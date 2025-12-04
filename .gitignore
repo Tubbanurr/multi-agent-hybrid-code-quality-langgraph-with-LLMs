@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Python (opsiyonel)
+__pycache__/
+*.pyc
+venv/
+.env
