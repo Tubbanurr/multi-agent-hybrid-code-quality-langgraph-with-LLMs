@@ -20,8 +20,8 @@ app.mount("/static", StaticFiles(directory="."), name="static")
 # MODEL API ANAHTARLARI
 # -------------------------------------------------
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "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")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "*AIzaSyCOdk8m7wR0gUCi5doI-53ZzCvDVhUEV_0*")
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "sk-6745ce2c1b7743d9a3d74b9079e3b9ff")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyCOdk8m7wR0gUCi5doI-53ZzCvDVhUEV_0")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "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")
 
 class PromptRequest(BaseModel):
     prompt: str
@@ -44,8 +44,28 @@ def call_codellama(prompt: str):
         return f"Groq API Hatası: {e}"
 
 def call_deepseek(prompt: str):
-    # DeepSeek geçici olarak devre dışı bırakıldı; HF izinleri yok.
-    return "DeepSeek şu anda pasif (HF izin sorunu)."
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}"
+    }
+
+    payload = {
+        "model": "deepseek/deepseek-chat",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    }
+
+    try:
+        res = requests.post(url, json=payload, headers=headers, timeout=40)
+        data = res.json()
+
+        if "choices" in data:
+            return data["choices"][0]["message"]["content"]
+
+        return f"DeepSeek Yanıtı Beklenmeyen Format: {data}"
+    except Exception as e:
+        return f"DeepSeek API Hatası: {e}"
 
 def call_gemini(prompt: str):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
@@ -86,3 +106,12 @@ def generate_code(req: PromptRequest) -> Dict:
             "Gemini 2.5": call_gemini(prompt)
         }
     }
+from module.code_quality import compare_models
+
+@app.post("/analyze-results")
+def analyze_results(payload: dict):
+    llama = payload["llama"]
+    deepseek = payload["deepseek"]
+    gemini = payload["gemini"]
+
+    return compare_models(llama, deepseek, gemini)
