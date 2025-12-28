@@ -1,7 +1,10 @@
 fastapi
 uvicorn
+requests
+python-dotenv
+groq
 langgraph
 pydantic
-python-dotenv
-requests
-groq
+langchain-groq
+langchain-google-genai
+langchain-core

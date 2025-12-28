@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAVELSAN - Kod Üretim Platformu</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- PrismJS Theme (Tomorrow Night) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    
+    <!-- Favicon (Optional) -->
+    <link rel="icon" href="https://img.utdstc.com/icon/428/847/42884742a2082f6766468725832a849767675f78bdf059c1186b51bf35be348d:200" type="image/png">
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <!-- Logo Placeholer -->
+                <div style="font-size: 24px;">🛡️</div>
+                <h1>HAVELSAN | Kod Üretim Modülü</h1>
+            </div>
+            <div style="font-size: 0.9rem; opacity: 0.8;">v2.0.0 (Agentic Update)</div>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <!-- Input Section -->
+        <section class="input-section">
+            <textarea id="prompt" placeholder="Örnek: Python ile bir REST API oluştur ve kullanıcı girişi (login) endpoint'i yaz..."></textarea>
+            
+            <div class="actions">
+                <button id="btn-generate" onclick="generateCode()" class="btn btn-primary">
+                    <span>🚀 Modelleri Çalıştır</span>
+                    <div id="loader-generate" class="loader"></div>
+                </button>
+
+                <button id="btn-analyze" onclick="analyzeResults()" class="btn btn-secondary">
+                    <span>📊 Kalite Analizi Yap</span>
+                    <div id="loader-analyze" class="loader"></div>
+                </button>
+            </div>
+        </section>
+
+        <!-- Winner Display -->
+        <section id="winner-display" class="winner-section" style="margin-bottom: 30px;"></section>
+
+        <!-- Results Grid -->
+        <div class="results-grid">
+            
+            <!-- Model 1 -->
+            <div class="model-card">
+                <div class="model-header">Llama 3 (Groq)</div>
+                <div class="code-container">
+                    <pre><code id="code-llama" class="language-python">Sonuçlar burada görünecek...</code></pre>
+                </div>
+                <div id="score-llama" class="score-panel"></div>
+            </div>
+
+            <!-- Model 2 -->
+            <div class="model-card">
+                <div class="model-header">DeepSeek V3</div>
+                <div class="code-container">
+                    <pre><code id="code-deepseek" class="language-python">Sonuçlar burada görünecek...</code></pre>
+                </div>
+                <div id="score-deepseek" class="score-panel"></div>
+            </div>
+
+            <!-- Model 3 -->
+            <div class="model-card">
+                <div class="model-header">Gemini 2.5</div>
+                <div class="code-container">
+                    <pre><code id="code-gemini" class="language-python">Sonuçlar burada görünecek...</code></pre>
+                </div>
+                <div id="score-gemini" class="score-panel"></div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- PrismJS Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    
+    <!-- App Logic -->
+    <script src="/static/js/script.js"></script>
+
+</body>
+</html>
