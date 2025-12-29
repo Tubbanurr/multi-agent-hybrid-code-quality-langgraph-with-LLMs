@@ -9,6 +9,7 @@ import os
 from module.llm_clients import call_codellama, call_deepseek, call_gemini
 from module.agent_graph import run_agent
 # from module.code_quality import compare_models # Old regex based
+from module.advanced_judge import advanced_judge  # NEW: Static analysis based
 
 app = FastAPI(title="HAVELSAN Code Generator")
 
@@ -63,3 +64,17 @@ def analyze_results_endpoint(payload: AnalysisRequest):
     
     # The result['judge_result'] contains {winner, reasoning, scores}
     return result["judge_result"]
+
+@app.post("/analyze-advanced")
+def analyze_advanced_endpoint(payload: AnalysisRequest):
+    """
+    Advanced static analysis using Pylint, Radon, Bandit, Flake8, AST.
+    More objective and deterministic than LLM-based judging.
+    Returns detailed breakdown with 6-layer analysis.
+    """
+    result = advanced_judge(
+        code_llama=payload.llama,
+        code_deepseek=payload.deepseek,
+        code_gemini=payload.gemini
+    )
+    return result

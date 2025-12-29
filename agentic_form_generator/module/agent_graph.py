@@ -92,29 +92,29 @@ def judge_solutions(state: AgentState) -> AgentState:
     prompt = state["prompt"]
 
     judge_prompt = f"""
-    You are an expert Senior Software Architect and Code Reviewer.
+    Sen uzman bir Yazılım Mimarı ve Kod İnceleyicisi'sin.
     
-    User Request: {prompt}
+    Kullanıcı İsteği: {prompt}
 
-    Option 1 (Llama):
+    Seçenek 1 (Llama):
     {llama}
 
-    Option 2 (DeepSeek):
+    Seçenek 2 (DeepSeek):
     {deepseek}
 
-    Option 3 (Gemini):
+    Seçenek 3 (Gemini):
     {gemini}
 
-    Evaluate these 3 snippets based on:
-    1. Correctness (Does it solve the user request?)
-    2. Efficiency (Big O, resource usage)
-    3. Style (Cleanliness, comments, naming conventions)
-    4. Safety (No vulnerabilities)
+    Bu 3 kod parçasını şu kriterlere göre değerlendir:
+    1. Doğruluk (Kullanıcı isteğini çözüyor mu?)
+    2. Verimlilik (Big O karmaşıklığı, kaynak kullanımı)
+    3. Stil (Temizlik, yorumlar, isimlendirme standartları)
+    4. Güvenlik (Güvenlik açığı yok mu?)
 
-    Output JSON ONLY in this format:
+    Çıktıyı SADECE JSON formatında ver:
     {{
         "winner": "CodeLlama" | "DeepSeek-V3" | "Gemini 2.5",
-        "reasoning": "A short paragraph explaining why the winner was chosen and comparison of others.",
+        "reasoning": "Kazananın neden seçildiğini ve diğerleriyle karşılaştırmasını açıklayan TÜRKÇE bir paragraf.",
         "scores": {{
             "CodeLlama": {{ "syntax": 20, "cleanliness": 0-15, "oop": 0-20, "complexity": 0-20, "total": 0-100 }},
             "DeepSeek-V3": {{ "syntax": 20, "cleanliness": 0-15, "oop": 0-20, "complexity": 0-20, "total": 0-100 }},

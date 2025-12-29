@@ -123,6 +123,15 @@ textarea:focus {
     background-color: #218838;
 }
 
+.btn-advanced {
+    background-color: #6f42c1;  /* Purple/Violet */
+    color: white;
+}
+
+.btn-advanced:hover {
+    background-color: #5a32a3;
+}
+
 .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
