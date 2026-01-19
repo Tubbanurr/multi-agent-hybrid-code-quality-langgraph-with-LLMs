@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAVELSAN - Hybrid Code Generator</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- PrismJS Theme -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="container">
+            <h1>HAVELSAN Hybrid Code Generator</h1>
+            <div class="version">v3.0.0</div>
+        </div>
+    </header>
+
+    <main class="container">
+
+        <!-- Input Section -->
+        <section class="input-section">
+            <textarea id="prompt" placeholder="Example: Write a binary search algorithm in Python..."></textarea>
+
+            <button id="btn-generate" onclick="generate()" class="btn btn-primary">
+                <span>Generate Code</span>
+                <div id="loader" class="loader"></div>
+            </button>
+        </section>
+
+        <!-- Round 1: 3 Model Results -->
+        <section id="round1-section" class="round1-section" style="display: none;">
+            <h2>Model Competition Results</h2>
+
+            <div class="results-grid">
+                <div class="model-card">
+                    <div class="model-header">CodeLlama 70B (Meta)</div>
+                    <div class="code-container">
+                        <pre><code id="code-llama" class="language-python">Generating code...</code></pre>
+                    </div>
+                    <div class="score-panel" id="score-llama"></div>
+                </div>
+
+                <div class="model-card">
+                    <div class="model-header">DeepSeek V3</div>
+                    <div class="code-container">
+                        <pre><code id="code-deepseek" class="language-python">Generating code...</code></pre>
+                    </div>
+                    <div class="score-panel" id="score-deepseek"></div>
+                </div>
+
+                <div class="model-card">
+                    <div class="model-header">Gemini 2.0 Flash (Google)</div>
+                    <div class="code-container">
+                        <pre><code id="code-gemini" class="language-python">Generating code...</code></pre>
+                    </div>
+                    <div class="score-panel" id="score-gemini"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Winner + Feedback Section -->
+        <section id="winner-section" class="winner-section" style="display: none;">
+            <div id="winner-info"></div>
+
+            <!-- Feedback Iterations (optional) -->
+            <div id="feedback-section" style="display: none;">
+                <h3>Feedback Improvement Process</h3>
+                <div id="feedback-iterations"></div>
+            </div>
+
+            <!-- Final Code -->
+            <div class="final-code-section">
+                <h3>Final Code</h3>
+                <div class="code-container">
+                    <pre><code id="final-code" class="language-python">Final code will appear here...</code></pre>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- PrismJS Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+    <!-- App Logic -->
+    <script src="/static/js/script.js"></script>
+
+</body>
+
+</html>
