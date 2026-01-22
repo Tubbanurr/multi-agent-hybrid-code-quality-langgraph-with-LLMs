@@ -204,9 +204,36 @@ def quality_judge_node(state: HybridState) -> HybridState:
         # Kalite Profili Oluştur (Gerekçelendirme çıktılarını birleştir)
         quality_parts = []
         for model, analysis in full_analysis.items():
+            hybrid = analysis.get("hybrid_score", 0)
+            static = analysis.get("static_score", 0)
+            llm = analysis.get("llm_score", 0)
             reasoning = analysis.get("llm_evaluation", {}).get("reasoning", "")
-            quality_parts.append(f"* {model} Analizi: {reasoning}")
+            
+            # Model'in detaylı analizi
+            quality_parts.append(f"### {model}")
+            quality_parts.append(f"- Hybrid Skor: {hybrid}/100 (Statik: {static}/100, LLM: {llm}/100)")
+            quality_parts.append(f"- Değerlendirme: {reasoning}")
+        
         quality_profile = "\n".join(quality_parts)
+        
+        # İLK TURDA DA SPESİFİK ÖNERİLER EKLE
+        winner_analysis = full_analysis[winner]
+        breakdown = winner_analysis.get("breakdown", {}).get("static_analysis", {}).get("breakdown", {})
+        initial_suggestions = []
+        
+        if breakdown.get("ast_structure", {}).get("score", 0) < 15:
+            initial_suggestions.append("- Kod yapısını iyileştir: Docstring ekle, class ve function kullan")
+        if breakdown.get("complexity", {}).get("average_complexity", 0) > 10:
+            initial_suggestions.append("- Karmaşıklığı azalt: Büyük fonksiyonları böl, nested if'leri azalt")
+        if breakdown.get("security", {}).get("issues_count", 0) > 0:
+            initial_suggestions.append("- Güvenlik açıklarını düzelt (injection, hardcoded credentials vb.)")
+        if breakdown.get("style", {}).get("violations", 0) > 5:
+            initial_suggestions.append("- PEP8 standartlarına uy (satır uzunluğu, boşluk kullanımı vb.)")
+        
+        if initial_suggestions:
+            quality_profile += "\n\n## ÖNCELİKLİ İYİLEŞTİRMELER:\n" + "\n".join(initial_suggestions)
+        
+        print(f"\n📋 QUALITY PROFILE OLUŞTURULDU ({len(quality_profile)} karakter)\n")
         
         return {
             "round1_scores": full_analysis,
@@ -277,11 +304,25 @@ def quality_judge_node(state: HybridState) -> HybridState:
             "new_categories": new_categories
         })
         
-        # Kalite profilini güncelle
+        # Kalite profilini güncelle - DAHA DETAYLI VE SPESİFİK
         reasoning = analysis.get("llm_evaluation", {}).get("reasoning", "")
         feedback_text = "\n".join([f"- {s['area']}: {s['action']}" for s in suggestions]) if suggestions else "Kodun kalitesini artır"
-        new_quality_profile = f"Mevcut En İyi Skor: {new_score}\nAnaliz: {reasoning}\nÖneriler:\n{feedback_text}"
         
+        new_quality_profile = f"""### İTERASYON {iteration} FEEDBACK
+
+**Mevcut Skor**: {previous_score}/100 → {new_score}/100 (Değişim: {new_score - previous_score:+.1f})
+
+**Statik Analiz Değerlendirmesi**:
+{reasoning}
+
+**Tespit Edilen Sorunlar ve Öneriler**:
+{feedback_text}
+
+**ÖNEMLİ**: Yukarıdaki önerileri DİKKATLE uygula. Her bir sorunu FİZİKSEL OLARAK düzelt."""
+        
+        print(f"\n📋 UPDATED QUALITY PROFILE ({len(new_quality_profile)} karakter):")
+        print(new_quality_profile[:500] + "..." if len(new_quality_profile) > 500 else new_quality_profile)
+        print()
         return {
             "current_score": new_score,
             "final_quality_score": new_score,
@@ -313,13 +354,15 @@ def should_continue(state: HybridState) -> str:
     score = state["final_quality_score"]
     threshold = state.get("quality_threshold", 70.0)
     iteration = state.get("iteration_count", 0)
-    max_iter = state.get("max_iterations", 3)
     
     print(f"\n⚖️  DÖNGÜ KONTROLÜ:")
-    print(f"   Mevcut Kalite Puanı: {score:.2f}, Eşik: {threshold}, İterasyon: {iteration}/{max_iter}")
+    print(f"   Mevcut Kalite Puanı: {score:.2f}, Eşik: {threshold}, İterasyon: {iteration}")
     
-    if score >= threshold or iteration > max_iter:
-        print("   ✅ Hedef sağlandı veya max deneme doldu. Sonlandırılıyor...\n")
+    if score >= threshold:
+        print("   ✅ Hedef sağlandı. Sonlandırılıyor...\n")
+        return "finalize"
+    elif iteration >= 10:
+        print("   ⚠️  Maksimum iterasyon sayısına (10) ulaşıldı. Sonlandırılıyor...\n")
         return "finalize"
     else:
         print("   🔄 Kalite yetersiz. Feedback döngüsü devam ediyor...\n")
