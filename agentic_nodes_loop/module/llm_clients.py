@@ -2,6 +2,7 @@ import os
 import requests
 from groq import Groq
 from dotenv import load_dotenv
+import time
 
 load_dotenv()
 
@@ -81,18 +82,32 @@ def call_deepseek(prompt: str) -> str:
 
 
 def call_gemini(prompt: str) -> str:
-    """Generates code using Gemini 2.0 Flash (Gemini API) - Google's latest."""
+    """Generates code using Gemini 2.0 Flash (Gemini API) - Google's latest.
+    Includes retry with exponential backoff for 429 rate‑limit errors.
+    """
     if not gemini_client:
         return "Gemini API Key missing or client init failed."
-    
-    try:
-        response = gemini_client.generate_content(
-            f"You are an expert Python programmer. Write clean, efficient code. Output ONLY the code.\n\n{prompt}",
-            generation_config={
-                "temperature": 0.1,
-                "max_output_tokens": 2048
-            }
-        )
-        return response.text
-    except Exception as e:
-        return f"Gemini API Error: {str(e)}"
+
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = gemini_client.generate_content(
+                f"You are an expert Python programmer. Write clean, efficient code. Output ONLY the code.\n\n{prompt}",
+                generation_config={
+                    "temperature": 0.1,
+                    "max_output_tokens": 2048
+                }
+            )
+            return response.text
+        except Exception as e:
+            # Detect rate‑limit (429) in the error message
+            err_msg = str(e)
+            if "429" in err_msg or "rate limit" in err_msg.lower():
+                if attempt < max_retries - 1:
+                    backoff = 2 ** attempt * 5  # 5, 10, 20 seconds
+                    print(f"Gemini rate limit hit, sleeping {backoff}s (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(backoff)
+                    continue
+            # For other errors or last attempt, return the error
+            return f"Gemini API Error: {err_msg}"
+    return "Gemini API Error: exceeded retry attempts"
