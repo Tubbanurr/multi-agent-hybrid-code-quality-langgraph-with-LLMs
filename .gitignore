@@ -1,7 +1,33 @@
+# Environment variables
 .env
-.DS_Store
+.env.local
+.env.*.local
+
+# Python
 __pycache__/
+*.py[cod]
+*.pyo
+.venv/
 venv/
-*.pyc
-.idea/
+env/
+
+# IDE
 .vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+logs/
+
+# Build
+dist/
+build/
+*.egg-info/
