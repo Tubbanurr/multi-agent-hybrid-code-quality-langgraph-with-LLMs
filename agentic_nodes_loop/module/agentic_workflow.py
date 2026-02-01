@@ -8,6 +8,9 @@ from typing import TypedDict, Dict, Any, List, Optional
 from langgraph.graph import StateGraph, END
 from langchain_groq import ChatGroq
 import os
+import csv
+from datetime import datetime
+import uuid
 from dotenv import load_dotenv
 
 # Mevcut modüllerden import
@@ -16,6 +19,74 @@ from module.advanced_judge import AdvancedCodeJudge
 
 # Env variables
 load_dotenv()
+
+# --- CSV Logging Utility ---
+def log_request_to_csv(
+    request_id: str,
+    user_prompt: str,
+    model_llama_score: float,
+    model_deepseek_score: float,
+    model_gemini_score: float,
+    initial_winner: str,
+    iteration_count: int,
+    final_score: float,
+    status: str,
+    log_file: str = "logs/workflow_log.csv"
+):
+    """
+    Append workflow summary to CSV file.
+    
+    Args:
+        request_id: Unique identifier for this request
+        user_prompt: User's original prompt
+        model_llama_score: CodeLlama's initial hybrid score
+        model_deepseek_score: DeepSeek's initial hybrid score
+        model_gemini_score: Gemini's initial hybrid score
+        initial_winner: Model that won in round 1
+        iteration_count: Number of feedback iterations
+        final_score: Final quality score after iterations
+        status: SUCCESS or MAX_ITER_REACHED
+        log_file: Path to CSV log file
+    """
+    # Create logs directory if it doesn't exist
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+    
+    # Check if file exists to determine if we need to write headers
+    file_exists = os.path.isfile(log_file)
+    
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    
+    with open(log_file, mode='a', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        
+        # Write header if file is new
+        if not file_exists:
+            writer.writerow([
+                "Request_ID",
+                "User_Prompt",
+                "Model_Llama_Score",
+                "Model_DeepSeek_Score",
+                "Model_Gemini_Score",
+                "Initial_Winner",
+                "Iteration_Count",
+                "Final_Score",
+                "Status",
+                "Timestamp"
+            ])
+        
+        # Write data row
+        writer.writerow([
+            request_id,
+            user_prompt[:100],  # Truncate long prompts
+            f"{model_llama_score:.1f}",
+            f"{model_deepseek_score:.1f}",
+            f"{model_gemini_score:.1f}",
+            initial_winner,
+            iteration_count,
+            f"{final_score:.1f}",
+            status,
+            timestamp
+        ])
 
 # --- State Definition ---
 class HybridState(TypedDict):
@@ -550,4 +621,45 @@ def run_hybrid_workflow(prompt: str, quality_threshold: float = 70.0, max_iterat
     print(f"Son Skor: {result['final_score']}/100")
     print(f"{'='*60}\n")
     
+    # --- CSV Logging ---
+    try:
+        # Generate unique request ID
+        request_id = f"REQ_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
+        
+        # Extract model scores from round1_scores
+        round1_scores = result.get("round1_scores", {})
+        
+        # Get hybrid scores for each model
+        llama_score = round1_scores.get("CodeLlama 70B", {}).get("hybrid_score", 0.0)
+        deepseek_score = round1_scores.get("DeepSeek V3", {}).get("hybrid_score", 0.0)
+        gemini_score = round1_scores.get("Gemini 2.0 Flash", {}).get("hybrid_score", 0.0)
+        
+        # Determine status
+        iteration_count = result.get("iteration_count", 0) - 1  # Subtract 1 because it's incremented at start
+        if iteration_count < 0:
+            iteration_count = 0
+            
+        status = "SUCCESS" if result.get("status") == "improved_via_feedback" or result.get("status") == "direct_output" else "MAX_ITER_REACHED"
+        
+        # If max iterations reached without success, update status
+        if iteration_count >= max_iterations and result.get("final_score", 0) < quality_threshold:
+            status = "MAX_ITER_REACHED"
+        
+        # Log to CSV
+        log_request_to_csv(
+            request_id=request_id,
+            user_prompt=prompt,
+            model_llama_score=llama_score,
+            model_deepseek_score=deepseek_score,
+            model_gemini_score=gemini_score,
+            initial_winner=result.get("winner_model", "Unknown"),
+            iteration_count=iteration_count,
+            final_score=result.get("final_score", 0.0),
+            status=status
+        )
+        print(f"📝 Log kaydedildi: {request_id}")
+    except Exception as e:
+        print(f"⚠️  CSV logging hatası: {e}")
+    
     return result
+
