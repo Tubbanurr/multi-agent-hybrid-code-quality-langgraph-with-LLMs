@@ -1,2 +1,4 @@
 Request_ID,User_Prompt,Model_Llama_Score,Model_DeepSeek_Score,Model_Gemini_Score,Initial_Winner,Iteration_Count,Final_Score,Status,Timestamp
 REQ_20260201_212513_69af5ada,python toplama kodu ver : 2+3,64.0,20.0,20.0,CodeLlama 70B,1,72.0,SUCCESS,2026-02-01 21:25
+REQ_20260201_213126_e2cff1b6,binary search yapan python kodu ver,66.0,20.0,20.0,CodeLlama 70B,4,71.0,SUCCESS,2026-02-01 21:31
+REQ_20260201_215137_0a2ab7b8,binary ve fibonacci yapan python kodu ver,67.0,20.0,20.0,CodeLlama 70B,9,69.0,MAX_ITER_REACHED,2026-02-01 21:51

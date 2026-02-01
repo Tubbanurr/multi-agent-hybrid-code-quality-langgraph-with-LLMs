@@ -612,7 +612,10 @@ def run_hybrid_workflow(prompt: str, quality_threshold: float = 70.0, max_iterat
         "status": ""
     }
     
-    result = hybrid_graph.invoke(initial_state)
+    result = hybrid_graph.invoke(
+        initial_state,
+        config={"recursion_limit": 50}
+    )
     
     print(f"\n{'='*60}")
     print(f"✨ WORKFLOW TAMAMLANDI")
