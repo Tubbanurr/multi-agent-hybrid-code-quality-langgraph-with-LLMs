@@ -536,37 +536,5 @@ def advanced_judge(code_llama: str, code_deepseek: str, code_gemini: str) -> Dic
         "scores": results
     }
 
-    def get_hybrid_score(self, static_analysis: Dict[str, Any], llm_evaluation: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Combines static analysis (70%) and LLM evaluation (30%) into hybrid score.
-        
-        Args:
-            static_analysis: Output from score_code()
-            llm_evaluation: Output from LLMJudge.evaluate_code()
-        
-        Returns:
-            {
-                "hybrid_score": 0-100,
-                "static_score": 0-100,
-                "llm_score": 0-100,
-                "weights": {"static": 0.7, "llm": 0.3},
-                "breakdown": {...}
-            }
-        """
-        static_score = static_analysis["total_score"]
-        llm_score = llm_evaluation["semantic_score"]
-        
-        # Hybrid formula: 70% static + 30% LLM
-        hybrid_score = int((static_score * 0.7) + (llm_score * 0.3))
-        
-        return {
-            "hybrid_score": hybrid_score,
-            "static_score": static_score,
-            "llm_score": llm_score,
-            "weights": {"static": 0.7, "llm": 0.3},
-            "breakdown": {
-                "static_analysis": static_analysis,
-                "llm_evaluation": llm_evaluation
-            }
-        }
+
 
