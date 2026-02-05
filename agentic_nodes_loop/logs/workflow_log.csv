@@ -2,3 +2,25 @@ Request_ID,User_Prompt,Model_Llama_Score,Model_DeepSeek_Score,Model_Gemini_Score
 REQ_20260201_212513_69af5ada,python toplama kodu ver : 2+3,64.0,20.0,20.0,CodeLlama 70B,1,72.0,SUCCESS,2026-02-01 21:25
 REQ_20260201_213126_e2cff1b6,binary search yapan python kodu ver,66.0,20.0,20.0,CodeLlama 70B,4,71.0,SUCCESS,2026-02-01 21:31
 REQ_20260201_215137_0a2ab7b8,binary ve fibonacci yapan python kodu ver,67.0,20.0,20.0,CodeLlama 70B,9,69.0,MAX_ITER_REACHED,2026-02-01 21:51
+REQ_20260202_200611_b8c620d0,python ile. yazılmış içinde dictionary yapısı örneği olan bir kod yaz,21.0,21.0,21.0,CodeLlama 70B,9,21.0,MAX_ITER_REACHED,2026-02-02 20:06
+REQ_20260202_200933_4822b721,python ile. yazılmış içinde dictionary yapısı örneği olan bir kod yaz,52.0,21.0,21.0,CodeLlama 70B,9,58.0,MAX_ITER_REACHED,2026-02-02 20:09
+REQ_20260202_220001_ad71b9bf,"write a bubble search algorithm with python",55.0,21.0,21.0,CodeLlama 70B,9,58.0,MAX_ITER_REACHED,2026-02-02 22:00
+REQ_20260203_215944_7aebd312,python ile zar atma algoritması yaz,0.0,0.0,0.0,Qwen2.5-Coder (Ollama),9,59.0,MAX_ITER_REACHED,2026-02-03 21:59
+REQ_20260203_224756_75b8b1ac,python ile bubble sort algoritması yaz,0.0,0.0,0.0,Llama 3.1 (Ollama),9,59.0,MAX_ITER_REACHED,2026-02-03 22:47
+REQ_20260204_004807_df5021f8,5in karesini alan kodu python ile yaz,0.0,0.0,0.0,CodeLlama (Ollama),9,58.0,MAX_ITER_REACHED,2026-02-04 00:48
+REQ_20260204_013507_e1a258ba,"50 nin katlarını 1000 e kadar yazdıran python kodunu yaz",0.0,0.0,0.0,Qwen2.5-Coder (Ollama),2,71.0,SUCCESS,2026-02-04 01:35
+REQ_20260204_014235_cddf8753,5+5 hesapla python,0.0,0.0,0.0,Qwen2.5-Coder (Ollama),4,75.0,SUCCESS,2026-02-04 01:42
+REQ_20260204_015730_8e271909,"9 - 5 in python kodunu yaz",0.0,0.0,0.0,Llama 3.1 (Ollama),9,64.0,MAX_ITER_REACHED,2026-02-04 01:57
+REQ_20260204_020437_8a1b71f4,"binary search algoritmasını yaz",0.0,0.0,0.0,CodeLlama (Ollama),4,71.0,SUCCESS,2026-02-04 02:04
+REQ_20260204_154335_0765d42d,python ile kök alma işlemini yapan bir fonsikyon yaz,0.0,0.0,0.0,Qwen2.5-Coder (Ollama),1,75.0,SUCCESS,2026-02-04 15:43
+REQ_20260204_163532_23fae132,python ile bubble search algoritması kodunu yaz,0.0,0.0,0.0,Qwen2.5-Coder (Ollama),3,70.0,SUCCESS,2026-02-04 16:35
+REQ_20260204_165735_9bf038c7,"bubble search algoritmasını python ile yaz",0.0,0.0,0.0,Qwen2.5-Coder (Ollama),3,70.0,SUCCESS,2026-02-04 16:57
+REQ_20260205_133112_2bfc7efe,"Kullanıcılardan gelen ham işlem verilerini (JSON formatında) alan, bunları asenkron olarak işleyen v",70.0,50.0,67.0,Qwen2.5-Coder (Ollama),1,69.0,SUCCESS,2026-02-05 13:31
+REQ_20260205_134922_985a2a70,"Kullanıcılardan gelen ham işlem verilerini (JSON formatında) alan, bunları asenkron olarak işleyen v",68.0,48.0,64.0,Qwen2.5-Coder (Ollama),1,68.0,SUCCESS,2026-02-05 13:49
+REQ_20260205_135337_b6e5b608,"Kullanıcılardan gelen ham işlem verilerini (JSON formatında) alan, bunları asenkron olarak işleyen v",68.0,45.0,67.0,Qwen2.5-Coder (Ollama),0,68.0,SUCCESS,2026-02-05 13:53
+REQ_20260205_140011_9a74d549,"2 ile 3 ü toplayan kodu yaz python ile
+",69.0,70.0,64.0,CodeLlama (Ollama),0,70.0,SUCCESS,2026-02-05 14:00
+REQ_20260205_143131_e82b659e,"2 + 4 kodunu python ile yaz
+",69.0,69.0,69.0,Qwen2.5-Coder (Ollama),1,74.0,SUCCESS,2026-02-05 14:31
+REQ_20260205_150746_99495860,"Kullanıcılardan gelen ham işlem verilerini (JSON formatında) alan, bunları asenkron olarak işleyen v",66.0,42.0,69.0,Llama 3.1 (Ollama),9,68.0,SUCCESS,2026-02-05 15:07
+REQ_20260205_152322_e0807e75,"Parametre olarak bir tam sayı listesi alan ve bu liste içerisindeki sadece asal sayıları bulup, bunl",68.0,68.0,66.0,Qwen2.5-Coder (Ollama),2,74.0,SUCCESS,2026-02-05 15:23

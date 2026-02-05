@@ -1,5 +1,6 @@
 // Hybrid Workflow Frontend Logic - Turkish & Detailed Feedback
 // NOW WITH HYBRID SCORING (Static + LLM)
+// Updated for Ollama support with dynamic model names
 
 async function generate() {
     const prompt = document.getElementById("prompt").value;
@@ -17,11 +18,18 @@ async function generate() {
     document.getElementById("winner-section").style.display = "none";
 
     try {
+        // Longer timeout for Ollama (local models are slower)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 dakika timeout
+
         const response = await fetch("/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt })
+            body: JSON.stringify({ prompt }),
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) throw new Error("API Hatası");
 
@@ -35,7 +43,11 @@ async function generate() {
         showWinner(data);
 
     } catch (error) {
-        alert("Hata: " + error.message);
+        if (error.name === 'AbortError') {
+            alert("İstek zaman aşımına uğradı. Ollama modelleri yavaş çalışıyor olabilir.");
+        } else {
+            alert("Hata: " + error.message);
+        }
     } finally {
         btn.disabled = false;
         loader.style.display = "none";
@@ -45,22 +57,25 @@ async function generate() {
 function showRound1(codes, scoresData) {
     document.getElementById("round1-section").style.display = "block";
 
-    const models = [
-        { id: "llama", name: "CodeLlama 70B" },
-        { id: "deepseek", name: "DeepSeek V3" },
-        { id: "gemini", name: "Gemini 2.0 Flash" }
-    ];
+    // Dinamik model isimleri - backend'den gelen isimleri kullan
+    const modelKeys = Object.keys(codes);
+    const modelSlots = ["llama", "deepseek", "gemini"];
 
-    models.forEach(model => {
-        const modelName = model.name;
+    modelKeys.forEach((modelName, index) => {
+        const slotId = modelSlots[index] || `model-${index}`;
         const code = codes[modelName] || "Kod üretilemedi";
         const scoreData = scoresData[modelName];
 
+        // Update model header with dynamic name
+        const headerElement = document.getElementById(`header-${slotId}`);
+        if (headerElement) headerElement.textContent = modelName;
+
         // Display code
-        document.getElementById(`code-${model.id}`).textContent = code;
+        const codeElement = document.getElementById(`code-${slotId}`);
+        if (codeElement) codeElement.textContent = code;
 
         // Display HYBRID score with breakdown
-        const scorePanel = document.getElementById(`score-${model.id}`);
+        const scorePanel = document.getElementById(`score-${slotId}`);
 
         if (!scoreData || scoreData.is_error) {
             // API HATASI - ÖZEL GÖSTER
@@ -77,13 +92,15 @@ function showRound1(codes, scoresData) {
         const hybridScore = scoreData.hybrid_score || scoreData.total_score || 0;
         const staticScore = scoreData.static_score || 0;
         const llmScore = scoreData.llm_score || 0;
-        const categories = scoreData["4_categories"] || {};
 
-        // Get breakdowns
+        // Get breakdowns from correct paths
         const staticAnalysis = scoreData.breakdown?.static_analysis || scoreData;
         const llmEvaluation = scoreData.breakdown?.llm_evaluation || {};
         const staticBreakdown = staticAnalysis.breakdown || {};
         const llmBreakdown = llmEvaluation.breakdown || {};
+
+        // 4_categories is inside static_analysis, not at root level
+        const categories = staticAnalysis["4_categories"] || scoreData["4_categories"] || {};
 
         scorePanel.innerHTML = `
             <!-- Hybrid Score Badge -->
@@ -162,9 +179,19 @@ function showRound1(codes, scoresData) {
                         <span class="llm-score-value">${llmBreakdown.readability || 0}/25</span>
                     </div>
                 </div>
+                ${llmEvaluation.chain_of_thought ? `
+                    <details class="cot-thinking" style="margin-top: 0.75rem; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; padding: 0.5rem;">
+                        <summary style="cursor: pointer; font-weight: 600; color: #a78bfa; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="animation: pulse 2s infinite;">🧠</span> Chain-of-Thought (Düşünce Süreci)
+                        </summary>
+                        <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #94a3b8; line-height: 1.6; font-family: monospace; white-space: pre-wrap; max-height: 200px; overflow-y: auto; padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 4px;">
+                            ${llmEvaluation.chain_of_thought}
+                        </div>
+                    </details>
+                ` : ''}
                 ${llmEvaluation.reasoning ? `
                     <details style="margin-top: 0.75rem;">
-                        <summary style="cursor: pointer; font-weight: 600; color: var(--gray-700);">LLM Reasoning</summary>
+                        <summary style="cursor: pointer; font-weight: 600; color: var(--gray-700);">💬 LLM Reasoning (Sonuç)</summary>
                         <p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--gray-600); line-height: 1.6;">
                             ${llmEvaluation.reasoning}
                         </p>
@@ -252,15 +279,27 @@ function showDetailedFeedback(iterations) {
                 </div>
             </div>
             
+            <!-- Chain-of-Thought Thinking -->
+            ${iter.chain_of_thought ? `
+            <details class="cot-thinking" style="margin-bottom: 1rem; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; padding: 0.75rem;">
+                <summary style="cursor: pointer; font-weight: 600; color: #a78bfa; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="animation: pulse 2s infinite;">🧠</span> CoT Düşünce Süreci
+                </summary>
+                <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #94a3b8; line-height: 1.6; font-family: monospace; white-space: pre-wrap; max-height: 150px; overflow-y: auto; padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 4px;">
+                    ${iter.chain_of_thought}
+                </div>
+            </details>
+            ` : ''}
+            
             <!-- İyileştirme Önerileri -->
             <div class="suggestions-box">
-                <div class="suggestions-title">İyileştirme Önerileri:</div>
+                <div class="suggestions-title">🎯 Dinamik Öneriler:</div>
                 ${iter.suggestions && iter.suggestions.length > 0 ?
                 iter.suggestions.map(s => `
-                        <div class="suggestion-item">
-                            <div class="suggestion-area">${s.area}</div>
-                            <div class="suggestion-issue">Sorun: ${s.issue}</div>
-                            <div class="suggestion-action">Aksiyon: ${s.action}</div>
+                        <div class="suggestion-item" style="border-left: 3px solid ${s.priority === 1 ? '#ef4444' : s.priority === 2 ? '#f59e0b' : '#22c55e'}; padding-left: 0.5rem; margin-bottom: 0.5rem;">
+                            <div class="suggestion-area" style="font-weight: 600; color: ${s.priority === 1 ? '#ef4444' : s.priority === 2 ? '#f59e0b' : '#22c55e'};">[${s.priority === 1 ? 'KRİTİK' : s.priority === 2 ? 'ÖNEMLİ' : 'DÜŞÜK'}] ${s.area}</div>
+                            <div class="suggestion-issue" style="font-size: 0.85rem;">Sorun: ${s.issue || ''}</div>
+                            <div class="suggestion-action" style="font-size: 0.85rem; font-weight: 500;">Aksiyon: ${s.action || ''}</div>
                         </div>
                     `).join('')
                 : '<div style="color: #999;">Genel iyileştirmeler</div>'

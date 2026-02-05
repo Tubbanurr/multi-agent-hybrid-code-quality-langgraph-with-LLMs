@@ -117,12 +117,12 @@ class AdvancedCodeJudge:
                 f.write(code)
                 temp_file = f.name
             
-            # Run pylint
+            # Run pylint with python -m
             proc = subprocess.run(
-                ['pylint', temp_file, '--output-format=json', '--score=yes'],
+                ['python3', '-m', 'pylint', temp_file, '--output-format=json', '--score=yes'],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=15
             )
             
             # Parse output
@@ -169,12 +169,12 @@ class AdvancedCodeJudge:
                 f.write(code)
                 temp_file = f.name
             
-            # Run radon cc (cyclomatic complexity)
+            # Run radon cc (cyclomatic complexity) with python -m
             proc = subprocess.run(
-                ['radon', 'cc', temp_file, '-j'],
+                ['python3', '-m', 'radon', 'cc', temp_file, '-j'],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=15
             )
             
             if proc.stdout:
@@ -233,12 +233,12 @@ class AdvancedCodeJudge:
                 f.write(code)
                 temp_file = f.name
             
-            # Run bandit
+            # Run bandit with python -m
             proc = subprocess.run(
-                ['bandit', temp_file, '-f', 'json'],
+                ['python3', '-m', 'bandit', temp_file, '-f', 'json'],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=15
             )
             
             if proc.stdout:
@@ -290,12 +290,12 @@ class AdvancedCodeJudge:
                 f.write(code)
                 temp_file = f.name
             
-            # Run flake8
+            # Run flake8 with python -m
             proc = subprocess.run(
-                ['flake8', temp_file, '--count'],
+                ['python3', '-m', 'flake8', temp_file, '--count'],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=15
             )
             
             # Count violations from output

@@ -14,7 +14,7 @@ import uuid
 from dotenv import load_dotenv
 
 # Mevcut modüllerden import
-from module.llm_clients import call_codellama, call_deepseek, call_gemini
+from module.llm_clients import call_codellama, call_deepseek, call_gemini, get_model_names
 from module.advanced_judge import AdvancedCodeJudge
 
 # Env variables
@@ -87,6 +87,68 @@ def log_request_to_csv(
             status,
             timestamp
         ])
+
+
+# --- Dynamic Threshold Utility ---
+def calculate_dynamic_threshold(prompt: str) -> float:
+    """
+    Prompt karmaşıklığına göre dinamik kalite eşiği hesapla.
+    
+    Basit işlemler (aritmetik, tek satırlık) için düşük eşik,
+    karmaşık algoritmalar için yüksek eşik.
+    
+    Returns:
+        float: 55.0 - 75.0 arası threshold değeri
+    """
+    prompt_lower = prompt.lower()
+    
+    # Token sayısı (basit yaklaşım)
+    word_count = len(prompt.split())
+    
+    # Karmaşıklık göstergeleri
+    complexity_keywords = [
+        'algorithm', 'algoritma', 'sort', 'search', 'binary', 'tree',
+        'graph', 'recursive', 'dynamic', 'fibonacci', 'linked list',
+        'hash', 'queue', 'stack', 'class', 'oop', 'design pattern',
+        'api', 'database', 'async', 'thread', 'parallel'
+    ]
+    
+    # Basitlik göstergeleri
+    simple_keywords = [
+        'topla', 'çıkar', 'çarp', 'böl', 'hesapla', 'yaz', 'print',
+        '+', '-', '*', '/', 'kare', 'küp', 'katları', 'hello',
+        'merhaba', 'basit', 'simple', 'basic'
+    ]
+    
+    # Skor hesapla
+    complexity_score = 0
+    
+    # Karmaşıklık keyword kontrolü
+    for keyword in complexity_keywords:
+        if keyword in prompt_lower:
+            complexity_score += 10
+    
+    # Basitlik keyword kontrolü
+    for keyword in simple_keywords:
+        if keyword in prompt_lower:
+            complexity_score -= 8
+    
+    # Word count bazlı ayarlama
+    if word_count <= 5:
+        complexity_score -= 10
+    elif word_count >= 15:
+        complexity_score += 5
+    
+    # Threshold hesapla (55-75 arası)
+    base_threshold = 65.0
+    threshold = base_threshold + (complexity_score / 5)
+    
+    # Sınırla
+    threshold = max(55.0, min(75.0, threshold))
+    
+    print(f"📊 Dinamik Threshold: {threshold:.1f} (prompt karmaşıklık skoru: {complexity_score})")
+    
+    return threshold
 
 # --- State Definition ---
 class HybridState(TypedDict):
@@ -211,10 +273,13 @@ def generator_node(state: HybridState) -> HybridState:
         print(f"🏁 DÜĞÜM 1: İLK KOD OLUŞTURMA (3 MODEL)")
         print(f"{'='*60}\n")
         
+        # Model isimlerini dinamik al (Ollama veya Cloud)
+        model_names = get_model_names()
+        
         codes = {
-            "CodeLlama 70B": call_codellama(prompt),
-            "DeepSeek V3": call_deepseek(prompt),
-            "Gemini 2.0 Flash": call_gemini(prompt)
+            model_names["model_1"]: call_codellama(prompt),
+            model_names["model_2"]: call_deepseek(prompt),
+            model_names["model_3"]: call_gemini(prompt)
         }
         return {"round1_codes": codes}
     else:
@@ -222,19 +287,37 @@ def generator_node(state: HybridState) -> HybridState:
         print(f"🔄 DÜĞÜM 1: KOD İYİLEŞTİRME (İterasyon {iteration})")
         print(f"{'='*60}\n")
         
-        # Geliştirilmiş prompt oluştur (Düğüm 2'den gelen kalite profili ile)
-        enhanced_prompt = f"""Orijinal İstek: {prompt}
+        # Geliştirilmiş ve daha direktif prompt oluştur
+        quality_profile = state.get('quality_profile', '')
+        current_code = state.get('current_code', '')
+        
+        enhanced_prompt = f"""# KOD İYİLEŞTİRME GÖREVİ
 
-QUALITY PROFILE (Ajanların değerlendirmeleri):
-{state['quality_profile']}
+## Orijinal İstek
+{prompt}
 
-Mevcut Kod:
-{state['current_code']}
+## Mevcut Kod
+```python
+{current_code}
+```
 
-Lütfen yukarıdaki profil ve önerileri dikkate alarak kodu iyileştir. SADECE kod üret."""
+## ZORUNLU İYİLEŞTİRMELER
+{quality_profile}
+
+## TALİMATLAR
+1. Yukarıdaki ÖNCELİKLİ önerileri MUTLAKA uygula
+2. Docstring ekle (fonksiyon/class varsa)
+3. Type hints ekle (parametreler ve dönüş değeri)
+4. Error handling ekle (try-except)
+5. Değişken isimlerini anlamlı yap
+
+⚠️ ÖNEMLİ: SADECE Python kodu üret, açıklama yazma!
+⚠️ Mevcut işlevselliği KORU, sadece kaliteyi artır!"""
         
         winner_model = state["winner_model"]
-        if "CodeLlama" in winner_model:
+        
+        # Model seçimi - Ollama model isimlerini de kontrol et
+        if "CodeLlama" in winner_model or "Qwen" in winner_model:
             new_code = call_codellama(enhanced_prompt)
         elif "DeepSeek" in winner_model:
             new_code = call_deepseek(enhanced_prompt)
@@ -354,8 +437,11 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
         # Kazananı bul
         winner = max(hybrid_scores, key=hybrid_scores.get)
         
-        # Ağırlıklı Ortalama (Nihai Kalite Puanı)
-        final_quality_score = sum(hybrid_scores.values()) / len(hybrid_scores)
+        # DÜZELTME: Kalite puanı olarak KAZANANIN skorunu kullan (ortalama değil!)
+        # Eski: final_quality_score = sum(hybrid_scores.values()) / len(hybrid_scores)
+        final_quality_score = hybrid_scores[winner]
+        
+        print(f"\n🏆 Kazanan: {winner} (Skor: {final_quality_score}/100)")
         
         # Kalite Profili Oluştur
         quality_parts = []
@@ -425,17 +511,31 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
         print(f"📊 Hybrid Skor: {new_score}/100 "
               f"(Static: {hybrid_result['static_score']}/100, LLM: {hybrid_result['llm_score']}/100)")
         
-        # Heuristic-based suggestions
-        breakdown = static_analysis.get("breakdown", {})
-        suggestions = []
-        if breakdown.get("ast_structure", {}).get("score", 0) < 15:
-            suggestions.append({"area": "Kod Yapısı", "action": "Docstring ekle, class ve function kullan"})
-        if breakdown.get("complexity", {}).get("average_complexity", 0) > 10:
-            suggestions.append({"area": "Karmaşıklık", "action": "Büyük fonksiyonları böl, nested if'leri azalt"})
-        if breakdown.get("security", {}).get("issues_count", 0) > 0:
-            suggestions.append({"area": "Güvenlik", "action": "Güvenlik açıklarını düzelt"})
-        if breakdown.get("style", {}).get("violations", 0) > 5:
-            suggestions.append({"area": "Stil (PEP8)", "action": "PEP8 standartlarına uy"})
+        # Chain-of-Thought Feedback Agent ile dinamik öneriler üret
+        print(f"\n🧠 CoT Feedback Agent çalışıyor...")
+        from module.feedback_agent import generate_cot_feedback, format_suggestions_for_prompt
+        
+        cot_feedback = generate_cot_feedback(
+            code=new_code,
+            original_prompt=state["prompt"],
+            static_analysis=static_analysis,
+            llm_evaluation=llm_evaluation,
+            previous_score=previous_score,
+            current_score=new_score
+        )
+        
+        suggestions = cot_feedback.get("suggestions", [])
+        cot_summary = cot_feedback.get("summary", "")
+        chain_of_thought = cot_feedback.get("chain_of_thought", "")
+        
+        # Debug output
+        if suggestions:
+            print(f"✅ {len(suggestions)} dinamik öneri üretildi")
+            for s in suggestions[:3]:  # İlk 3'ü göster
+                print(f"   [{s.get('priority', '?')}] {s.get('area', 'Genel')}: {s.get('action', '')[:50]}...")
+        else:
+            print("⚠️  Öneri üretilemedi, fallback kullanılıyor")
+            suggestions = [{"priority": 2, "area": "Genel", "issue": "Kod kalitesi düşük", "action": "Docstring, type hints ve error handling ekle"}]
         
         # Metrik değişimlerini hesapla
         metric_changes = {
@@ -448,51 +548,75 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
         # Feedback geçmişini güncelle
         feedback_iter = state.get("feedback_iterations", [])
         
+        # Önceki kodu doğru şekilde al
+        # İterasyon 1'de winner_code kullan, sonraki iterasyonlarda previous_code_snapshot
         if iteration == 1:
-            previous_code = state.get("winner_code", "")
+            previous_code_for_display = state.get("winner_code", "") or state.get("previous_code_snapshot", "")
+        else:
+            previous_code_for_display = previous_code if previous_code else state.get("previous_code_snapshot", "")
         
         feedback_iter.append({
             "iteration": iteration,
-            "previous_code": previous_code,
+            "previous_code": previous_code_for_display,
             "new_code": new_code,
             "previous_score": previous_score,
             "new_score": new_score,
             "score_improvement": new_score - previous_score,
             "suggestions": suggestions,
             "reasoning": llm_evaluation.get("reasoning", ""),
-            "static_breakdown": breakdown,
+            "chain_of_thought": chain_of_thought,  # CoT reasoning
+            "static_breakdown": static_analysis.get("breakdown", {}),
             "metric_changes": metric_changes,
             "previous_categories": previous_categories,
             "new_categories": new_categories
         })
         
-        # Kalite profilini güncelle
+        # Kalite profilini güncelle - DİNAMİK ÖNERİLER ile
         reasoning = llm_evaluation.get("reasoning", "")
-        feedback_text = "\n".join([f"- {s['area']}: {s['action']}" for s in suggestions]) if suggestions else "Kodun kalitesini artır"
+        feedback_text = format_suggestions_for_prompt(suggestions)
         
-        new_quality_profile = f"""### İTERASYON {iteration} FEEDBACK
+        # ROLLBACK MEKANİZMASI: Skor düştüyse önceki kodu koru
+        rollback_applied = False
+        final_code = new_code
+        final_score = new_score
+        final_categories = new_categories
+        
+        if new_score < previous_score - 2:  # 2 puandan fazla düşüş varsa rollback
+            print(f"⚠️  ROLLBACK: Skor {previous_score:.1f} → {new_score:.1f} düştü. Önceki kod korunuyor.")
+            rollback_applied = True
+            final_code = previous_code
+            final_score = previous_score
+            final_categories = previous_categories
+        else:
+            print(f"✅ İyileştirme: {previous_score:.1f} → {new_score:.1f}")
+        
+        new_quality_profile = f"""### İTERASYON {iteration} FEEDBACK (CoT)
 
 **Mevcut Skor**: {previous_score}/100 → {new_score}/100 (Değişim: {new_score - previous_score:+.1f})
+{f"**⚠️ ROLLBACK UYGULANDI** - Önceki kod korundu" if rollback_applied else ""}
 
 **LLM Semantic Değerlendirmesi**:
 {reasoning}
 
-**Tespit Edilen Sorunlar ve Öneriler**:
+**🧠 Chain-of-Thought Dinamik Öneriler**:
 {feedback_text}
 
-**ÖNEMLİ**: Yukarıdaki önerileri DİKKATLE uygula. Her bir sorunu FİZİKSEL OLARAK düzelt."""
+{f"**Özet**: {cot_summary}" if cot_summary else ""}
+
+**ÖNEMLİ**: Yukarıdaki ÖNCELİKLİ önerileri DİKKATLE uygula. Yüksek öncelikli olanları MUTLAKA düzelt."""
         
         print(f"\n📋 UPDATED QUALITY PROFILE ({len(new_quality_profile)} karakter):")
         print(new_quality_profile[:500] + "..." if len(new_quality_profile) > 500 else new_quality_profile)
         print()
         
         return {
-            "current_score": new_score,
-            "final_quality_score": new_score,
-            "hybrid_score": new_score,
+            "current_code": final_code,  # Rollback varsa önceki, yoksa yeni kod
+            "current_score": final_score,
+            "final_quality_score": final_score,
+            "hybrid_score": final_score,
             "feedback_iterations": feedback_iter,
             "quality_profile": new_quality_profile,
-            "previous_categories": new_categories,
+            "previous_categories": final_categories,
             "iteration_count": iteration + 1
         }
 
@@ -565,9 +689,14 @@ hybrid_graph = workflow.compile()
 
 
 # --- Public Interface ---
-def run_hybrid_workflow(prompt: str, quality_threshold: float = 70.0, max_iterations: int = 3) -> Dict[str, Any]:
+def run_hybrid_workflow(prompt: str, quality_threshold: float = None, max_iterations: int = 10) -> Dict[str, Any]:
     """
     Hybrid workflow çalıştır
+    
+    Args:
+        prompt: Kullanıcı prompt'u
+        quality_threshold: Kalite eşiği (None ise dinamik hesaplanır)
+        max_iterations: Maksimum iterasyon sayısı
     
     Returns:
         {
@@ -581,11 +710,15 @@ def run_hybrid_workflow(prompt: str, quality_threshold: float = 70.0, max_iterat
             "status": "direct_output" | "improved_via_feedback"
         }
     """
+    # Dinamik threshold hesapla veya verilen değeri kullan
+    if quality_threshold is None:
+        quality_threshold = calculate_dynamic_threshold(prompt)
+    
     print(f"\n{'='*60}")
     print(f"🚀 HYBRID WORKFLOW BAŞLIYOR")
     print(f"{'='*60}")
     print(f"Prompt: {prompt[:100]}...")
-    print(f"Kalite Eşiği: {quality_threshold}/100")
+    print(f"Kalite Eşiği: {quality_threshold}/100 {'(📊 Dinamik)' if quality_threshold != 70.0 else ''}")
     print(f"Max İterasyon: {max_iterations}")
     print(f"{'='*60}\n")
     
@@ -632,10 +765,13 @@ def run_hybrid_workflow(prompt: str, quality_threshold: float = 70.0, max_iterat
         # Extract model scores from round1_scores
         round1_scores = result.get("round1_scores", {})
         
-        # Get hybrid scores for each model
-        llama_score = round1_scores.get("CodeLlama 70B", {}).get("hybrid_score", 0.0)
-        deepseek_score = round1_scores.get("DeepSeek V3", {}).get("hybrid_score", 0.0)
-        gemini_score = round1_scores.get("Gemini 2.0 Flash", {}).get("hybrid_score", 0.0)
+        # Dinamik model isimlerini al
+        model_names = get_model_names()
+        
+        # Get hybrid scores for each model - Dinamik isimlerle
+        llama_score = round1_scores.get(model_names["model_1"], {}).get("hybrid_score", 0.0)
+        deepseek_score = round1_scores.get(model_names["model_2"], {}).get("hybrid_score", 0.0)
+        gemini_score = round1_scores.get(model_names["model_3"], {}).get("hybrid_score", 0.0)
         
         # Determine status
         iteration_count = result.get("iteration_count", 0) - 1  # Subtract 1 because it's incremented at start

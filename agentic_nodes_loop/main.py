@@ -33,9 +33,8 @@ def serve_index():
 @app.post("/generate")
 def generate_endpoint(req: PromptRequest) -> Dict:
     """
-    YENİ: Hybrid Workflow Endpoint
-    
-    1. İlk tur: 3 model (Llama, DeepSeek, Gemini) kod üretir
+    Hybrid Workflow Endpoint
+    1. İlk tur: 3 model kod üretir
     2. 4 metrikle analiz → Kazanan seçilir  
     3. Eşik kontrolü:
        - >= 70 → Direkt çıktı
@@ -43,7 +42,7 @@ def generate_endpoint(req: PromptRequest) -> Dict:
     """
     result = run_hybrid_workflow(
         prompt=req.prompt,
-        quality_threshold=70.0,
-        max_iterations=3
+        quality_threshold=70.0,  # Sabit eşik
+        max_iterations=10
     )
     return result
