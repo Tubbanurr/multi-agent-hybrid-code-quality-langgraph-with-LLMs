@@ -17,7 +17,8 @@ class AdvancedCodeJudge:
     Multi-layered code quality analyzer using industry-standard tools.
     """
     
-    def __init__(self):
+    def __init__(self, metric_weights: Dict[str, int] = None):
+        # Default weights
         self.weights = {
             "ast_structure": 20,
             "pylint_score": 25,
@@ -25,6 +26,58 @@ class AdvancedCodeJudge:
             "security": 15,
             "style": 10,
             "type_hints": 10
+        }
+        
+        # Override if provided
+        if metric_weights:
+            self.weights.update(metric_weights)
+
+    # ... (rest of methods) ...
+
+    def get_hybrid_score(self, static_analysis: Dict[str, Any], llm_evaluation: Dict[str, Any], 
+                        static_weight: float = 0.7, llm_weight: float = 0.3) -> Dict[str, Any]:
+        """
+        Combines static analysis and LLM evaluation into hybrid score with dynamic weights.
+        
+        Args:
+            static_analysis: Output from score_code()
+            llm_evaluation: Output from LLMJudge.evaluate_code()
+            static_weight: Weight for static analysis (default 0.7)
+            llm_weight: Weight for LLM evaluation (default 0.3)
+        
+        Returns:
+            {
+                "hybrid_score": 0-100,
+                "static_score": 0-100,
+                "llm_score": 0-100,
+                "weights": {"static": float, "llm": float},
+                "breakdown": {...}
+            }
+        """
+        static_score = static_analysis["total_score"]
+        llm_score = llm_evaluation["semantic_score"]
+        
+        # Normalize weights to sum to 1.0 just in case
+        total_weight = static_weight + llm_weight
+        if total_weight > 0:
+            w_static = static_weight / total_weight
+            w_llm = llm_weight / total_weight
+        else:
+            w_static = 0.7
+            w_llm = 0.3
+        
+        # Hybrid formula
+        hybrid_score = int((static_score * w_static) + (llm_score * w_llm))
+        
+        return {
+            "hybrid_score": hybrid_score,
+            "static_score": static_score,
+            "llm_score": llm_score,
+            "weights": {"static": w_static, "llm": w_llm},
+            "breakdown": {
+                "static_analysis": static_analysis,
+                "llm_evaluation": llm_evaluation
+            }
         }
     
     def clean_code(self, text: str) -> str:
@@ -414,34 +467,46 @@ class AdvancedCodeJudge:
         
         return result
     
-    def get_hybrid_score(self, static_analysis: Dict[str, Any], llm_evaluation: Dict[str, Any]) -> Dict[str, Any]:
+    def get_hybrid_score(self, static_analysis: Dict[str, Any], llm_evaluation: Dict[str, Any], 
+                        static_weight: float = 0.7, llm_weight: float = 0.3) -> Dict[str, Any]:
         """
-        Combines static analysis (70%) and LLM evaluation (30%) into hybrid score.
+        Combines static analysis and LLM evaluation into hybrid score with dynamic weights.
         
         Args:
             static_analysis: Output from score_code()
             llm_evaluation: Output from LLMJudge.evaluate_code()
+            static_weight: Weight for static analysis (default 0.7)
+            llm_weight: Weight for LLM evaluation (default 0.3)
         
         Returns:
             {
                 "hybrid_score": 0-100,
                 "static_score": 0-100,
                 "llm_score": 0-100,
-                "weights": {"static": 0.7, "llm": 0.3},
+                "weights": {"static": float, "llm": float},
                 "breakdown": {...}
             }
         """
         static_score = static_analysis["total_score"]
         llm_score = llm_evaluation["semantic_score"]
         
-        # Hybrid formula: 70% static + 30% LLM
-        hybrid_score = int((static_score * 0.7) + (llm_score * 0.3))
+        # Normalize weights to sum to 1.0 just in case
+        total_weight = static_weight + llm_weight
+        if total_weight > 0:
+            w_static = static_weight / total_weight
+            w_llm = llm_weight / total_weight
+        else:
+            w_static = 0.7
+            w_llm = 0.3
+        
+        # Hybrid formula
+        hybrid_score = int((static_score * w_static) + (llm_score * w_llm))
         
         return {
             "hybrid_score": hybrid_score,
             "static_score": static_score,
             "llm_score": llm_score,
-            "weights": {"static": 0.7, "llm": 0.3},
+            "weights": {"static": w_static, "llm": w_llm},
             "breakdown": {
                 "static_analysis": static_analysis,
                 "llm_evaluation": llm_evaluation

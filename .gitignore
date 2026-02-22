@@ -5,3 +5,17 @@ venv/
 *.pyc
 .idea/
 .vscode/
+.env.local
+.env.*.local
+*.py[cod]
+*.pyo
+.venv/
+env/
+*.swp
+Thumbs.db
+node_modules/
+*.log
+logs/
+dist/
+build/
+*.egg-info/

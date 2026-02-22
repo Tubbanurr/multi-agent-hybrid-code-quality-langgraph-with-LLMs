@@ -24,6 +24,9 @@ app.add_middleware(
 
 class PromptRequest(BaseModel):
     prompt: str
+    static_weight: float = 0.7
+    llm_weight: float = 0.3
+    metric_weights: Dict[str, int] = None
 
 @app.get("/", response_class=HTMLResponse)
 def serve_index():
@@ -42,7 +45,10 @@ def generate_endpoint(req: PromptRequest) -> Dict:
     """
     result = run_hybrid_workflow(
         prompt=req.prompt,
-        quality_threshold=70.0,  # Sabit eşik
-        max_iterations=10
+        quality_threshold=70.0,
+        max_iterations=10,
+        static_weight=req.static_weight,
+        llm_weight=req.llm_weight,
+        metric_weights=req.metric_weights
     )
     return result

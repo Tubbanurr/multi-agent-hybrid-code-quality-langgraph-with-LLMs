@@ -1,26 +1,134 @@
-Request_ID,User_Prompt,Model_Llama_Score,Model_DeepSeek_Score,Model_Gemini_Score,Initial_Winner,Iteration_Count,Final_Score,Status,Timestamp
-REQ_20260201_212513_69af5ada,python toplama kodu ver : 2+3,64.0,20.0,20.0,CodeLlama 70B,1,72.0,SUCCESS,2026-02-01 21:25
-REQ_20260201_213126_e2cff1b6,binary search yapan python kodu ver,66.0,20.0,20.0,CodeLlama 70B,4,71.0,SUCCESS,2026-02-01 21:31
-REQ_20260201_215137_0a2ab7b8,binary ve fibonacci yapan python kodu ver,67.0,20.0,20.0,CodeLlama 70B,9,69.0,MAX_ITER_REACHED,2026-02-01 21:51
-REQ_20260202_200611_b8c620d0,python ile. yazılmış içinde dictionary yapısı örneği olan bir kod yaz,21.0,21.0,21.0,CodeLlama 70B,9,21.0,MAX_ITER_REACHED,2026-02-02 20:06
-REQ_20260202_200933_4822b721,python ile. yazılmış içinde dictionary yapısı örneği olan bir kod yaz,52.0,21.0,21.0,CodeLlama 70B,9,58.0,MAX_ITER_REACHED,2026-02-02 20:09
-REQ_20260202_220001_ad71b9bf,"write a bubble search algorithm with python",55.0,21.0,21.0,CodeLlama 70B,9,58.0,MAX_ITER_REACHED,2026-02-02 22:00
-REQ_20260203_215944_7aebd312,python ile zar atma algoritması yaz,0.0,0.0,0.0,Qwen2.5-Coder (Ollama),9,59.0,MAX_ITER_REACHED,2026-02-03 21:59
-REQ_20260203_224756_75b8b1ac,python ile bubble sort algoritması yaz,0.0,0.0,0.0,Llama 3.1 (Ollama),9,59.0,MAX_ITER_REACHED,2026-02-03 22:47
-REQ_20260204_004807_df5021f8,5in karesini alan kodu python ile yaz,0.0,0.0,0.0,CodeLlama (Ollama),9,58.0,MAX_ITER_REACHED,2026-02-04 00:48
-REQ_20260204_013507_e1a258ba,"50 nin katlarını 1000 e kadar yazdıran python kodunu yaz",0.0,0.0,0.0,Qwen2.5-Coder (Ollama),2,71.0,SUCCESS,2026-02-04 01:35
-REQ_20260204_014235_cddf8753,5+5 hesapla python,0.0,0.0,0.0,Qwen2.5-Coder (Ollama),4,75.0,SUCCESS,2026-02-04 01:42
-REQ_20260204_015730_8e271909,"9 - 5 in python kodunu yaz",0.0,0.0,0.0,Llama 3.1 (Ollama),9,64.0,MAX_ITER_REACHED,2026-02-04 01:57
-REQ_20260204_020437_8a1b71f4,"binary search algoritmasını yaz",0.0,0.0,0.0,CodeLlama (Ollama),4,71.0,SUCCESS,2026-02-04 02:04
-REQ_20260204_154335_0765d42d,python ile kök alma işlemini yapan bir fonsikyon yaz,0.0,0.0,0.0,Qwen2.5-Coder (Ollama),1,75.0,SUCCESS,2026-02-04 15:43
-REQ_20260204_163532_23fae132,python ile bubble search algoritması kodunu yaz,0.0,0.0,0.0,Qwen2.5-Coder (Ollama),3,70.0,SUCCESS,2026-02-04 16:35
-REQ_20260204_165735_9bf038c7,"bubble search algoritmasını python ile yaz",0.0,0.0,0.0,Qwen2.5-Coder (Ollama),3,70.0,SUCCESS,2026-02-04 16:57
-REQ_20260205_133112_2bfc7efe,"Kullanıcılardan gelen ham işlem verilerini (JSON formatında) alan, bunları asenkron olarak işleyen v",70.0,50.0,67.0,Qwen2.5-Coder (Ollama),1,69.0,SUCCESS,2026-02-05 13:31
-REQ_20260205_134922_985a2a70,"Kullanıcılardan gelen ham işlem verilerini (JSON formatında) alan, bunları asenkron olarak işleyen v",68.0,48.0,64.0,Qwen2.5-Coder (Ollama),1,68.0,SUCCESS,2026-02-05 13:49
-REQ_20260205_135337_b6e5b608,"Kullanıcılardan gelen ham işlem verilerini (JSON formatında) alan, bunları asenkron olarak işleyen v",68.0,45.0,67.0,Qwen2.5-Coder (Ollama),0,68.0,SUCCESS,2026-02-05 13:53
-REQ_20260205_140011_9a74d549,"2 ile 3 ü toplayan kodu yaz python ile
-",69.0,70.0,64.0,CodeLlama (Ollama),0,70.0,SUCCESS,2026-02-05 14:00
-REQ_20260205_143131_e82b659e,"2 + 4 kodunu python ile yaz
-",69.0,69.0,69.0,Qwen2.5-Coder (Ollama),1,74.0,SUCCESS,2026-02-05 14:31
-REQ_20260205_150746_99495860,"Kullanıcılardan gelen ham işlem verilerini (JSON formatında) alan, bunları asenkron olarak işleyen v",66.0,42.0,69.0,Llama 3.1 (Ollama),9,68.0,SUCCESS,2026-02-05 15:07
-REQ_20260205_152322_e0807e75,"Parametre olarak bir tam sayı listesi alan ve bu liste içerisindeki sadece asal sayıları bulup, bunl",68.0,68.0,66.0,Qwen2.5-Coder (Ollama),2,74.0,SUCCESS,2026-02-05 15:23
+Request_ID,User_Prompt,Model_1_Name,Model_2_Name,Model_3_Name,Judge_Model,Static_Weight,LLM_Weight,Model_1_Static_Score,Model_1_LLM_Score,Model_1_Hybrid_Score,Model_2_Static_Score,Model_2_LLM_Score,Model_2_Hybrid_Score,Model_3_Static_Score,Model_3_LLM_Score,Model_3_Hybrid_Score,Initial_Winner,Iteration_Count,Final_Score,Status,Timestamp,Generated_Code,Judge_Reasoning
+REQ_20260222_200033_c0569574,"Python ile bubble sort algoritmasını yaz, type hint ve docstring ekle ",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,65.0,91.0,72.0,65.0,86.0,71.0,60.0,87.0,68.0,Qwen2.5-Coder (Ollama),0,72.0,SUCCESS,2026-02-22 20:00,"```python
+def bubble_sort(arr: list[int]) -> list[int]:
+    """"""
+    Bubble Sort algorithm implementation.
+
+    Args:
+        arr (list[int]): The list of integers to be sorted.
+
+    Returns:
+        list[int]: The sorted list.
+    """"""
+    n = len(arr)
+    for i in range(n):
+        # Flag to check if any swap occurred
+        swapped = False
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                # Swap the elements
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+                swapped = True
+        # If no swap occurred, the list is already sorted
+        if not swapped:
+            break
+    return arr
+```","The code correctly implements the bubble sort algorithm with proper type hints and a docstring. It efficiently handles early termination when no swaps occur, indicating the array is sorted. The code follows Python best practices by using meaningful variable names and includes necessary documentation. However, minor improvements could be made to enhance readability and variable naming conventions."
+REQ_20260222_200718_a6420e4a,"Python ile bağlı liste (linked list) veri yapısını class olarak yaz, ekleme, silme ve arama metodlarını ekle, hata yönetimi ve type hint kullan ",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,69.0,0.0,48.0,58.0,74.0,62.0,67.0,96.0,75.0,Llama 3.1 (Ollama),0,75.0,SUCCESS,2026-02-22 20:07,"```python
+from typing import TypeVar, Generic, Optional
+
+T = TypeVar('T')
+
+class Node(Generic[T]):
+    """"""Linked list node.""""""
+    
+    def __init__(self, value: T):
+        self.value = value
+        self.next = None
+
+
+class LinkedList(Generic[T]):
+    """"""Linked list data structure.""""""
+    
+    def __init__(self):
+        self.head = None
+
+    def append(self, value: T) -> None:
+        """"""Add a new node to the end of the linked list.""""""
+        
+        if not self.head:
+            self.head = Node(value)
+        else:
+            current = self.head
+            while current.next:
+                current = current.next
+            current.next = Node(value)
+
+    def remove(self, value: T) -> bool:
+        """"""Remove the first occurrence of a node with the given value.""""""
+        
+        if not self.head:
+            return False
+
+        if self.head.value == value:
+            self.head = self.head.next
+            return True
+
+        current = self.head
+        while current.next:
+            if current.next.value == value:
+                current.next = current.next.next
+                return True
+            current = current.next
+
+        return False
+
+    def search(self, value: T) -> Optional[T]:
+        """"""Find the first occurrence of a node with the given value.""""""
+        
+        current = self.head
+        while current:
+            if current.value == value:
+                return current.value
+            current = current.next
+
+        return None
+
+    def __str__(self) -> str:
+        """"""Return a string representation of the linked list.""""""
+        
+        values = []
+        current = self.head
+        while current:
+            values.append(str(current.value))
+            current = current.next
+        return ' -> '.join(values)
+
+
+# Example usage:
+
+linked_list = LinkedList[int]
+
+linked_list.append(1)
+linked_list.append(2)
+linked_list.append(3)
+
+print(linked_list)  # Output: 1 -> 2 -> 3
+
+print(linked_list.search(2))  # Output: 2
+print(linked_list.remove(2))   # Output: True
+print(linked_list)           # Output: 1 -> 3
+
+linked_list.append(4)
+print(linked_list)          # Output: 1 -> 3 -> 4
+```","The provided Python code correctly implements a linked list with standard operations (append, remove, search) and follows good practices. The code is logically sound and efficient for the given problem. Minor improvements could be made to enhance error handling and documentation, but overall, it meets high standards of correctness and readability."
+REQ_20260222_201142_ab3d357e,write a fibonacci algorithm code with python ,Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,58.0,100.0,70.0,58.0,81.0,64.0,53.0,0.0,37.0,Qwen2.5-Coder (Ollama),0,70.0,SUCCESS,2026-02-22 20:11,"```python
+def fibonacci(n):
+    if n <= 0:
+        return []
+    elif n == 1:
+        return [0]
+    elif n == 2:
+        return [0, 1]
+    
+    fib_sequence = [0, 1]
+    for i in range(2, n):
+        next_value = fib_sequence[-1] + fib_sequence[-2]
+        fib_sequence.append(next_value)
+    
+    return fib_sequence
+
+# Example usage:
+n = 10
+print(fibonacci(n))
+```","The code correctly implements the Fibonacci sequence with proper handling of edge cases. It uses an efficient iterative approach, follows Python best practices with clear variable names and minimal error handling, and is highly readable."
