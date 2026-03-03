@@ -6,6 +6,7 @@ Combines: AST, Pylint, Radon, Bandit, Flake8, and Type Checking
 import ast
 import re
 import subprocess
+import sys
 import tempfile
 import os
 from typing import Dict, Any
@@ -170,26 +171,29 @@ class AdvancedCodeJudge:
                 f.write(code)
                 temp_file = f.name
             
-            # Run pylint with python -m
+            # Run pylint in text mode with score
+            # NOTE: --output-format=json suppresses the score line entirely,
+            # so we use text mode and parse the score from stdout.
             proc = subprocess.run(
-                ['python3', '-m', 'pylint', temp_file, '--output-format=json', '--score=yes'],
+                [sys.executable, '-m', 'pylint', temp_file, '--score=yes'],
                 capture_output=True,
                 text=True,
                 timeout=15
             )
             
-            # Parse output
+            # Count issues from stdout (each line with a message type like C0114, W0611, etc.)
             if proc.stdout:
-                try:
-                    data = json.loads(proc.stdout)
-                    result["issues"] = data if isinstance(data, list) else []
-                except json.JSONDecodeError:
-                    pass
+                issue_lines = [
+                    line for line in proc.stdout.strip().split('\n')
+                    if re.search(r':\d+:\d+: [CRWEF]\d{4}:', line)
+                ]
+                result["issues"] = issue_lines
             
-            # Extract score from stderr (pylint puts score there)
-            score_match = re.search(r'Your code has been rated at ([\d\.]+)/10', proc.stderr)
+            # Extract score from stdout (pylint outputs it there in text mode)
+            all_output = (proc.stdout or '') + (proc.stderr or '')
+            score_match = re.search(r'Your code has been rated at ([\-\d\.]+)/10', all_output)
             if score_match:
-                raw_score = float(score_match.group(1))
+                raw_score = max(0.0, float(score_match.group(1)))
                 result["raw_score"] = raw_score
                 result["scaled_score"] = int((raw_score / 10) * 25)  # Scale to 25 points
             
@@ -224,7 +228,7 @@ class AdvancedCodeJudge:
             
             # Run radon cc (cyclomatic complexity) with python -m
             proc = subprocess.run(
-                ['python3', '-m', 'radon', 'cc', temp_file, '-j'],
+                [sys.executable, '-m', 'radon', 'cc', temp_file, '-j'],
                 capture_output=True,
                 text=True,
                 timeout=15
@@ -288,7 +292,7 @@ class AdvancedCodeJudge:
             
             # Run bandit with python -m
             proc = subprocess.run(
-                ['python3', '-m', 'bandit', temp_file, '-f', 'json'],
+                [sys.executable, '-m', 'bandit', temp_file, '-f', 'json'],
                 capture_output=True,
                 text=True,
                 timeout=15
@@ -345,7 +349,7 @@ class AdvancedCodeJudge:
             
             # Run flake8 with python -m
             proc = subprocess.run(
-                ['python3', '-m', 'flake8', temp_file, '--count'],
+                [sys.executable, '-m', 'flake8', temp_file, '--count'],
                 capture_output=True,
                 text=True,
                 timeout=15

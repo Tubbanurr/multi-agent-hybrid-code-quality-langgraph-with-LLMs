@@ -16,7 +16,7 @@ OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 
 # Model configurations (optimized for 24GB RAM)
 OLLAMA_MODELS = {
-    "judge": os.getenv("OLLAMA_JUDGE_MODEL", "deepseek-r1:14b"),
+    "judge": os.getenv("OLLAMA_JUDGE_MODEL", "deepseek-r1:7b"),
     "coder_1": os.getenv("OLLAMA_CODER_MODEL_1", "qwen2.5-coder:7b"),
     "coder_2": os.getenv("OLLAMA_CODER_MODEL_2", "codellama:7b"),
     "coder_3": os.getenv("OLLAMA_CODER_MODEL_3", "llama3.1:8b"),

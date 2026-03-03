@@ -45,16 +45,19 @@ except Exception as e:
 
 
 # --- Ollama Functions (conditional import) ---
+OLLAMA_MODEL_NAMES = {}
 if USE_OLLAMA:
     try:
         from module.ollama_client import (
             call_qwen_coder,
             call_codellama_ollama,
             call_llama31,
-            check_ollama_available
+            check_ollama_available,
+            OLLAMA_MODELS
         )
         OLLAMA_AVAILABLE = check_ollama_available()
         if OLLAMA_AVAILABLE:
+            OLLAMA_MODEL_NAMES = OLLAMA_MODELS
             print("✅ Ollama aktif - Yerel modeller kullanılacak")
         else:
             print("⚠️ Ollama servisi bulunamadı - Cloud API'lere fallback")
@@ -75,7 +78,7 @@ def call_codellama(prompt: str) -> str:
     - Cloud mode: Llama 3.3 70B via Groq
     """
     if USE_OLLAMA and OLLAMA_AVAILABLE:
-        print("  📡 Qwen2.5-Coder (Ollama) kullanılıyor...")
+        print(f"  📡 {OLLAMA_MODEL_NAMES.get('coder_1', 'Coder 1')} (Ollama) kullanılıyor...")
         return call_qwen_coder(prompt)
     
     # Fallback to Groq
@@ -105,7 +108,7 @@ def call_deepseek(prompt: str) -> str:
     - Cloud mode: DeepSeek V3 via DeepSeek API
     """
     if USE_OLLAMA and OLLAMA_AVAILABLE:
-        print("  📡 CodeLlama (Ollama) kullanılıyor...")
+        print(f"  📡 {OLLAMA_MODEL_NAMES.get('coder_2', 'Coder 2')} (Ollama) kullanılıyor...")
         return call_codellama_ollama(prompt)
     
     # Fallback to DeepSeek API
@@ -137,7 +140,7 @@ def call_gemini(prompt: str) -> str:
     Includes retry with exponential backoff for 429 rate-limit errors.
     """
     if USE_OLLAMA and OLLAMA_AVAILABLE:
-        print("  📡 Llama 3.1 (Ollama) kullanılıyor...")
+        print(f"  📡 {OLLAMA_MODEL_NAMES.get('coder_3', 'Coder 3')} (Ollama) kullanılıyor...")
         return call_llama31(prompt)
     
     # Fallback to Gemini API
@@ -170,12 +173,12 @@ def call_gemini(prompt: str) -> str:
 # --- Model Names for Display ---
 
 def get_model_names() -> dict:
-    """Return display names for the current model configuration."""
+    """Return display names for the current model configuration (dynamically from .env)."""
     if USE_OLLAMA and OLLAMA_AVAILABLE:
         return {
-            "model_1": "Qwen2.5-Coder (Ollama)",
-            "model_2": "CodeLlama (Ollama)",
-            "model_3": "Llama 3.1 (Ollama)"
+            "model_1": f"{OLLAMA_MODEL_NAMES.get('coder_1', 'Coder 1')} (Ollama)",
+            "model_2": f"{OLLAMA_MODEL_NAMES.get('coder_2', 'Coder 2')} (Ollama)",
+            "model_3": f"{OLLAMA_MODEL_NAMES.get('coder_3', 'Coder 3')} (Ollama)"
         }
     else:
         return {

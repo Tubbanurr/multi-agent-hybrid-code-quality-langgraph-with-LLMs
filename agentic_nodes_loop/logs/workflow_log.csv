@@ -132,3 +132,228 @@ def fibonacci(n):
 n = 10
 print(fibonacci(n))
 ```","The code correctly implements the Fibonacci sequence with proper handling of edge cases. It uses an efficient iterative approach, follows Python best practices with clear variable names and minimal error handling, and is highly readable."
+REQ_20260226_151616_9e570726,2+2,Llama 3.3 70B (Groq),DeepSeek V3,Gemini 2.0 Flash,Llama 3.3 70B (Groq),0.70,0.30,40.0,90.0,55.0,31.0,0.0,21.0,31.0,0.0,21.0,Llama 3.3 70B (Groq),9,55.0,SUCCESS,2026-02-26 15:16,"```python
+result = 2 + 2
+print(result)
+```","The provided response is an error message and not a code, it does not attempt to solve the problem of evaluating the expression 2+2."
+REQ_20260226_151716_6f12d491,python kodu ver,Llama 3.3 70B (Groq),DeepSeek V3,Gemini 2.0 Flash,Llama 3.3 70B (Groq),0.70,0.30,54.0,85.0,63.0,31.0,0.0,21.0,31.0,0.0,21.0,Llama 3.3 70B (Groq),9,63.0,SUCCESS,2026-02-26 15:17,"```python
+# Örnek Python Kodu
+
+def selamla(isim: str) -> None:
+    """"""Kullanıcıya selam verir.""""""
+    print(f""Merhaba, {isim}!"")
+
+def topla(sayi1: int, sayi2: int) -> int:
+    """"""İki sayıyı toplar.""""""
+    return sayi1 + sayi2
+
+def main() -> None:
+    """"""Ana fonksiyon.""""""
+    isim = ""Kullanıcı""
+    selamla(isim)
+    sayi1 = 5
+    sayi2 = 7
+    sonuc = topla(sayi1, sayi2)
+    print(f""{sayi1} + {sayi2} = {sonuc}"")
+
+if __name__ == ""__main__"":
+    main()
+```","The provided text is an error message, not a Python code, and therefore cannot be evaluated as a code snippet."
+REQ_20260226_172323_28e6dcb2,fibonacci yazan python kodu ver,Llama 3.3 70B (Groq),DeepSeek V3,Gemini 2.0 Flash,None (Fallback),0.70,0.30,31.0,0.0,21.0,31.0,0.0,21.0,31.0,0.0,21.0,Llama 3.3 70B (Groq),9,21.0,SUCCESS,2026-02-26 17:23,Gemini API Key missing or client init failed.,LLM evaluation unavailable: GROQ_API_KEY not configured
+REQ_20260302_200643_bc4e7300,fibonacci python kodu ver,Llama 3.3 70B (Groq),DeepSeek V3,Gemini 2.0 Flash,None (Fallback),0.70,0.30,31.0,0.0,21.0,31.0,0.0,21.0,31.0,0.0,21.0,Llama 3.3 70B (Groq),9,21.0,SUCCESS,2026-03-02 20:06,Gemini API Key missing or client init failed.,LLM evaluation unavailable: GROQ_API_KEY not configured
+REQ_20260302_200920_f62800d9,fibonacci python kodu ver,Llama 3.3 70B (Groq),DeepSeek V3,Gemini 2.0 Flash,None (Fallback),0.70,0.30,31.0,0.0,21.0,31.0,0.0,21.0,31.0,0.0,21.0,Llama 3.3 70B (Groq),9,21.0,SUCCESS,2026-03-02 20:09,Gemini API Key missing or client init failed.,LLM evaluation unavailable: GROQ_API_KEY not configured
+REQ_20260302_203603_56319877,fibonacci python kodu ver,Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,0.0,29.0,42.0,0.0,29.0,42.0,0.0,29.0,Qwen2.5-Coder (Ollama),9,29.0,SUCCESS,2026-03-02 20:36,"```
+def fibonacci(n):
+    if n <= 1:
+        return n
+    else:
+        return fibonacci(n-1) + fibonacci(n-2)
+```",Ollama Error: HTTP 500
+REQ_20260302_213651_0c7cdc4b,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli. ",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,90.0,56.0,40.0,90.0,55.0,42.0,95.0,57.0,Llama 3.1 (Ollama),2,56.0,SUCCESS,2026-03-02 21:36,"```python
+def calculate_average(numbers):
+    """"""
+    Calculate the average of a list of numbers.
+
+    Args:
+        numbers (list): A list of numbers. If the list is empty, returns None.
+
+    Returns:
+        float: The average of the numbers in the list.
+    """"""
+    if not numbers:
+        return None
+    total = sum(numbers)
+    average = total / len(numbers)
+    return average
+
+# Example usage:
+numbers = [10, 20, 30]
+print(calculate_average(numbers))  # Output: 20.0
+
+empty_list = []
+print(calculate_average(empty_list))  # Output: None
+```","The function correctly calculates the average of a list, handling empty lists by returning None. It uses proper docstrings and error-prone variable names but could improve clarity with better comments and more descriptive messages."
+REQ_20260302_215312_a016fc3e,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,100.0,59.0,40.0,73.0,49.0,42.0,100.0,59.0,Qwen2.5-Coder (Ollama),9,57.0,SUCCESS,2026-03-02 21:53,"```python
+def calculate_average(numbers):
+    """"""
+    Calculates the average of a list of numbers.
+
+    Args:
+        numbers (list): A list of numbers.
+
+    Returns:
+        float: The average of the numbers. Returns None if the list is empty.
+    """"""
+    try:
+        if not numbers:
+            return None
+        
+        total = sum(numbers)
+        average = total / len(numbers)
+        return average
+    except Exception as e:
+        print(f""An error occurred: {e}"")
+        return None
+
+# Test cases
+print(calculate_average([]))  # Output: None
+print(calculate_average([1, 2, 3, 4, 5]))  # Output: 3.0
+```","The code correctly calculates the average of a list of numbers. It handles empty lists by returning None, which is appropriate. The logic is efficient with clear variable names and error handling. The function follows best practices with good docstring and readability."
+REQ_20260303_124255_f8921f72,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,85.0,54.0,40.0,75.0,50.0,42.0,96.0,58.0,Llama 3.1 (Ollama),9,58.0,SUCCESS,2026-03-03 12:42,"```python
+def calculate_average(numbers):
+    """"""
+    Calculate the average of a list of numbers.
+
+    Args:
+        numbers (list): A list of numbers.
+
+    Returns:
+        float: The average of the numbers. Returns None if the list is empty.
+    """"""
+    try:
+        if not numbers:
+            return None
+        total = sum(numbers)
+        average = total / len(numbers)
+        return average
+    except TypeError as e:
+        print(f""Error: {e}"")
+        return None
+
+# Example usage:
+numbers = [1, 2, 3, 4, 5]
+print(calculate_average(numbers))  # Output: 3.0
+
+empty_list = []
+print(calculate_average(empty_list))  # Output: None
+```","The code correctly calculates the average of a list of numbers. It handles empty lists by returning None and uses try-except blocks for robustness. The logic is clear, well-commented, and follows PEP8 standards. Readability is excellent with concise variable names and logical separation of concerns."
+REQ_20260303_125736_1b4fac2b,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:1.5b (Ollama),llama3.2:3b (Ollama),qwen2.5-coder:1.5b (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,100.0,59.0,40.0,100.0,58.0,42.0,100.0,59.0,qwen2.5-coder:1.5b (Ollama),9,58.0,SUCCESS,2026-03-03 12:57,"```python
+def calculate_average(numbers):
+    """"""
+    Calculate the average of a list of numbers.
+
+    Args:
+        numbers (list): A list of numbers.
+
+    Returns:
+        float: The average of the numbers. Returns None if the list is empty.
+    """"""
+    try:
+        if not numbers:
+            return None
+        total = sum(numbers)
+        average = total / len(numbers)
+        return average
+    except TypeError as e:
+        print(f""Error: {e}"")
+        return None
+
+# Example usage:
+numbers = [1, 2, 3, 4, 5]
+print(calculate_average(numbers))  # Output: 3.0
+
+empty_list = []
+print(calculate_average(empty_list))  # Output: None
+```",No reasoning provided
+REQ_20260303_131050_9afcc2db,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:1.5b (Ollama),llama3.2:3b (Ollama),qwen2.5-coder:1.5b (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,100.0,59.0,40.0,100.0,58.0,42.0,100.0,59.0,qwen2.5-coder:1.5b (Ollama),9,55.0,SUCCESS,2026-03-03 13:10,"```python
+def calculate_average(numbers):
+    """"""
+    Calculates the average of a list of numbers.
+
+    Args:
+        numbers (list): A list of numbers.
+
+    Returns:
+        float: The average of the numbers. Returns None if the list is empty.
+    """"""
+    try:
+        if not numbers:
+            return None
+        total = sum(numbers)
+        count = len(numbers)
+        average = total / count
+        return average
+    except Exception as e:
+        print(f""An error occurred: {e}"")
+        return None
+
+# Example usage:
+print(calculate_average([1, 2, 3, 4, 5]))  # Output: 3.0
+print(calculate_average([]))               # Output: None
+```",No reasoning provided
+REQ_20260303_132020_b4013098,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:1.5b (Ollama),llama3.2:3b (Ollama),qwen2.5-coder:1.5b (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,85.0,54.0,40.0,100.0,58.0,42.0,85.0,54.0,llama3.2:3b (Ollama),9,57.0,SUCCESS,2026-03-03 13:20,"```python
+def liste_ortalama(lst):
+    """"""
+    Liste içinde bulunan sayıların ortalaması hesaplar.
+    
+    Args:
+        lst (list): Liste
+    
+    Returns:
+        float: Sayıların ortalaması, liste boşsa None döner.
+    """"""
+    if not lst:
+        return None
+    try:
+        return sum(lst) / len(lst)
+    except TypeError as e:
+        print(f""Hata: {e}"")
+        return None
+
+# Test cases
+print(liste_ortalama([1, 2, 3]))  # Output: 2.0
+print(liste_ortalama([]))       # Output: None
+print(liste_ortalama(""abc""))     # Output: Hata: unsupported operand type(s) for +: 'int' and 'str'
+```","The function correctly calculates the average of a list, handles empty lists by returning None, uses clear variable names, and follows best practices. However, it could be improved with better exception handling and reduced print statements for readability."
+REQ_20260303_133322_69225bc9,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli. ",qwen2.5-coder:1.5b (Ollama),llama3.2:3b (Ollama),qwen2.5-coder:1.5b (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,100.0,59.0,40.0,99.0,57.0,42.0,100.0,59.0,qwen2.5-coder:1.5b (Ollama),9,58.0,SUCCESS,2026-03-03 13:33,"```python
+def calculate_average(numbers):
+    """"""
+    Calculates the average of a list of numbers.
+    
+    Args:
+        numbers (list): A list of numbers. If the list is empty, returns None.
+        
+    Returns:
+        float: The average of the numbers in the list. Returns None if the list is empty.
+    """"""
+    try:
+        total = sum(numbers)
+        average = total / len(numbers)
+        return average
+    except ZeroDivisionError:
+        return None
+
+# Test cases
+print(calculate_average([1, 2, 3]))  # Output: 2.0
+print(calculate_average([]))       # Output: None
+```","The function calculates the average of a list of numbers correctly. It handles empty lists by returning None, uses efficient sum and division methods, includes proper error handling with try-except, has clear documentation, and is concise and readable."
+REQ_20260303_134807_bdc44232,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:1.5b (Ollama),llama3.2:3b (Ollama),qwen2.5-coder:1.5b (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,69.0,100.0,78.0,56.0,99.0,68.0,69.0,100.0,78.0,qwen2.5-coder:1.5b (Ollama),0,78.0,SUCCESS,2026-03-03 13:48,"```python
+def calculate_average(numbers):
+    if not numbers:
+        return None
+    total = sum(numbers)
+    average = total / len(numbers)
+    return average
+```
+
+This function takes a list of numbers as input and returns the average of those numbers. If the input list is empty, it returns `None`. The function first checks if the list is empty using the condition `if not numbers`. If the list is not empty, it calculates the sum of all elements in the list using the built-in `sum()` function and then divides this sum by the number of elements in the list to find the average. The result is returned as a float.",No reasoning provided
