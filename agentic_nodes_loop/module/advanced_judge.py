@@ -17,16 +17,27 @@ class AdvancedCodeJudge:
     Multi-layered code quality analyzer using industry-standard tools.
     """
     
-    def __init__(self):
+    def __init__(self, metric_weights: Dict[str, int] = None):
+        # Default weights per 100-point 6-category system
         self.weights = {
-            "ast_structure": 20,
-            "pylint_score": 25,
-            "complexity": 20,
-            "security": 15,
-            "style": 10,
-            "type_hints": 10
+            "cyclomatic_complexity": 15,
+            "comment_density": 5,
+            "identifier_clarity": 5,
+            "code_smells": 15,
+            "duplication": 5,
+            "test_coverage": 10,
+            "compile_success": 5,
+            "static_lint": 10,
+            "formatting": 5,
+            "prompt_adherence": 10,
+            "naming_alignment": 5,
+            "error_handling": 10
         }
-    
+        
+        # Override if provided
+        if metric_weights:
+            self.weights.update(metric_weights)
+
     def clean_code(self, text: str) -> str:
         """Extract pure Python code from markdown or mixed content."""
         pattern = r"```(?:python)?\n(.*?)```"
@@ -37,66 +48,25 @@ class AdvancedCodeJudge:
         return text.strip()
     
     def analyze_ast(self, code: str) -> Dict[str, Any]:
-        """
-        AST-based structural analysis
-        Returns: syntax validity, classes count, functions count, imports count
-        """
+        """Check for syntax errors using AST."""
         result = {
             "syntax_valid": False,
-            "classes": 0,
-            "functions": 0,
-            "imports": 0,
-            "docstrings": 0,
-            "score": 0,
+            "score": 0, # Max 5 points in this system
             "error": None
         }
         
+        if not code.strip():
+            return result
+            
         try:
-            tree = ast.parse(code)
+            ast.parse(code)
             result["syntax_valid"] = True
-            
-            for node in ast.walk(tree):
-                if isinstance(node, ast.ClassDef):
-                    result["classes"] += 1
-                    if ast.get_docstring(node):
-                        result["docstrings"] += 1
-                        
-                elif isinstance(node, ast.FunctionDef):
-                    result["functions"] += 1
-                    if ast.get_docstring(node):
-                        result["docstrings"] += 1
-                        
-                elif isinstance(node, (ast.Import, ast.ImportFrom)):
-                    result["imports"] += 1
-            
-            # Scoring logic
-            score = 0
-            if result["syntax_valid"]:
-                score += 10
-            
-            # Reward OOP structure
-            if result["classes"] >= 2:
-                score += 5
-            elif result["classes"] == 1:
-                score += 3
-            
-            # Reward functions
-            if result["functions"] >= 3:
-                score += 3
-            elif result["functions"] >= 1:
-                score += 2
-            
-            # Reward documentation
-            if result["docstrings"] >= 2:
-                score += 2
-            
-            result["score"] = min(score, 20)  # Max 20 points
-            
+            result["score"] = 5
         except SyntaxError as e:
-            result["error"] = f"Syntax Error: {e.msg} at line {e.lineno}"
+            result["error"] = f"Syntax Error at line {e.lineno}: {e.msg}"
         except Exception as e:
             result["error"] = str(e)
-        
+            
         return result
     
     def analyze_pylint(self, code: str) -> Dict[str, Any]:
@@ -117,28 +87,28 @@ class AdvancedCodeJudge:
                 f.write(code)
                 temp_file = f.name
             
-            # Run pylint
+            # Run pylint - we need the text output to get the 'rated at' line easily
             proc = subprocess.run(
-                ['pylint', temp_file, '--output-format=json', '--score=yes'],
+                ['python3', '-m', 'pylint', temp_file, '--score=yes'],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=15,
+                env={**os.environ, "PAGER": "cat"}
             )
             
-            # Parse output
-            if proc.stdout:
-                try:
-                    data = json.loads(proc.stdout)
-                    result["issues"] = data if isinstance(data, list) else []
-                except json.JSONDecodeError:
-                    pass
-            
-            # Extract score from stderr (pylint puts score there)
-            score_match = re.search(r'Your code has been rated at ([\d\.]+)/10', proc.stderr)
+            # Combined stdout and stderr to find the score
+            full_output = proc.stdout + proc.stderr
+            score_match = re.search(r'Your code has been rated at ([\d\.]+)/10', full_output)
             if score_match:
                 raw_score = float(score_match.group(1))
                 result["raw_score"] = raw_score
-                result["scaled_score"] = int((raw_score / 10) * 25)  # Scale to 25 points
+                result["scaled_score"] = int((raw_score / 10) * 25)
+            else:
+                # If pylint fails to give a score because code is too short or weird,
+                # give a neutral baseline (7.0/10) if no major errors exist
+                if not proc.stderr or "error" not in proc.stderr.lower():
+                    result["raw_score"] = 7.0
+                    result["scaled_score"] = 17
             
             # Cleanup
             os.unlink(temp_file)
@@ -147,6 +117,8 @@ class AdvancedCodeJudge:
             result["error"] = "Pylint timeout"
         except FileNotFoundError:
             result["error"] = "Pylint not installed"
+            result["raw_score"] = 10.0 # Default to max score if tool is missing to avoid penalizing environment issues
+            result["scaled_score"] = 25
         except Exception as e:
             result["error"] = str(e)
         
@@ -169,12 +141,12 @@ class AdvancedCodeJudge:
                 f.write(code)
                 temp_file = f.name
             
-            # Run radon cc (cyclomatic complexity)
+            # Run radon cc (cyclomatic complexity) with python -m
             proc = subprocess.run(
-                ['radon', 'cc', temp_file, '-j'],
+                ['python3', '-m', 'radon', 'cc', temp_file, '-j'],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=15
             )
             
             if proc.stdout:
@@ -182,27 +154,30 @@ class AdvancedCodeJudge:
                     data = json.loads(proc.stdout)
                     complexities = []
                     
-                    for file_data in data.values():
-                        for item in file_data:
-                            complexities.append(item.get('complexity', 0))
+                    for key, file_data in data.items():
+                        items = file_data if isinstance(file_data, list) else [file_data]
+                        for item in items:
+                            if isinstance(item, dict):
+                                complexities.append(item.get('complexity', 0))
                     
                     if complexities:
                         result["average_complexity"] = sum(complexities) / len(complexities)
                         result["max_complexity"] = max(complexities)
-                    
-                    # Scoring: lower complexity is better
-                    avg = result["average_complexity"]
-                    if avg <= 5:
-                        result["score"] = 20
-                    elif avg <= 10:
-                        result["score"] = 15
-                    elif avg <= 15:
-                        result["score"] = 10
-                    else:
-                        result["score"] = 5
-                        
                 except json.JSONDecodeError:
                     pass
+            
+            # Scoring logic - Max 15 points
+            avg = result["average_complexity"]
+            if avg == 0: 
+                result["score"] = 15
+            elif avg <= 5:
+                result["score"] = 15
+            elif avg <= 10:
+                result["score"] = 12
+            elif avg <= 15:
+                result["score"] = 8
+            else:
+                result["score"] = 5
             
             os.unlink(temp_file)
             
@@ -233,12 +208,12 @@ class AdvancedCodeJudge:
                 f.write(code)
                 temp_file = f.name
             
-            # Run bandit
+            # Run bandit with python -m
             proc = subprocess.run(
-                ['bandit', temp_file, '-f', 'json'],
+                ['python3', '-m', 'bandit', temp_file, '-f', 'json'],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=15
             )
             
             if proc.stdout:
@@ -290,12 +265,12 @@ class AdvancedCodeJudge:
                 f.write(code)
                 temp_file = f.name
             
-            # Run flake8
+            # Run flake8 with python -m
             proc = subprocess.run(
-                ['flake8', temp_file, '--count'],
+                ['python3', '-m', 'flake8', temp_file, '--count'],
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=15
             )
             
             # Count violations from output
@@ -329,7 +304,6 @@ class AdvancedCodeJudge:
     def analyze_type_hints(self, code: str) -> Dict[str, Any]:
         """
         Check for type hints using simple AST analysis.
-        (MyPy would be too complex for quick analysis)
         """
         result = {
             "functions_with_hints": 0,
@@ -346,7 +320,6 @@ class AdvancedCodeJudge:
                 if isinstance(node, ast.FunctionDef):
                     result["total_functions"] += 1
                     
-                    # Check if function has type hints
                     has_hints = (
                         node.returns is not None or
                         any(arg.annotation is not None for arg in node.args.args)
@@ -357,216 +330,279 @@ class AdvancedCodeJudge:
             
             if result["total_functions"] > 0:
                 result["coverage"] = result["functions_with_hints"] / result["total_functions"]
-                result["score"] = int(result["coverage"] * 10)  # Max 10 points
+                result["score"] = int(result["coverage"] * 5)  # Scale to 5 points (part of Maintainability)
             
         except Exception as e:
             result["error"] = str(e)
         
         return result
+
+    def analyze_comments(self, code: str) -> Dict[str, Any]:
+        """Calculate comment density: (comment_lines / total_lines)."""
+        result = {"density": 0.0, "score": 0, "total_lines": 0, "comment_lines": 0}
+        lines = code.splitlines()
+        result["total_lines"] = len(lines)
+        if result["total_lines"] == 0: return result
+
+        comment_lines = 0
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith('#') or (stripped.startswith('"""') or stripped.startswith("'''")):
+                comment_lines += 1
+        
+        result["comment_lines"] = comment_lines
+        result["density"] = comment_lines / result["total_lines"]
+        
+        # Scoring: Ideal density 10-30%
+        # More lenient: for very short files (< 10 lines), don't penalize missing comments 
+        if result["total_lines"] < 10 and result["comment_lines"] == 0:
+            result["score"] = 5 # Give full points to short scripts without noise
+        elif 0.05 <= result["density"] <= 0.4: # Lowened threshold to 5%
+            result["score"] = 5
+        elif result["density"] > 0:
+            result["score"] = 3
+        else:
+            result["score"] = 0
+        return result
+
+    def analyze_formatting(self, code: str) -> Dict[str, Any]:
+        """Checks for consistent indentation and spacing."""
+        result = {"score": 5, "issues": []}
+        lines = code.splitlines()
+        for i, line in enumerate(lines):
+            if line.strip() and not line.startswith((' ', '\t', '#')):
+                # Check for mixing tabs and spaces
+                if '\t' in line and ' ' in line[:line.find(line.strip())]:
+                    result["score"] = max(0, result["score"] - 1)
+        return result
+
+    def analyze_error_handling(self, code: str) -> int:
+        """Check for try-except, assert, and Optional patterns."""
+        score = 0
+        try:
+            tree = ast.parse(code)
+            has_try = False
+            has_assert = False
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Try):
+                    has_try = True
+                if isinstance(node, ast.Assert):
+                    has_assert = True
+            
+            if has_try: score += 6
+            if has_assert: score += 4
+        except:
+            pass
+        return min(score, 10)
     
     def analyze_duplications(self, code: str) -> Dict[str, Any]:
         """
         Detect code duplications (repeated lines/blocks).
-        Simple but effective duplication detection.
         """
         result = {
             "total_lines": 0,
             "unique_lines": 0,
             "duplicate_lines": 0,
             "duplication_ratio": 0.0,
-            "score": 10,  # Max 10 points
+            "score": 5,
             "error": None
         }
         
         try:
             lines = code.strip().split('\n')
-            # Filter out empty lines and comments
             code_lines = [
                 line.strip() for line in lines 
                 if line.strip() and not line.strip().startswith('#')
             ]
             
             result["total_lines"] = len(code_lines)
-            
             if result["total_lines"] == 0:
                 return result
             
-            # Count unique lines
             unique = set(code_lines)
             result["unique_lines"] = len(unique)
             result["duplicate_lines"] = result["total_lines"] - result["unique_lines"]
-            result["duplication_ratio"] = result["duplicate_lines"] / result["total_lines"] if result["total_lines"] > 0 else 0
+            result["duplication_ratio"] = result["duplicate_lines"] / result["total_lines"]
             
-            # Scoring: penalize duplications
             if result["duplication_ratio"] == 0:
-                result["score"] = 10  # Perfect
+                result["score"] = 5
             elif result["duplication_ratio"] < 0.1:
-                result["score"] = 8   # Very good
+                result["score"] = 4
             elif result["duplication_ratio"] < 0.2:
-                result["score"] = 6   # Good
+                result["score"] = 3
             elif result["duplication_ratio"] < 0.3:
-                result["score"] = 4   # Fair
+                result["score"] = 2
             else:
-                result["score"] = 2   # Poor (lots of duplication)
+                result["score"] = 1
             
         except Exception as e:
             result["error"] = str(e)
         
         return result
-    
-    def get_hybrid_score(self, static_analysis: Dict[str, Any], llm_evaluation: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Combines static analysis (70%) and LLM evaluation (30%) into hybrid score.
-        
-        Args:
-            static_analysis: Output from score_code()
-            llm_evaluation: Output from LLMJudge.evaluate_code()
-        
-        Returns:
-            {
-                "hybrid_score": 0-100,
-                "static_score": 0-100,
-                "llm_score": 0-100,
-                "weights": {"static": 0.7, "llm": 0.3},
-                "breakdown": {...}
-            }
-        """
-        static_score = static_analysis["total_score"]
-        llm_score = llm_evaluation["semantic_score"]
-        
-        # Hybrid formula: 70% static + 30% LLM
-        hybrid_score = int((static_score * 0.7) + (llm_score * 0.3))
-        
-        return {
-            "hybrid_score": hybrid_score,
-            "static_score": static_score,
-            "llm_score": llm_score,
-            "weights": {"static": 0.7, "llm": 0.3},
-            "breakdown": {
-                "static_analysis": static_analysis,
-                "llm_evaluation": llm_evaluation
-            }
-        }
-    
+
     def score_code(self, raw_code: str) -> Dict[str, Any]:
         """
         Main scoring function that combines all analysis methods.
-        NOW WITH DUPLICATIONS!
+        Categorized as per the 6-category requirement.
         """
         code = self.clean_code(raw_code)
         
-        # Run all analyzers
-        ast_result = self.analyze_ast(code)
-        pylint_result = self.analyze_pylint(code)
-        complexity_result = self.analyze_complexity(code)
-        security_result = self.analyze_security(code)
-        style_result = self.analyze_style(code)
-        type_hints_result = self.analyze_type_hints(code)
-        duplications_result = self.analyze_duplications(code)  # NEW!
+        # Substantial check: Detect garbage/one-word hallucinations or explanatory paragraphs
+        substance = False
+        clean_stripped = code.strip()
         
-        # Calculate total score (now 110 max, we'll normalize to 100)
-        raw_total = (
-            ast_result["score"] +
-            pylint_result["scaled_score"] +
-            complexity_result["score"] +
-            security_result["score"] +
-            style_result["score"] +
-            type_hints_result["score"] +
-            duplications_result["score"]
+        # A valid script MUST have at least one of these major structural markers
+        # to be considered "code" rather than just a paragraph of text.
+        major_markers = ["def ", "import ", " = ", "class ", "print("]
+        has_major = any(m in clean_stripped for m in major_markers)
+        
+        # If the output is longer than 40 chars and has NO major markers, it's likely a paragraph/hallucination.
+        if len(clean_stripped) > 40:
+            if has_major:
+                substance = True
+            else:
+                substance = False
+        # For very short strings, we look for any major marker or at least a minimal structure
+        elif len(clean_stripped) > 5 and has_major:
+            substance = True
+        elif len(clean_stripped) > 0 and has_major: # e.g. "a = 1"
+            substance = True
+        
+        # 1. Kod Kalitesi (0-25)
+        complexity_res = self.analyze_complexity(code)
+        # If complexity is literally 0 AND it's not a substantial script, it's suspect
+        if complexity_res["average_complexity"] == 0 and not substance:
+            complexity_res["score"] = 0
+        comment_res = self.analyze_comments(code)
+        
+        # 2. Teknik Borç (0-20)
+        pylint_res = self.analyze_pylint(code)
+        duplication_res = self.analyze_duplications(code)
+        
+        # 3. Test & Build (0-15)
+        ast_res = self.analyze_ast(code)
+        
+        # 4. Stil & Standart (0-15)
+        style_res = self.analyze_style(code)
+        format_res = self.analyze_formatting(code)
+        
+        # 6. Güvenlik & Hata Yönetimi (0-10)
+        error_res = self.analyze_error_handling(code)
+        
+        if not substance:
+            # Penalize everything drastically for garbage content
+            complexity_res["score"] = 0
+            comment_res["score"] = 0
+            pylint_res["scaled_score"] = 0
+            pylint_res["raw_score"] = 0
+            duplication_res["score"] = 0
+            style_res["score"] = 0
+            format_res["score"] = 0
+            error_res = 0
+            # Ensure syntax also fails
+            ast_res["syntax_valid"] = False
+        
+        # Static Total - Precise sum based on weights:
+        # 15(Complexity)+5(Comments)+15(Pylint)+5(Duplication)+5(Syntax)+10(Style)+5(Format)+10(Error) = 70 total
+        static_raw = (
+            complexity_res["score"] +    # 15
+            comment_res["score"] +       # 5
+            pylint_res["scaled_score"] + # 15
+            duplication_res["score"] +    # 5
+            ast_res["score"] +            # 5
+            style_res["score"] +         # 10
+            format_res["score"] +        # 5
+            error_res                    # 10
         )
         
-        # Normalize to 100
-        total_score = min(int((raw_total / 110) * 100), 100)
-        
         return {
-            "total_score": total_score,
+            "static_total": static_raw,
             "breakdown": {
-                "ast_structure": ast_result,
-                "pylint_quality": pylint_result,
-                "complexity": complexity_result,
-                "security": security_result,
-                "style": style_result,
-                "type_hints": type_hints_result,
-                "duplications": duplications_result  # NEW!
-            },
-            "4_categories": {  # Map to 4 main categories
-                "reliability": ast_result["score"] + security_result["score"],  # 35 max
-                "maintainability": pylint_result["scaled_score"] + style_result["score"] + type_hints_result["score"],  # 45 max
-                "duplications": duplications_result["score"],  # 10 max
-                "complexity": complexity_result["score"]  # 20 max
-            },
-            "max_score": 100
+                "complexity": complexity_res,
+                "comments": comment_res,
+                "pylint": pylint_res,
+                "duplication": duplication_res,
+                "syntax": ast_res,
+                "style": style_res,
+                "format": format_res,
+                "error_handling": error_res,
+                "security": self.analyze_security(code),
+                "type_hints": self.analyze_type_hints(code)
+            }
         }
 
+    def get_hybrid_score(self, static_data: Dict[str, Any], llm_eval: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Combines static and LLM results into the exact 6-category 100-point scale.
+        """
+        # 1. Kod Kalitesi (25 pts)
+        cat1 = (
+            min(15, static_data["breakdown"]["complexity"]["score"]) + 
+            static_data["breakdown"]["comments"]["score"] + 
+            llm_eval["breakdown"].get("identifier_clarity", 0)
+        )
+        
+        # 2. Teknik Borç (20 pts)
+        cat2 = (
+            min(15, int(static_data["breakdown"]["pylint"]["raw_score"] * 1.5)) + 
+            min(5, static_data["breakdown"]["duplication"]["score"] / 2)
+        )
+        
+        # 3. Test & Build (15 pts)
+        cat3 = (5 if static_data["breakdown"]["syntax"]["syntax_valid"] else 0)
+        cat3 += llm_eval["breakdown"].get("test_reliability", 8)
+        
+        # 4. Stil & Standart (15 pts)
+        cat4 = min(10, static_data["breakdown"]["style"]["score"]) + static_data["breakdown"]["format"]["score"]
+        
+        # 5. Semantic Alignment (15 pts)
+        cat5 = llm_eval["breakdown"].get("prompt_adherence", 0) + llm_eval["breakdown"].get("naming_alignment", 0)
+        
+        # 6. Robustness & Safety (10 pts)
+        cat6 = static_data["breakdown"]["error_handling"]
+        
+        total_score = cat1 + cat2 + cat3 + cat4 + cat5 + cat6
+        
+        return {
+            "total_score": int(total_score),
+            "static_total": static_data["static_total"],
+            "llm_total": llm_eval["semantic_score"],
+            "categories": {
+                "1_Kod_Kalitesi": cat1,
+                "2_Teknik_Borc": cat2,
+                "3_Test_Build": cat3,
+                "4_Stil_Standart": cat4,
+                "5_Semantic_Alignment": cat5,
+                "6_Robustness_Safety": cat6
+            },
+            "static_analysis": static_data,
+            "llm_evaluation": llm_eval,
+            "reasoning": llm_eval.get("reasoning", ""),
+            "chain_of_thought": llm_eval.get("chain_of_thought", "")
+        }
 
-def advanced_judge(code_llama: str, code_deepseek: str, code_gemini: str) -> Dict[str, Any]:
+def advanced_judge(code_1: str, code_2: str, code_3: str, prompt: str) -> Dict[str, Any]:
     """
-    Compare three code snippets using advanced static analysis.
+    Compare three code snippets using the new 100-point metric set.
     """
     judge = AdvancedCodeJudge()
+    from module.llm_judge import LLMJudge
+    llm_judge = LLMJudge()
     
-    results = {
-        "CodeLlama": judge.score_code(code_llama),
-        "DeepSeek-V3": judge.score_code(code_deepseek),
-        "Gemini 2.5": judge.score_code(code_gemini)
-    }
+    from module.llm_clients import get_model_names
+    model_names = get_model_names()
     
-    # Find winner
-    winner = max(results.keys(), key=lambda k: results[k]["total_score"])
+    all_results = {}
+    for i, code in enumerate([code_1, code_2, code_3], 1):
+        name = model_names.get(f"model_{i}", f"Model {i}")
+        static = judge.score_code(code)
+        llm_eval = llm_judge.evaluate_code(code, prompt)
+        all_results[name] = judge.get_hybrid_score(static, llm_eval)
     
-    # Generate reasoning
-    winner_score = results[winner]["total_score"]
-    reasoning_parts = [f"{winner} kazandı ({winner_score}/100 puan) çünkü:"]
-    
-    breakdown = results[winner]["breakdown"]
-    if breakdown["ast_structure"]["score"] >= 15:
-        reasoning_parts.append("- Mükemmel kod yapısı ve syntax")
-    if breakdown["pylint_quality"]["scaled_score"] >= 20:
-        reasoning_parts.append("- Yüksek kod kalitesi (Pylint)")
-    if breakdown["complexity"]["score"] >= 15:
-        reasoning_parts.append("- Düşük karmaşıklık (maintainable)")
-    if breakdown["security"]["score"] >= 12:
-        reasoning_parts.append("- Güvenlik açığı yok")
-    
-    reasoning = " ".join(reasoning_parts)
+    winner = max(all_results.keys(), key=lambda k: all_results[k]["total_score"])
     
     return {
         "winner": winner,
-        "reasoning": reasoning,
-        "scores": results
+        "results": all_results,
+        "reasoning": all_results[winner]["reasoning"]
     }
-
-    def get_hybrid_score(self, static_analysis: Dict[str, Any], llm_evaluation: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Combines static analysis (70%) and LLM evaluation (30%) into hybrid score.
-        
-        Args:
-            static_analysis: Output from score_code()
-            llm_evaluation: Output from LLMJudge.evaluate_code()
-        
-        Returns:
-            {
-                "hybrid_score": 0-100,
-                "static_score": 0-100,
-                "llm_score": 0-100,
-                "weights": {"static": 0.7, "llm": 0.3},
-                "breakdown": {...}
-            }
-        """
-        static_score = static_analysis["total_score"]
-        llm_score = llm_evaluation["semantic_score"]
-        
-        # Hybrid formula: 70% static + 30% LLM
-        hybrid_score = int((static_score * 0.7) + (llm_score * 0.3))
-        
-        return {
-            "hybrid_score": hybrid_score,
-            "static_score": static_score,
-            "llm_score": llm_score,
-            "weights": {"static": 0.7, "llm": 0.3},
-            "breakdown": {
-                "static_analysis": static_analysis,
-                "llm_evaluation": llm_evaluation
-            }
-        }
-

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from typing import Dict
 import os
 
-from module.llm_clients import call_codellama, call_deepseek, call_gemini
+from module.llm_clients import call_codellama, call_deepseek, call_gemini, get_model_names
 from module.agentic_workflow import run_hybrid_workflow  # NEW: Hybrid workflow
 
 app = FastAPI(title="HAVELSAN Hybrid Code Generator")
@@ -24,18 +24,25 @@ app.add_middleware(
 
 class PromptRequest(BaseModel):
     prompt: str
+    static_weight: float = 0.7
+    llm_weight: float = 0.3
+    metric_weights: Dict[str, int] = None
 
 @app.get("/", response_class=HTMLResponse)
 def serve_index():
     with open("templates/index.html", "r", encoding="utf-8") as file:
         return file.read()
 
+@app.get("/models")
+def get_models_endpoint():
+    """Return configured model names."""
+    return get_model_names()
+
 @app.post("/generate")
 def generate_endpoint(req: PromptRequest) -> Dict:
     """
-    YENİ: Hybrid Workflow Endpoint
-    
-    1. İlk tur: 3 model (Llama, DeepSeek, Gemini) kod üretir
+    Hybrid Workflow Endpoint
+    1. İlk tur: 3 model kod üretir
     2. 4 metrikle analiz → Kazanan seçilir  
     3. Eşik kontrolü:
        - >= 70 → Direkt çıktı
@@ -44,6 +51,9 @@ def generate_endpoint(req: PromptRequest) -> Dict:
     result = run_hybrid_workflow(
         prompt=req.prompt,
         quality_threshold=70.0,
-        max_iterations=3
+        max_iterations=3,
+        static_weight=req.static_weight,
+        llm_weight=req.llm_weight,
+        metric_weights=req.metric_weights
     )
     return result

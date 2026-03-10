@@ -1,5 +1,5 @@
-// Hybrid Workflow Frontend Logic - Turkish & Detailed Feedback
-// NOW WITH HYBRID SCORING (Static + LLM)
+// Updated for Ollama support with dynamic model names
+console.log("HAVELSAN UI v3.1.0 Loaded - Fixed Scores Persistence");
 
 async function generate() {
     const prompt = document.getElementById("prompt").value;
@@ -17,11 +17,18 @@ async function generate() {
     document.getElementById("winner-section").style.display = "none";
 
     try {
+        // Longer timeout for Ollama (local models are slower)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1800000); // 30 dakika timeout
+
         const response = await fetch("/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt })
+            body: JSON.stringify({ prompt }),
+            signal: controller.signal
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) throw new Error("API Hatası");
 
@@ -35,7 +42,11 @@ async function generate() {
         showWinner(data);
 
     } catch (error) {
-        alert("Hata: " + error.message);
+        if (error.name === 'AbortError') {
+            alert("İstek zaman aşımına uğradı. Ollama modelleri yavaş çalışıyor olabilir.");
+        } else {
+            alert("Hata: " + error.message);
+        }
     } finally {
         btn.disabled = false;
         loader.style.display = "none";
@@ -45,22 +56,25 @@ async function generate() {
 function showRound1(codes, scoresData) {
     document.getElementById("round1-section").style.display = "block";
 
-    const models = [
-        { id: "llama", name: "CodeLlama 70B" },
-        { id: "deepseek", name: "DeepSeek V3" },
-        { id: "gemini", name: "Gemini 2.0 Flash" }
-    ];
+    // Dinamik model isimleri - backend'den gelen isimleri kullan
+    const modelKeys = Object.keys(codes);
+    const modelSlots = ["llama", "deepseek", "gemini"];
 
-    models.forEach(model => {
-        const modelName = model.name;
+    modelKeys.forEach((modelName, index) => {
+        const slotId = modelSlots[index] || `model-${index}`;
         const code = codes[modelName] || "Kod üretilemedi";
         const scoreData = scoresData[modelName];
 
+        // Update model header with dynamic name
+        const headerElement = document.getElementById(`header-${slotId}`);
+        if (headerElement) headerElement.textContent = modelName;
+
         // Display code
-        document.getElementById(`code-${model.id}`).textContent = code;
+        const codeElement = document.getElementById(`code-${slotId}`);
+        if (codeElement) codeElement.textContent = code;
 
         // Display HYBRID score with breakdown
-        const scorePanel = document.getElementById(`score-${model.id}`);
+        const scorePanel = document.getElementById(`score-${slotId}`);
 
         if (!scoreData || scoreData.is_error) {
             // API HATASI - ÖZEL GÖSTER
@@ -74,14 +88,13 @@ function showRound1(codes, scoresData) {
             return;
         }
 
-        const hybridScore = scoreData.hybrid_score || scoreData.total_score || 0;
-        const staticScore = scoreData.static_score || 0;
-        const llmScore = scoreData.llm_score || 0;
-        const categories = scoreData["4_categories"] || {};
+        const hybridScore = scoreData.total_score || 0;
+        const staticScore = scoreData.static_total || 0;
+        const llmScore = scoreData.llm_total || 0;
 
-        // Get breakdowns
-        const staticAnalysis = scoreData.breakdown?.static_analysis || scoreData;
-        const llmEvaluation = scoreData.breakdown?.llm_evaluation || {};
+        const categories = scoreData.categories || {};
+        const staticAnalysis = scoreData.static_analysis || {};
+        const llmEvaluation = scoreData.llm_evaluation || {};
         const staticBreakdown = staticAnalysis.breakdown || {};
         const llmBreakdown = llmEvaluation.breakdown || {};
 
@@ -92,79 +105,109 @@ function showRound1(codes, scoresData) {
                     <div class="score-total-value">Hybrid: ${hybridScore}/100</div>
                 </div>
                 <div class="score-breakdown">
-                    Statik: ${staticScore}/100 (70%) | LLM: ${llmScore}/100 (30%)
+                    Statik: ${(staticScore / 70 * 100).toFixed(1)}/100 (70%) | LLM: ${(llmScore / 30 * 100).toFixed(1)}/100 (30%)
                 </div>
             </div>
             
-            <!-- Static Analysis Categories -->
+            <!-- 6 Hybrid Categories -->
             <div class="categories-container">
-                <div class="categories-title">Statik Analiz Metrikleri</div>
+                <div class="categories-title">Kod Kalite Metrikleri (6 Kategori)</div>
                 
                 <div class="category-item">
                     <div class="category-header">
-                        <span class="category-label">Güvenilirlik</span>
-                        <span class="category-value">${categories.reliability || 0}/35</span>
+                        <span class="category-label">1. Kod Kalitesi</span>
+                        <span class="category-value">${categories["1_Kod_Kalitesi"] || 0}/25</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill reliability" style="width: ${(categories.reliability || 0) / 35 * 100}%"></div>
+                    <div class="progress-bars-container" style="display: flex; gap: 2px;">
+                        <div class="progress-bar" style="flex: 1;"><div class="progress-fill" style="width: ${(categories["1_Kod_Kalitesi"] || 0) / 25 * 100}%; background: #3b82f6;"></div></div>
                     </div>
                 </div>
                 
                 <div class="category-item">
                     <div class="category-header">
-                        <span class="category-label">Sürdürülebilirlik</span>
-                        <span class="category-value">${categories.maintainability || 0}/45</span>
+                        <span class="category-label">2. Teknik Borç</span>
+                        <span class="category-value">${categories["2_Teknik_Borc"] || 0}/20</span>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill maintainability" style="width: ${(categories.maintainability || 0) / 45 * 100}%"></div>
+                        <div class="progress-fill" style="width: ${(categories["2_Teknik_Borc"] || 0) / 20 * 100}%; background: #f59e0b;"></div>
                     </div>
                 </div>
                 
                 <div class="category-item">
                     <div class="category-header">
-                        <span class="category-label">Kod Tekrarı</span>
-                        <span class="category-value">${categories.duplications || 0}/10</span>
+                        <span class="category-label">3. Test & Build</span>
+                        <span class="category-value">${categories["3_Test_Build"] || 0}/15</span>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill duplications" style="width: ${(categories.duplications || 0) / 10 * 100}%"></div>
+                        <div class="progress-fill" style="width: ${(categories["3_Test_Build"] || 0) / 15 * 100}%; background: #10b981;"></div>
                     </div>
                 </div>
                 
                 <div class="category-item">
                     <div class="category-header">
-                        <span class="category-label">Karmaşıklık</span>
-                        <span class="category-value">${categories.complexity || 0}/20</span>
+                        <span class="category-label">4. Stil & Standart</span>
+                        <span class="category-value">${categories["4_Stil_Standart"] || 0}/15</span>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill complexity" style="width: ${(categories.complexity || 0) / 20 * 100}%"></div>
+                        <div class="progress-fill" style="width: ${(categories["4_Stil_Standart"] || 0) / 15 * 100}%; background: #6366f1;"></div>
+                    </div>
+                </div>
+
+                <div class="category-item">
+                    <div class="category-header">
+                        <span class="category-label">5. Semantic Alignment</span>
+                        <span class="category-value">${categories["5_Semantic_Alignment"] || 0}/15</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${(categories["5_Semantic_Alignment"] || 0) / 15 * 100}%; background: #ec4899;"></div>
+                    </div>
+                </div>
+
+                <div class="category-item">
+                    <div class="category-header">
+                        <span class="category-label">6. Robustness & Safety</span>
+                        <span class="category-value">${categories["6_Robustness_Safety"] || 0}/10</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${(categories["6_Robustness_Safety"] || 0) / 10 * 100}%; background: #ef4444;"></div>
                     </div>
                 </div>
             </div>
             
-            <!-- LLM Semantic Evaluation (NEW!) -->
+            <!-- LLM Semantic Evaluation -->
             <div class="llm-evaluation">
                 <div class="llm-title">LLM Semantic Değerlendirme</div>
                 <div class="llm-breakdown">
-                    <div>
-                        <span>Algorithm Correctness:</span>
-                        <span class="llm-score-value">${llmBreakdown.algorithm_correctness || 0}/25</span>
+                    <div class="llm-metric-row">
+                        <span>Identifier Clarity:</span>
+                        <span class="llm-score-value">${llmBreakdown.identifier_clarity || 0}/5</span>
                     </div>
-                    <div>
-                        <span>Code Logic:</span>
-                        <span class="llm-score-value">${llmBreakdown.code_logic || 0}/25</span>
+                    <div class="llm-metric-row">
+                        <span>Prompt Adherence:</span>
+                        <span class="llm-score-value">${llmBreakdown.prompt_adherence || 0}/10</span>
                     </div>
-                    <div>
-                        <span>Best Practices:</span>
-                        <span class="llm-score-value">${llmBreakdown.best_practices || 0}/25</span>
+                    <div class="llm-metric-row">
+                        <span>Naming Alignment:</span>
+                        <span class="llm-score-value">${llmBreakdown.naming_alignment || 0}/5</span>
                     </div>
-                    <div>
-                        <span>Readability:</span>
-                        <span class="llm-score-value">${llmBreakdown.readability || 0}/25</span>
+                    <div class="llm-metric-row">
+                        <span>Logic & Reliability:</span>
+                        <span class="llm-score-value">${llmBreakdown.test_reliability || 0}/10</span>
                     </div>
                 </div>
+                ${llmEvaluation.chain_of_thought ? `
+                    <details class="cot-thinking" style="margin-top: 0.75rem; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; padding: 0.5rem;">
+                        <summary style="cursor: pointer; font-weight: 600; color: #a78bfa; display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="animation: pulse 2s infinite;">🧠</span> CoT (Düşünce Süreci)
+                        </summary>
+                        <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #94a3b8; line-height: 1.6; font-family: monospace; white-space: pre-wrap; max-height: 200px; overflow-y: auto; padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 4px;">
+                            ${llmEvaluation.chain_of_thought}
+                        </div>
+                    </details>
+                ` : ''}
                 ${llmEvaluation.reasoning ? `
                     <details style="margin-top: 0.75rem;">
-                        <summary style="cursor: pointer; font-weight: 600; color: var(--gray-700);">LLM Reasoning</summary>
+                        <summary style="cursor: pointer; font-weight: 600; color: var(--gray-700);">💬 LLM Reasoning</summary>
                         <p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--gray-600); line-height: 1.6;">
                             ${llmEvaluation.reasoning}
                         </p>
@@ -172,16 +215,17 @@ function showRound1(codes, scoresData) {
                 ` : ''}
             </div>
             
-            <!-- Detaylı Analiz (Collapsible) -->
+            <!-- Detaylı Statik Analiz -->
             <details>
-                <summary>Detaylı Statik Analiz</summary>
+                <summary>Detaylı Statik Metrikler</summary>
                 <div class="details-content">
-                    <div><strong>AST Yapısı:</strong> ${staticBreakdown.ast_structure?.score || 0}/20</div>
-                    <div><strong>Pylint Kalitesi:</strong> ${staticBreakdown.pylint_quality?.scaled_score || 0}/25</div>
-                    <div><strong>Güvenlik:</strong> ${staticBreakdown.security?.score || 0}/15 ${staticBreakdown.security?.issues_count > 0 ? '(' + staticBreakdown.security.issues_count + ' açık)' : '(Temiz)'}</div>
-                    <div><strong>Stil (PEP8):</strong> ${staticBreakdown.style?.score || 0}/10 (${staticBreakdown.style?.violations || 0} ihlal)</div>
-                    <div><strong>Type Hints:</strong> ${staticBreakdown.type_hints?.score || 0}/10</div>
-                    <div><strong>Kod Tekrarı:</strong> ${staticBreakdown.duplications?.score || 0}/10 (%${((staticBreakdown.duplications?.duplication_ratio || 0) * 100).toFixed(1)} tekrar)</div>
+                    <div><strong>Syntax/AST:</strong> ${staticBreakdown.syntax?.score || 0}/5</div>
+                    <div><strong>Pylint:</strong> ${staticBreakdown.pylint?.scaled_score || 0}/15 (Raw: ${staticBreakdown.pylint?.raw_score?.toFixed(2) || 0}/10)</div>
+                    <div><strong>Karmaşıklık:</strong> ${staticBreakdown.complexity?.score || 0}/15 (Max: ${staticBreakdown.complexity?.max_complexity || 0})</div>
+                    <div><strong>Stil (PEP8):</strong> ${staticBreakdown.style?.score || 0}/10 (İhlal: ${staticBreakdown.style?.violations || 0})</div>
+                    <div><strong>Yorum Yoğunluğu:</strong> ${staticBreakdown.comments?.score || 0}/5 (%${((staticBreakdown.comments?.density || 0) * 100).toFixed(1)})</div>
+                    <div><strong>Kod Tekrarı:</strong> ${staticBreakdown.duplication?.score || 0}/5 (%${((staticBreakdown.duplication?.duplication_ratio || 0) * 100).toFixed(1)})</div>
+                    <div><strong>Hata Yönetimi:</strong> ${staticBreakdown.error_handling || 0}/10</div>
                 </div>
             </details>
         `;
@@ -252,15 +296,27 @@ function showDetailedFeedback(iterations) {
                 </div>
             </div>
             
+            <!-- Chain-of-Thought Thinking -->
+            ${iter.chain_of_thought ? `
+            <details class="cot-thinking" style="margin-bottom: 1rem; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; padding: 0.75rem;">
+                <summary style="cursor: pointer; font-weight: 600; color: #a78bfa; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="animation: pulse 2s infinite;">🧠</span> CoT Düşünce Süreci
+                </summary>
+                <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #94a3b8; line-height: 1.6; font-family: monospace; white-space: pre-wrap; max-height: 150px; overflow-y: auto; padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 4px;">
+                    ${iter.chain_of_thought}
+                </div>
+            </details>
+            ` : ''}
+            
             <!-- İyileştirme Önerileri -->
             <div class="suggestions-box">
-                <div class="suggestions-title">İyileştirme Önerileri:</div>
+                <div class="suggestions-title">🎯 Dinamik Öneriler:</div>
                 ${iter.suggestions && iter.suggestions.length > 0 ?
                 iter.suggestions.map(s => `
-                        <div class="suggestion-item">
-                            <div class="suggestion-area">${s.area}</div>
-                            <div class="suggestion-issue">Sorun: ${s.issue}</div>
-                            <div class="suggestion-action">Aksiyon: ${s.action}</div>
+                        <div class="suggestion-item" style="border-left: 3px solid ${s.priority === 1 ? '#ef4444' : s.priority === 2 ? '#f59e0b' : '#22c55e'}; padding-left: 0.5rem; margin-bottom: 0.5rem;">
+                            <div class="suggestion-area" style="font-weight: 600; color: ${s.priority === 1 ? '#ef4444' : s.priority === 2 ? '#f59e0b' : '#22c55e'};">[${s.priority === 1 ? 'KRİTİK' : s.priority === 2 ? 'ÖNEMLİ' : 'DÜŞÜK'}] ${s.area}</div>
+                            <div class="suggestion-issue" style="font-size: 0.85rem;">Sorun: ${s.issue || ''}</div>
+                            <div class="suggestion-action" style="font-size: 0.85rem; font-weight: 500;">Aksiyon: ${s.action || ''}</div>
                         </div>
                     `).join('')
                 : '<div style="color: #999;">Genel iyileştirmeler</div>'
@@ -309,8 +365,32 @@ function showDetailedFeedback(iterations) {
     });
 }
 
+// Initial load
+document.addEventListener("DOMContentLoaded", () => {
+    updateModelHeaders();
+});
+
+async function updateModelHeaders() {
+    try {
+        const response = await fetch("/models");
+        const models = await response.json();
+
+        document.getElementById("header-llama").textContent = models.model_1 || "Model 1";
+        document.getElementById("header-deepseek").textContent = models.model_2 || "Model 2";
+        document.getElementById("header-gemini").textContent = models.model_3 || "Model 3";
+    } catch (err) {
+        console.error("Modeller yüklenemedi:", err);
+    }
+}
+
 function getMetricLabel(metric) {
     const labels = {
+        '1_Kod_Kalitesi': 'Kod Kalitesi',
+        '2_Teknik_Borc': 'Teknik Borç',
+        '3_Test_Build': 'Test & Build',
+        '4_Stil_Standart': 'Stil & Standart',
+        '5_Semantic_Alignment': 'Semantic Alignment',
+        '6_Robustness_Safety': 'Robustness & Safety',
         'reliability': 'Güvenilirlik',
         'maintainability': 'Sürdürülebilirlik',
         'duplications': 'Kod Tekrarı',
