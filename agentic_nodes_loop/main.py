@@ -40,12 +40,12 @@ def generate_endpoint(req: PromptRequest) -> Dict:
     1. İlk tur: 3 model kod üretir
     2. 4 metrikle analiz → Kazanan seçilir  
     3. Eşik kontrolü:
-       - >= 70 → Direkt çıktı
-       - < 70 → Feedback döngüsü (sadece kazananla)
+       - >= 85 → Direkt çıktı
+       - < 85 → Feedback döngüsü (sadece kazananla)
     """
     result = run_hybrid_workflow(
         prompt=req.prompt,
-        quality_threshold=70.0,
+        quality_threshold=85.0,
         max_iterations=10,
         static_weight=req.static_weight,
         llm_weight=req.llm_weight,

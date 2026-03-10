@@ -13,9 +13,10 @@ async function generate() {
     btn.disabled = true;
     loader.style.display = "inline-block";
 
-    // Hide sections
+    // Hide sections and reset LEDs
     document.getElementById("round1-section").style.display = "none";
     document.getElementById("winner-section").style.display = "none";
+    document.querySelectorAll('.model-led').forEach(led => led.classList.remove('active'));
 
     try {
         // Longer timeout for Ollama (local models are slower)
@@ -63,8 +64,13 @@ function showRound1(codes, scoresData) {
 
     modelKeys.forEach((modelName, index) => {
         const slotId = modelSlots[index] || `model-${index}`;
+        const ledId = `led-model${index + 1}`;
         const code = codes[modelName] || "Kod üretilemedi";
         const scoreData = scoresData[modelName];
+
+        // Turn on LED for this model
+        const led = document.getElementById(ledId);
+        if (led) led.classList.add('active');
 
         // Update model header with dynamic name
         const headerElement = document.getElementById(`header-${slotId}`);
@@ -180,14 +186,10 @@ function showRound1(codes, scoresData) {
                     </div>
                 </div>
                 ${llmEvaluation.chain_of_thought ? `
-                    <details class="cot-thinking" style="margin-top: 0.75rem; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; padding: 0.5rem;">
-                        <summary style="cursor: pointer; font-weight: 600; color: #a78bfa; display: flex; align-items: center; gap: 0.5rem;">
-                            <span style="animation: pulse 2s infinite;">🧠</span> Chain-of-Thought (Düşünce Süreci)
-                        </summary>
-                        <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #94a3b8; line-height: 1.6; font-family: monospace; white-space: pre-wrap; max-height: 200px; overflow-y: auto; padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 4px;">
-                            ${llmEvaluation.chain_of_thought}
-                        </div>
-                    </details>
+                    <div class="cot-thinking-balloon">
+                        <div class="cot-title">🧠 Chain-of-Thought (Düşünce Süreci)</div>
+                        <div class="cot-content">${llmEvaluation.chain_of_thought}</div>
+                    </div>
                 ` : ''}
                 ${llmEvaluation.reasoning ? `
                     <details style="margin-top: 0.75rem;">
@@ -281,14 +283,10 @@ function showDetailedFeedback(iterations) {
             
             <!-- Chain-of-Thought Thinking -->
             ${iter.chain_of_thought ? `
-            <details class="cot-thinking" style="margin-bottom: 1rem; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; padding: 0.75rem;">
-                <summary style="cursor: pointer; font-weight: 600; color: #a78bfa; display: flex; align-items: center; gap: 0.5rem;">
-                    <span style="animation: pulse 2s infinite;">🧠</span> CoT Düşünce Süreci
-                </summary>
-                <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #94a3b8; line-height: 1.6; font-family: monospace; white-space: pre-wrap; max-height: 150px; overflow-y: auto; padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 4px;">
-                    ${iter.chain_of_thought}
-                </div>
-            </details>
+            <div class="cot-thinking-balloon" style="margin-top: 1rem;">
+                <div class="cot-title">🧠 CoT Düşünce Süreci</div>
+                <div class="cot-content">${iter.chain_of_thought}</div>
+            </div>
             ` : ''}
             
             <!-- İyileştirme Önerileri -->

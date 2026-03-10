@@ -6,10 +6,11 @@ Provides unified interface for local LLM models via Ollama.
 import os
 import requests
 import json
+import re
 from typing import Optional, Dict, Any
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv()
+load_dotenv(find_dotenv(), override=True)
 
 # Ollama Configuration
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
@@ -19,7 +20,7 @@ OLLAMA_MODELS = {
     "judge": os.getenv("OLLAMA_JUDGE_MODEL", "deepseek-r1:7b"),
     "coder_1": os.getenv("OLLAMA_CODER_MODEL_1", "qwen2.5-coder:7b"),
     "coder_2": os.getenv("OLLAMA_CODER_MODEL_2", "codellama:7b"),
-    "coder_3": os.getenv("OLLAMA_CODER_MODEL_3", "llama3.1:8b"),
+    "coder_3": os.getenv("OLLAMA_CODER_MODEL_3", "deepseek-r1:1.5b"),
 }
 
 
@@ -216,134 +217,157 @@ def call_llama31(prompt: str) -> str:
 
 # --- DeepSeek R1 Judge Function ---
 
-def call_deepseek_r1_judge(code: str, prompt: str) -> Dict[str, Any]:
+def call_ollama_judge(code: str, prompt: str) -> Dict[str, Any]:
     """
-    Evaluate code using DeepSeek-R1 with Chain-of-Thought reasoning.
-    
-    DeepSeek-R1 outputs reasoning in <think>...</think> blocks.
-    We parse this to extract both the reasoning and the final JSON scores.
-    
-    Returns:
-        {
-            "semantic_score": 0-100,
-            "breakdown": {
-                "algorithm_correctness": 0-25,
-                "code_logic": 0-25,
-                "best_practices": 0-25,
-                "readability": 0-25
-            },
-            "reasoning": "...",
-            "chain_of_thought": "...",  # Raw CoT from <think> block
-            "error": False
-        }
+    Evaluate code using the configured Ollama judge model.
+    Supports CoT reasoning (like DeepSeek-R1) and standard models (like Phi-4).
     """
-    system_prompt = """You are an expert Python code reviewer with deep knowledge of algorithms, design patterns, and best practices.
+    system_prompt = """You are an expert Python code reviewer.
+Evaluate the code on 4 criteria (0-25 points each):
+1. Algorithm Correctness
+2. Code Logic
+3. Best Practices
+4. Readability
 
-Evaluate the given code based on these 4 criteria (each 0-25 points):
-
-1. **Algorithm Correctness** (0-25): Does the code correctly solve the stated problem? Are there bugs or edge cases not handled?
-
-2. **Code Logic** (0-25): Is the logic sound and efficient? Are there better algorithmic approaches? Is it optimized?
-
-3. **Best Practices** (0-25): Does it follow Python best practices? (PEP8, naming, error handling, modularity, etc.)
-
-4. **Readability** (0-25): Is the code clear and easy to understand? Good variable names? Comments where needed?
-
-Return ONLY a valid JSON object with this exact structure (no markdown, no code blocks):
+Return ONLY a JSON object:
 {
-  "algorithm_correctness": <number 0-25>,
-  "code_logic": <number 0-25>,
-  "best_practices": <number 0-25>,
-  "readability": <number 0-25>,
-  "reasoning": "<brief 1-2 sentence explanation of the scores>"
+  "algorithm_correctness": <0-25>,
+  "code_logic": <0-25>,
+  "best_practices": <0-25>,
+  "readability": <0-25>,
+  "reasoning": "<1-2 sentence explanation>"
 }"""
 
-    user_prompt = f"""Original Request: {prompt}
+    user_prompt = f"""EVALUATION TASK:
+Please evaluate the following Python code based on the original user prompt.
 
-Generated Code:
-```python
+[ORIGINAL USER PROMPT]:
+{prompt}
+
+[CODE TO EVALUATE]:
 {code}
-```
 
-Evaluate this code and return JSON scores."""
+---
+Remember: Your response must be in strict JSON format as specified in the system instructions."""
 
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}
     ]
     
-    # Call DeepSeek-R1 with JSON format
+    # Determine if we should force JSON format
+    # For R1 series, we want False to capture <think> blocks via raw text
+    # For others (phi4, codellama, etc.), True is much safer.
+    judge_model = OLLAMA_MODELS["judge"].lower()
+    is_r1 = "r1" in judge_model
+    force_json = not is_r1
+    
     response = call_ollama_chat(
         model=OLLAMA_MODELS["judge"],
         messages=messages,
         temperature=0.1,
         max_tokens=1024,
-        timeout=180,  # Longer timeout for CoT reasoning
-        format_json=True
+        timeout=240,
+        format_json=force_json
     )
     
-    # Check for errors
+    # Error check
     if response.startswith("Ollama Error:"):
-        return {
-            "semantic_score": 0,
-            "breakdown": {
-                "algorithm_correctness": 0,
-                "code_logic": 0,
-                "best_practices": 0,
-                "readability": 0
-            },
-            "reasoning": response,
-            "chain_of_thought": "",
-            "error": True
-        }
+        return _get_error_result(response)
     
-    # Parse Chain-of-Thought if present
+    # Parse Chain-of-Thought
     chain_of_thought = ""
-    json_response = response
-    
-    # DeepSeek-R1 may include <think>...</think> blocks
-    if "<think>" in response and "</think>" in response:
-        import re
-        think_match = re.search(r"<think>(.*?)</think>", response, re.DOTALL)
-        if think_match:
-            chain_of_thought = think_match.group(1).strip()
-            # Remove think block from response to get JSON
-            json_response = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL).strip()
-    
-    # Parse JSON
     try:
-        result = json.loads(json_response)
+        # JSON extraction logic
+        # 1. Handle CoT
+        if "<think>" in response:
+            think_match = re.search(r"<think>(.*?)</think>", response, re.DOTALL)
+            if think_match:
+                chain_of_thought = think_match.group(1).strip()
+            response = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL).strip()
         
-        algorithm_correctness = min(25, max(0, result.get("algorithm_correctness", 0)))
-        code_logic = min(25, max(0, result.get("code_logic", 0)))
-        best_practices = min(25, max(0, result.get("best_practices", 0)))
-        readability = min(25, max(0, result.get("readability", 0)))
+        # 2. Extract JSON from potential markdown/conversational text
+        # Use a more robust regex that finds the first { and last }
+        json_match = re.search(r"(\{.*\})", response, re.DOTALL)
+        if json_match:
+            json_payload = json_match.group(1).strip()
+        else:
+            json_payload = response.strip()
+
+        try:
+            result = json.loads(json_payload)
+        except json.JSONDecodeError:
+            # Fallback: Try regex extraction of scores if JSON fails
+            print(f"  ⚠️  JSON parse failed, attempting regex fallback for scores...")
+            ac_match = re.search(r'"algorithm_correctness":\s*(\d+)', response)
+            cl_match = re.search(r'"code_logic":\s*(\d+)', response)
+            bp_match = re.search(r'"best_practices":\s*(\d+)', response)
+            rd_match = re.search(r'"readability":\s*(\d+)', response)
+            
+            if ac_match and cl_match and bp_match and rd_match:
+                result = {
+                    "algorithm_correctness": int(ac_match.group(1)),
+                    "code_logic": int(cl_match.group(1)),
+                    "best_practices": int(bp_match.group(1)),
+                    "readability": int(rd_match.group(1)),
+                    "reasoning": "Extracted via regex fallback"
+                }
+            else:
+                raise ValueError("Could not extract scores via regex fallback")
+
+        # Scores
+        ac = min(25, max(0, int(result.get("algorithm_correctness", 0))))
+        cl = min(25, max(0, int(result.get("code_logic", 0))))
+        bp = min(25, max(0, int(result.get("best_practices", 0))))
+        rd = min(25, max(0, int(result.get("readability", 0))))
+        total = ac + cl + bp + rd
         
-        semantic_score = algorithm_correctness + code_logic + best_practices + readability
-        
+        # Reasoning
+        reasoning = result.get("reasoning", "")
+        if not reasoning or reasoning == "No reasoning provided":
+            reasoning = generate_auto_reasoning(ac, cl, bp, rd)
+            
         return {
-            "semantic_score": semantic_score,
+            "semantic_score": total,
             "breakdown": {
-                "algorithm_correctness": algorithm_correctness,
-                "code_logic": code_logic,
-                "best_practices": best_practices,
-                "readability": readability
+                "algorithm_correctness": ac,
+                "code_logic": cl,
+                "best_practices": bp,
+                "readability": rd
             },
-            "reasoning": result.get("reasoning", "No reasoning provided"),
+            "reasoning": reasoning,
             "chain_of_thought": chain_of_thought,
             "error": False
         }
         
-    except json.JSONDecodeError as e:
-        return {
-            "semantic_score": 0,
-            "breakdown": {
-                "algorithm_correctness": 0,
-                "code_logic": 0,
-                "best_practices": 0,
-                "readability": 0
-            },
-            "reasoning": f"JSON parse error: {str(e)}",
-            "chain_of_thought": chain_of_thought,
-            "error": True
-        }
+    except (json.JSONDecodeError, ValueError, TypeError, Exception) as e:
+        return _get_error_result(f"Judge error: {str(e)} | Raw snippet: {response[:100]}...", chain_of_thought)
+
+
+def generate_auto_reasoning(ac, cl, bp, rd) -> str:
+    """Generate a readable reasoning string from scores."""
+    parts = []
+    if ac >= 20: parts.append("Algoritma doğru")
+    elif ac >= 10: parts.append("Algoritma kısmen doğru")
+    else: parts.append("Algoritmada ciddi hatalar var")
+    
+    if cl >= 20: parts.append("mantık sağlam")
+    elif cl >= 10: parts.append("mantık geliştirilebilir")
+    
+    if bp >= 20: parts.append("en iyi pratiklere uygun")
+    elif bp >= 10: parts.append("pratiklerde eksikler var")
+    
+    if rd >= 20: parts.append("okunabilirlik yüksek")
+    
+    return f"Hibrid Değerlendirme (Skor {ac+cl+bp+rd}/100): " + ", ".join(parts) + "."
+
+
+def _get_error_result(msg: str, cot: str = "") -> Dict[str, Any]:
+    return {
+        "semantic_score": 0,
+        "breakdown": {"algorithm_correctness": 0, "code_logic": 0, "best_practices": 0, "readability": 0},
+        "reasoning": msg,
+        "chain_of_thought": cot,
+        "error": True
+    }
+

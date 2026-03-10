@@ -524,7 +524,23 @@ class AdvancedCodeJudge:
         """
         code = self.clean_code(raw_code)
         
-        # Run all analyzers
+        # Guard clause for empty or extremely short code
+        if not code.strip() or len(code.strip()) < 10:
+            return {
+                "total_score": 0,
+                "breakdown": {
+                    "ast_structure": {"score": 0, "syntax_valid": False, "functions": 0, "classes": 0, "docstrings": 0},
+                    "pylint_quality": {"scaled_score": 0},
+                    "complexity": {"score": 0, "average_complexity": 0},
+                    "security": {"score": 0, "issues_count": 0},
+                    "style": {"score": 0, "violations": 0},
+                    "type_hints": {"score": 0},
+                    "duplications": {"score": 0}
+                },
+                "4_categories": {"reliability": 0, "maintainability": 0, "duplications": 0, "complexity": 0},
+                "max_score": 100,
+                "error": "Code is too short or empty"
+            }
         ast_result = self.analyze_ast(code)
         pylint_result = self.analyze_pylint(code)
         complexity_result = self.analyze_complexity(code)

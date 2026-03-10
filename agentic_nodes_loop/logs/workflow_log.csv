@@ -357,3 +357,467 @@ def calculate_average(numbers):
 ```
 
 This function takes a list of numbers as input and returns the average of those numbers. If the input list is empty, it returns `None`. The function first checks if the list is empty using the condition `if not numbers`. If the list is not empty, it calculates the sum of all elements in the list using the built-in `sum()` function and then divides this sum by the number of elements in the list to find the average. The result is returned as a float.",No reasoning provided
+REQ_20260303_143718_1953900e,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:3b (Ollama),llama3.2:3b (Ollama),starcoder2:3b (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,74.0,97.0,80.0,61.0,97.0,71.0,58.0,83.0,65.0,qwen2.5-coder:3b (Ollama),0,80.0,SUCCESS,2026-03-03 14:37,"```python
+def calculate_average(numbers):
+    if not numbers:
+        return None
+    total = sum(numbers)
+    count = len(numbers)
+    average = total / count
+    return average
+
+# Test the function
+numbers_list = [1, 2, 3, 4, 5]
+print(calculate_average(numbers_list))  # Output: 3.0
+
+empty_list = []
+print(calculate_average(empty_list))  # Output: None
+```","The function correctly calculates the average of a list, handles an empty input by returning None as specified, follows Python best practices closely with good variable names and code structure. The logic is sound but could be slightly optimized for readability."
+REQ_20260303_144806_4aef4e30,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:3b (Ollama),llama3.2:3b (Ollama),starcoder2:3b (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,72.0,97.0,79.0,61.0,97.0,71.0,63.0,9.0,46.0,qwen2.5-coder:3b (Ollama),9,79.0,SUCCESS,2026-03-03 14:48,"```python
+def calculate_average(numbers):
+    if not numbers:
+        return None
+    total = sum(numbers)
+    count = len(numbers)
+    average = total / count
+    return average
+
+# Test the function
+print(calculate_average([1, 2, 3, 4, 5]))  # Output: 3.0
+print(calculate_average([]))              # Output: None
+```","The provided Python function is missing, thus it cannot be evaluated for correctness or logic."
+REQ_20260303_150526_253cd545,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:3b (Ollama),llama3.2:3b (Ollama),starcoder2:3b (Ollama),phi4-mini (Ollama),0.70,0.30,72.0,99.0,80.0,67.0,97.0,76.0,62.0,23.0,50.0,qwen2.5-coder:3b (Ollama),9,80.0,SUCCESS,2026-03-03 15:05,"def calculate_average(numbers):
+    if not numbers:
+        return None
+    total = sum(numbers)
+    count = len(numbers)
+    average = total / count
+    return average
+
+# Test the function
+print(calculate_average([1, 2, 3, 4, 5]))  # Output: 3.0
+print(calculate_average([]))              # Output: None","The code snippet is missing, so it's impossible to assess the correctness of an algorithm or its logic. However, based on best practices and readability standards for Python functions that calculate averages (handling empty lists by returning None), a well-structured function would be expected."
+REQ_20260303_151801_4a2dbf06,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:3b (Ollama),llama3.2:3b (Ollama),starcoder2:3b (Ollama),phi4-mini (Ollama),0.70,0.30,72.0,99.0,80.0,67.0,97.0,76.0,58.0,37.0,51.0,qwen2.5-coder:3b (Ollama),1,87.0,SUCCESS,2026-03-03 15:18,"from typing import List, Optional
+
+def calculate_average(numbers: List[float]) -> Optional[float]:
+    """"""
+    Calculate the average of a list of numbers.
+
+    Args:
+    numbers (List[float]): A list of numbers to calculate the average from.
+
+    Returns:
+    Optional[float]: The average of the numbers if the list is not empty, otherwise None.
+    """"""
+    try:
+        if not numbers:
+            return None
+        total = sum(numbers)
+        count = len(numbers)
+        average = total / count
+        return average
+    except ZeroDivisionError:
+        print(""Error: Division by zero encountered."")
+        return None
+
+# Test the function
+print(calculate_average([1, 2, 3, 4, 5]))  # Output: 3.0
+print(calculate_average([]))               # Output: None","The code correctly calculates the average of a list, handles empty lists by returning None as specified. It follows good practices with type hinting and exception handling for division errors."
+REQ_20260303_153353_41db82c0,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:3b (Ollama),codellama:7b (Ollama),deepseek-r1:1.5b (Ollama),deepseek-r1:7b (Ollama),0.70,0.30,72.0,0.0,50.0,63.0,0.0,44.0,63.0,0.0,44.0,qwen2.5-coder:3b (Ollama),9,58.0,SUCCESS,2026-03-03 15:33,"from typing import List, Optional
+
+def calculate_average(numbers: List[float]) -> Optional[float]:
+    """"""
+    Calculate the average of a list of numbers.
+
+    Args:
+        numbers (List[float]): A list of numbers to calculate the average from.
+
+    Returns:
+        Optional[float]: The average of the numbers if the list is not empty, otherwise None.
+    """"""
+    try:
+        if not numbers:
+            return None
+        total = sum(numbers)
+        count = len(numbers)
+        average = total / count
+        return average
+    except ZeroDivisionError:
+        print(""Error: Division by zero encountered."")
+        return None
+
+# Test cases
+print(calculate_average([1, 2, 3, 4, 5]))  # Output: 3.0
+print(calculate_average([]))              # Output: None",Ollama Error: HTTP 500
+REQ_20260303_154948_c6f9cfcf,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:7b (Ollama),qwen2.5-coder:3b (Ollama),phi4-mini (Ollama),deepseek-r1:1.5b (Ollama),0.70,0.30,63.0,100.0,74.0,74.0,93.0,79.0,63.0,93.0,72.0,qwen2.5-coder:3b (Ollama),1,86.0,SUCCESS,2026-03-03 15:49,"def calculate_average(numbers: list) -> float:
+    """"""
+    Calculates the average of a list of numbers.
+    
+    Args:
+        numbers (list): A list of numeric values.
+        
+    Returns:
+        float or None: The average of the numbers if the list is not empty, otherwise None.
+    """"""
+    if not numbers:
+        return None
+    total = sum(numbers)
+    count = len(numbers)
+    average = total / count
+    return average
+
+# Test the function
+numbers_list = [1, 2, 3, 4, 5]
+print(calculate_average(numbers_list))  # Output: 3.0
+
+empty_list = []
+print(calculate_average(empty_list))     # Output: None","The function correctly calculates the average of a list, handling empty lists by returning None. It uses clear type hints and logical flow, making it easy to understand."
+REQ_20260303_155558_61a9157a,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:7b (Ollama),qwen2.5-coder:3b (Ollama),llama3.2:3b (Ollama),phi4-mini (Ollama),0.70,0.30,63.0,99.0,73.0,72.0,99.0,80.0,67.0,97.0,76.0,qwen2.5-coder:3b (Ollama),1,86.0,SUCCESS,2026-03-03 15:55,"def calculate_average(numbers: list) -> float:
+    """"""
+    Calculates the average of a list of numbers.
+    
+    Args:
+        numbers (list): A list of numeric values.
+        
+    Returns:
+        float or None: The average of the numbers if the list is not empty, otherwise None.
+    """"""
+    if not numbers:
+        return None
+    total = sum(numbers)
+    count = len(numbers)
+    average = total / count
+    return average
+
+# Test the function
+print(calculate_average([1, 2, 3, 4, 5]))  # Output: 3.0
+print(calculate_average([]))                # Output: None","The code correctly calculates the average of a list, handles an empty input by returning None as specified. It follows good practices with type hinting and docstrings for clarity."
+REQ_20260303_162129_795e79c2,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:7b (Ollama),qwen2.5-coder:3b (Ollama),llama3.2:3b (Ollama),deepseek-r1:1.5b (Ollama),0.70,0.30,63.0,99.0,73.0,72.0,75.0,72.0,67.0,100.0,76.0,llama3.2:3b (Ollama),2,85.0,SUCCESS,2026-03-03 16:21,"def calculate_average(numbers: list[float]) -> float | None:
+    """"""
+    Calculates the average of a list of numbers.
+
+    Args:
+        numbers (list[float]): A list of numbers.
+
+    Returns:
+        float | None: The average of the numbers, or None if the list is empty.
+    """"""
+
+    try:
+        # Check if the list is empty
+        if not numbers:
+            return None
+
+        # Calculate the sum of the numbers
+        total_sum = sum(numbers)
+
+        # Calculate the count of numbers
+        count = len(numbers)
+
+        # Return the average
+        return total_sum / count
+
+    except TypeError as e:
+        # Handle type errors
+        print(f""Error: {e}"")
+        return None
+
+# Example usage:
+numbers = [1, 2, 3, 4, 5]
+average = calculate_average(numbers)
+print(average)  # Output: 3.0
+
+empty_list = []
+average = calculate_average(empty_list)
+print(average)  # Output: None","The function correctly calculates the average of a list of numbers, handles empty lists by returning None, and uses try-except blocks for error handling. It is well-structured with clear comments but could be more readable without additional white space or comments in the docstring."
+REQ_20260303_164644_e70c3362,Bir string içinde birbirini tekrar etmeyen en uzun alt string'in (substring) uzunluğunu bulan bir python kodu yaz. Örnek: 'abcabcbb' girdisi için sonuç 3 olmalı (abc).  ,qwen2.5-coder:7b (Ollama),qwen2.5-coder:3b (Ollama),llama3.2:3b (Ollama),deepseek-r1:1.5b (Ollama),0.70,0.30,69.0,0.0,48.0,73.0,0.0,51.0,69.0,0.0,48.0,qwen2.5-coder:3b (Ollama),5,87.0,SUCCESS,2026-03-03 16:46,"def longest_unique_substring(s: str) -> int:
+    """"""
+    Finds the length of the longest substring without repeating characters.
+
+    :param s: Input string
+    :return: Length of the longest unique substring
+    """"""
+    max_length = 0
+    start = 0
+    char_index_map = {}
+
+    for end, char in enumerate(s):
+        if char in char_index_map and char_index_map[char] >= start:
+            start = char_index_map[char] + 1
+        char_index_map[char] = end
+        max_length = max(max_length, end - start + 1)
+
+    return max_length
+
+# Test the function
+input_string = 'abcabcbb'
+result = longest_unique_substring(input_string)
+print(result)  # Output: 3","This function implements the sliding window technique to find the longest substring without repeating characters. It efficiently tracks each character's index and adjusts the start of the window when a duplicate is found, ensuring optimal performance with O(n) time complexity."
+REQ_20260303_165502_92fcd6fc,Bir string içinde birbirini tekrar etmeyen en uzun alt string'in (substring) uzunluğunu bulan bir python kodu yaz. Örnek: 'abcabcbb' girdisi için sonuç 3 olmalı (abc). ,llama3.1:8b (Ollama),qwen2.5-coder:3b (Ollama),llama3.2:3b (Ollama),phi4-mini:latest (Ollama),0.70,0.30,65.0,94.0,73.0,72.0,99.0,80.0,72.0,94.0,78.0,qwen2.5-coder:3b (Ollama),3,85.0,SUCCESS,2026-03-03 16:55,"class LongestUniqueSubstring:
+    """"""
+    Initialize the class to find the longest unique substring.
+
+    Attributes:
+        max_length (int): The maximum length of a unique substring found so far.
+        start (int): The starting index of the current window.
+        char_index_map (dict): A dictionary mapping characters to their last seen indices.
+    """"""
+
+    def __init__(self) -> None:
+        """"""
+        Initialize the class with no attributes.
+
+        Attributes:
+            max_length (int): The maximum length of a unique substring found so far.
+            start (int): The starting index of the current window.
+            char_index_map (dict): A dictionary mapping characters to their last seen indices.
+        """"""
+        self.max_length: int = 0
+        self.start: int = 0
+        self.char_index_map: dict[str, int] = {}
+
+    def longest_unique_substring(self, s: str) -> int:
+        """"""
+        Find the length of the longest substring without repeating characters.
+
+        Args:
+            s (str): The input string.
+
+        Returns:
+            int: The length of the longest unique substring.
+        """"""
+        try:
+            for end, char in enumerate(s):
+                if char in self.char_index_map and self.char_index_map[char] >= self.start:
+                    self.start = self.char_index_map[char] + 1
+                self.char_index_map[char] = end
+                self.max_length = max(self.max_length, end - self.start + 1)
+
+            return self.max_length
+
+        except Exception as e:
+            print(f""An error occurred: {e}"")
+            return None
+
+
+# Test the function
+input_string = 'abcabcbb'
+print(LongestUniqueSubstring().longest_unique_substring(input_string))  # Output: 3","The code correctly implements an efficient sliding window approach to find the longest unique substring. It adheres closely to best practices, with minor room for improvement in exception handling and variable naming conventions."
+REQ_20260303_175342_9c38e0ed,Bir string içinde birbirini tekrar etmeyen en uzun alt string'in (substring) uzunluğunu bulan bir python kodu yaz. Örnek: 'abcabcbb' girdisi için sonuç 3 olmalı (abc).,deepseek-r1:7b (Ollama),qwen2.5-coder:3b (Ollama),codellama:7b (Ollama),phi4-mini:latest (Ollama),0.70,0.30,29.0,25.0,27.0,73.0,94.0,79.0,67.0,70.0,67.0,qwen2.5-coder:3b (Ollama),1,85.0,SUCCESS,2026-03-03 17:53,"def find_longest_unique_substring(s: str) -> int:
+    """"""
+    Finds the length of the longest substring without repeating characters in a given string.
+
+    Args:
+        s (str): The input string to search for the longest unique substring.
+
+    Returns:
+        int: The length of the longest substring without repeating characters.
+    """"""
+    max_length = 0
+    start = 0
+    char_index_map = {}
+
+    try:
+        for end, char in enumerate(s):
+            if char in char_index_map and char_index_map[char] >= start:
+                start = char_index_map[char] + 1
+            char_index_map[char] = end
+            max_length = max(max_length, end - start + 1)
+
+    except Exception as e:
+        print(f""An error occurred: {e}"")
+
+    return max_length
+
+# Test the function
+input_string = 'abcabcbb'
+result = find_longest_unique_substring(input_string)
+print(result)  # Output: 3","The code correctly implements an efficient sliding window algorithm to find the longest substring without repeating characters, adheres closely to best practices with appropriate exception handling and variable naming conventions. The readability is high due to clear function documentation."
+REQ_20260303_180207_0c2f3787, Bir string içinde birbirini tekrar etmeyen en uzun alt string'in (substring) uzunluğunu bulan bir python kodu yaz. Örnek: 'abcabcbb' girdisi için sonuç 3 olmalı (abc).,qwen2.5-coder:7b (Ollama),qwen2.5-coder:3b (Ollama),starcoder2:3b (Ollama),phi4-mini:latest (Ollama),0.70,0.30,70.0,97.0,78.0,70.0,97.0,78.0,0.0,82.0,24.0,qwen2.5-coder:7b (Ollama),1,85.0,SUCCESS,2026-03-03 18:02,"def length_of_longest_substring(s: str) -> int:
+    """"""
+    Finds the length of the longest substring without repeating characters.
+
+    :param s: Input string.
+    :return: Length of the longest substring without repeating characters.
+    """"""
+    n = len(s)
+    longest = 0
+    start = 0
+    char_index = {}
+
+    for end in range(n):
+        if s[end] in char_index and char_index[s[end]] >= start:
+            start = char_index[s[end]] + 1
+        else:
+            longest = max(longest, end - start + 1)
+        
+        char_index[s[end]] = end
+    
+    return longest
+
+# Test the function
+print(length_of_longest_substring('abcabcbb'))  # Output: 3","The code correctly implements an efficient sliding window approach to find the longest substring without repeating characters, adhering closely to best practices and maintaining high readability."
+REQ_20260304_034601_d95cc7f2,Python ile çok kullanıcılı bir async chat sunucusu yaz. Gereksinimler: asyncio ve websockets kullan. Aynı anda en az 1000 bağlantıyı destekle. Kullanıcılar odaya katılabilsin ve mesajlar sadece o odadakilere yayınlansın. Her kullanıcı için rate limiting uygula (10 sn’de max 5 mesaj). Mesajları hafızada tut ve son 20 mesajı yeni katılan kullanıcıya gönder. Hataları özel exception sınıflarıyla yönet. Kod modüler ve type hint’li olsun. ,qwen2.5-coder:7b (Ollama),qwen2.5-coder:3b (Ollama),starcoder2:3b (Ollama),phi4-mini:latest (Ollama),0.70,0.30,56.0,75.0,61.0,76.0,75.0,75.0,0.0,70.0,21.0,qwen2.5-coder:3b (Ollama),9,75.0,SUCCESS,2026-03-04 03:46,"import asyncio
+from aiohttp import web
+from collections import deque
+from typing import Optional
+
+# Custom exceptions for handling errors
+class ConnectionLostException(Exception):
+    """"""Exception raised when a connection is lost.""""""
+    pass
+
+class RateLimitExceededException(Exception):
+    """"""Exception raised when a user exceeds their rate limit.""""""
+    pass
+
+# User class to manage user connections and messages
+class User:
+    def __init__(self, websocket: web.WebSocketResponse):
+        self.websocket = websocket
+        self.messages = deque(maxlen=20)
+        self.rate_limit = 5
+        self.last_message_time = None
+        self.lock = asyncio.Lock()  # Add a lock for rate limiting
+
+# Chat server class to handle WebSocket connections and messages
+class ChatServer:
+    def __init__(self):
+        self.users = set()
+        self.loop = asyncio.get_event_loop()
+
+    async def handle_connection(self, websocket: web.WebSocketResponse) -> None:
+        """"""
+        Handles incoming WebSocket connections.
+        
+        :param websocket: The WebSocket connection object.
+        """"""
+        user = User(websocket)
+        self.users.add(user)
+
+        try:
+            await self.handle_messages(user)
+        finally:
+            self.users.remove(user)
+            await websocket.close()
+
+    async def handle_messages(self, user: User) -> None:
+        """"""
+        Handles incoming messages from a WebSocket connection.
+        
+        :param user: The User object associated with the WebSocket connection.
+        """"""
+        while True:
+            try:
+                message = await user.websocket.receive()
+                if message.type == web.WSMsgType.TEXT:
+                    async with user.lock:
+                        if not self.is_rate_limited(user):
+                            self.broadcast_message(message.data, user)
+                            user.messages.appendleft(message.data)
+                elif message.type == web.WSMsgType.CLOSED:
+                    break
+            except ConnectionLostException as e:
+                print(f""Connection lost from {user.websocket.remote_addr}: {e}"")
+                await websocket.close()
+            except RateLimitExceededException as e:
+                print(f""Rate limit exceeded for {user.websocket.remote_addr}: {e}"")
+                await websocket.close()
+            except asyncio.TimeoutError:
+                print(f""Timeout error on connection from {user.websocket.remote_addr}"")
+                await websocket.close()
+            except Exception as e:
+                print(f""Error handling message from {user.websocket.remote_addr}: {e}"")
+                await websocket.close()
+
+    def broadcast_message(self, message: str, sender: User = None) -> None:
+        """"""
+        Broadcasts a message to all connected users.
+        
+        :param message: The message to be broadcasted.
+        :param sender: The User object that sent the message (optional).
+        """"""
+        for user in self.users:
+            if user != sender:
+                asyncio.create_task(user.websocket.send_str(message))
+
+    def is_rate_limited(self, user: User) -> bool:
+        """"""
+        Checks if a user has exceeded their rate limit.
+        
+        :param user: The User object to check.
+        :return: True if the user has exceeded their rate limit, False otherwise.
+        """"""
+        async with user.lock:
+            if not user.last_message_time:
+                user.last_message_time = self.loop.time()
+                return False
+
+            current_time = self.loop.time()
+            elapsed_time = current_time - user.last_message_time
+            if elapsed_time < 10:
+                user.rate_limit -= 1
+                if user.rate_limit <= 0:
+                    raise RateLimitExceededException(""Rate limit exceeded"")
+            else:
+                user.rate_limit = 5
+
+            user.last_message_time = current_time
+            return True
+
+# Main function to run the chat server
+async def main() -> None:
+    """"""
+    Runs the chat server.
+    
+    This function sets up and starts the web server on port 8765.
+    It handles incoming WebSocket connections and manages messages for each user.
+    """"""
+    app = web.Application()
+    chat_server = ChatServer()
+
+    @app.websocket_routes.get('/chat')
+    async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
+        """"""
+        Handles incoming WebSocket requests for the '/chat' route.
+        
+        :param request: The HTTP request object.
+        :return: The WebSocket response object.
+        """"""
+        return await chat_server.handle_connection(request.ws)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '127.0.0.1', 8765)  # Use localhost for security
+    await site.start()
+
+    print(""Chat server started on port 8765"")
+
+if __name__ == '__main__':
+    asyncio.run(main())","The provided text does not contain any Python code to evaluate; instead, it mentions an 'Ollama Error: Request timeout (120s)', which is unrelated and cannot be assessed for correctness or logic."
+REQ_20260304_122500_86b45a36,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",qwen2.5-coder:7b (Ollama),qwen2.5-coder:3b (Ollama),starcoder2:3b (Ollama),phi4-mini:latest (Ollama),0.70,0.30,63.0,94.0,72.0,72.0,99.0,80.0,29.0,97.0,49.0,qwen2.5-coder:3b (Ollama),1,87.0,SUCCESS,2026-03-04 12:25,"from typing import List, Optional
+
+def calculate_average(numbers: List[float]) -> Optional[float]:
+    """"""
+    Calculate the average of a list of numbers.
+
+    Args:
+    numbers (List[float]): A list of numbers to calculate the average from.
+
+    Returns:
+    Optional[float]: The average of the numbers if the list is not empty, otherwise None.
+    """"""
+    try:
+        if not numbers:
+            return None
+        total = sum(numbers)
+        count = len(numbers)
+        average = total / count
+        return average
+    except ZeroDivisionError:
+        print(""Error: Division by zero encountered."")
+        return None
+
+# Test the function
+print(calculate_average([1, 2, 3, 4, 5]))  # Output: 3.0
+print(calculate_average([]))                # Output: None","The code correctly calculates and returns the average of a list, handles empty lists by returning None as specified. It follows best practices with type hinting for clarity on input/output types; however, it could improve error handling instead of printing an error message."

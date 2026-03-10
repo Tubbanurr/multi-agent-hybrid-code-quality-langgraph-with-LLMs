@@ -545,6 +545,7 @@ details[open] summary::after {
         height: 300px;
     }
 }
+
 /* Detailed Feedback Iteration Styles */
 .feedback-iteration-detailed {
     background: white;
@@ -810,7 +811,7 @@ details[open] summary::after {
     line-height: 1.8;
 }
 
-.llm-breakdown > div {
+.llm-breakdown>div {
     padding: 0.25rem 0;
     color: var(--gray-700);
     display: flex;
@@ -838,10 +839,13 @@ details[open] summary::after {
 
 /* Chain-of-Thought Thinking Styles */
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
         transform: scale(1);
     }
+
     50% {
         opacity: 0.7;
         transform: scale(1.1);

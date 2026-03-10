@@ -10,9 +10,9 @@ Supports:
 import os
 import json
 from typing import Dict, Any
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv()
+load_dotenv(find_dotenv(), override=True)
 
 # Configuration
 USE_OLLAMA = os.getenv("USE_OLLAMA", "false").lower() == "true"
@@ -34,10 +34,11 @@ class LLMJudge:
         # Try Ollama first if enabled
         if self.use_ollama:
             try:
-                from module.ollama_client import check_ollama_available
+                from module.ollama_client import check_ollama_available, OLLAMA_MODELS
                 self.ollama_available = check_ollama_available()
                 if self.ollama_available:
-                    print("  🤖 LLM Judge: DeepSeek-R1 (Ollama)")
+                    judge_model = OLLAMA_MODELS.get("judge", "Ollama Model")
+                    print(f"  🤖 LLM Judge: {judge_model} (Ollama)")
             except ImportError:
                 pass
         
@@ -89,10 +90,10 @@ class LLMJudge:
         return self._evaluate_with_groq(code, prompt)
     
     def _evaluate_with_ollama(self, code: str, prompt: str) -> Dict[str, Any]:
-        """Evaluate code using DeepSeek-R1 via Ollama."""
+        """Evaluate code using the configured Ollama judge model."""
         try:
-            from module.ollama_client import call_deepseek_r1_judge
-            result = call_deepseek_r1_judge(code, prompt)
+            from module.ollama_client import call_ollama_judge
+            result = call_ollama_judge(code, prompt)
             return result
         except Exception as e:
             return self._get_fallback_result(f"Ollama evaluation failed: {str(e)}")
@@ -191,7 +192,8 @@ Evaluate this code and return JSON scores."""
     def get_model_name(self) -> str:
         """Return the name of the active LLM judge model."""
         if self.use_ollama and self.ollama_available:
-            return "DeepSeek-R1 (Ollama)"
+            from module.ollama_client import OLLAMA_MODELS
+            return f"{OLLAMA_MODELS.get('judge', 'Local LLM')} (Ollama)"
         elif self.groq_client:
             return "Llama 3.3 70B (Groq)"
         else:

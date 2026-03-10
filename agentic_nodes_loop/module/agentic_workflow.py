@@ -9,7 +9,8 @@ from langgraph.graph import StateGraph, END
 from langchain_groq import ChatGroq
 import os
 import csv
-import json # Added json import
+import json
+import re
 from datetime import datetime
 import uuid
 from dotenv import load_dotenv
@@ -180,6 +181,32 @@ def calculate_dynamic_threshold(prompt: str) -> float:
     
     return threshold
 
+
+def clean_code(text: str) -> str:
+    """
+    Extracts Python code from LLM output. 
+    Handles markdown code blocks and raw text.
+    """
+    if not text or not isinstance(text, str):
+        return ""
+    
+    # Handle markdown code blocks
+    code_match = re.search(r"```python\s*(.*?)\s*```", text, re.DOTALL)
+    if code_match:
+        return code_match.group(1).strip()
+    
+    # If no markdown blocks, but there is text, DON'T return empty.
+    # Return the original text as it might be code without markdown.
+    # But filters out common LLM conversational starters if they exist
+    cleaned = text.strip()
+    if cleaned.startswith("Here is") or cleaned.startswith("Sure,"):
+        # Very basic heuristic to skip one-line conversational starters
+        lines = cleaned.split("\n")
+        if len(lines) > 1 and ":" in lines[0]:
+            return "\n".join(lines[1:]).strip()
+            
+    return cleaned
+
 # --- State Definition ---
 class HybridState(TypedDict):
     """Hybrid workflow state"""
@@ -318,9 +345,9 @@ def generator_node(state: HybridState) -> HybridState:
         model_names = get_model_names()
         
         codes = {
-            model_names["model_1"]: call_codellama(prompt),
-            model_names["model_2"]: call_deepseek(prompt),
-            model_names["model_3"]: call_gemini(prompt)
+            model_names["model_1"]: clean_code(call_codellama(prompt)),
+            model_names["model_2"]: clean_code(call_deepseek(prompt)),
+            model_names["model_3"]: clean_code(call_gemini(prompt))
         }
         return {"round1_codes": codes}
     else:
@@ -356,14 +383,27 @@ def generator_node(state: HybridState) -> HybridState:
 ⚠️ Mevcut işlevselliği KORU, sadece kaliteyi artır!"""
         
         winner_model = state["winner_model"]
+        model_names = get_model_names()
         
-        # Model seçimi - Ollama model isimlerini de kontrol et
-        if "CodeLlama" in winner_model or "Qwen" in winner_model:
-            new_code = call_codellama(enhanced_prompt)
-        elif "DeepSeek" in winner_model:
-            new_code = call_deepseek(enhanced_prompt)
+        # Model seçimi - Model isimlerini vaka-duyarsız kontrol et
+        if winner_model == model_names.get("model_1"):
+            print(f"  🎯 Kazanan model ({winner_model}) ile iyileştirme yapılıyor (Slot: Coder 1)...")
+            new_code = clean_code(call_codellama(enhanced_prompt))
+        elif winner_model == model_names.get("model_2"):
+            print(f"  🎯 Kazanan model ({winner_model}) ile iyileştirme yapılıyor (Slot: Coder 2)...")
+            new_code = clean_code(call_deepseek(enhanced_prompt))
+        elif winner_model == model_names.get("model_3"):
+            print(f"  🎯 Kazanan model ({winner_model}) ile iyileştirme yapılıyor (Slot: Coder 3)...")
+            new_code = clean_code(call_gemini(enhanced_prompt))
         else:
-            new_code = call_gemini(enhanced_prompt)
+            # Fallback based on keywords if slot matching fails
+            winner_model_lower = winner_model.lower()
+            if "qwen" in winner_model_lower or "codellama" in winner_model_lower:
+                new_code = clean_code(call_codellama(enhanced_prompt))
+            elif "deepseek" in winner_model_lower:
+                new_code = clean_code(call_deepseek(enhanced_prompt))
+            else:
+                new_code = clean_code(call_gemini(enhanced_prompt))
             
         # Yeni kodu kaydet VE önceki kodu snapshot olarak sakla
         return {
@@ -700,7 +740,7 @@ def finalize_node(state: HybridState) -> HybridState:
 def should_continue(state: HybridState) -> str:
     """Eşik kontrolü ve döngü kararı."""
     score = state["final_quality_score"]
-    threshold = state.get("quality_threshold", 70.0)
+    threshold = state.get("quality_threshold", 85.0)
     iteration = state.get("iteration_count", 0)
     
     print(f"\n⚖️  DÖNGÜ KONTROLÜ:")
