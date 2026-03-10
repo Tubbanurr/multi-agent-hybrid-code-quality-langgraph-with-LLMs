@@ -206,7 +206,8 @@ Evaluate this code and return JSON scores."""
     def get_model_name(self) -> str:
         """Return the name of the active LLM judge model."""
         if self.use_ollama and self.ollama_available:
-            return "DeepSeek-R1 (Ollama)"
+            judge_model = os.getenv("OLLAMA_JUDGE_MODEL", "deepseek-r1:1.5b")
+            return f"{judge_model} (Ollama)"
         elif self.groq_client:
             return "Llama 3.3 70B (Groq)"
         else:
