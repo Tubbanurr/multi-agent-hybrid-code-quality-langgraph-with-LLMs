@@ -5,15 +5,9 @@ DeepSeek-R1'in CoT yeteneğini kullanarak dinamik, bağlama özgü
 kod iyileştirme önerileri üretir.
 """
 
-import os
 import json
 import re
 from typing import Dict, Any, List
-from dotenv import load_dotenv
-
-load_dotenv()
-
-USE_OLLAMA = os.getenv("USE_OLLAMA", "false").lower() == "true"
 
 
 def generate_cot_feedback(
@@ -127,11 +121,8 @@ Kod:
 
 Bu kodu iyileştirmek için öncelikli önerilerini JSON formatında ver."""
 
-    # Ollama veya Groq kullan
-    if USE_OLLAMA:
-        result = _call_ollama_cot(system_prompt, user_prompt)
-    else:
-        result = _call_groq_cot(system_prompt, user_prompt)
+    # Ollama ile CoT feedback üret
+    result = _call_ollama_cot(system_prompt, user_prompt)
     
     # Eğer hata varsa veya öneri yoksa, statik analize dayalı akıllı fallback kullan
     if result.get("error") or not result.get("suggestions"):
@@ -301,41 +292,6 @@ def _call_ollama_cot(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
         }
 
 
-def _call_groq_cot(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
-    """Groq API üzerinden CoT feedback üret (fallback)."""
-    try:
-        from groq import Groq
-        
-        api_key = os.getenv("GROQ_API_KEY")
-        if not api_key:
-            return {
-                "suggestions": [],
-                "chain_of_thought": "",
-                "summary": "Groq API Key missing",
-                "error": True
-            }
-        
-        client = Groq(api_key=api_key)
-        
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.2,
-            max_tokens=2048
-        )
-        
-        return _parse_cot_response(response.choices[0].message.content)
-        
-    except Exception as e:
-        return {
-            "suggestions": [],
-            "chain_of_thought": "",
-            "summary": f"Groq CoT Error: {str(e)}",
-            "error": True
-        }
 
 
 def _parse_cot_response(response: str) -> Dict[str, Any]:

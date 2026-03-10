@@ -1,0 +1,73 @@
+_wandb:
+    value:
+        cli_version: 0.25.0
+        e:
+            ng2lhjh87795vx9h79sv8d965268sqbb:
+                apple:
+                    ecpuCores: 6
+                    gpuCores: 10
+                    memoryGb: 24
+                    name: Apple M4
+                    pcpuCores: 4
+                    ramTotalBytes: "25769803776"
+                    swapTotalBytes: "1073741824"
+                args:
+                    - main:app
+                    - --reload
+                codePath: agentic_nodes_loop/venv/bin/uvicorn
+                codePathLocal: venv/bin/uvicorn
+                cpu_count: 10
+                cpu_count_logical: 10
+                disk:
+                    /:
+                        total: "494384795648"
+                        used: "261523869696"
+                email: tubba.nurr41@gmail.com
+                executable: /Users/tuba/Desktop/ap/agentic_nodes_loop/venv/bin/python3
+                git:
+                    commit: 6f0a7a1da3fbca21b55f4d3805277b2362f1aac0
+                    remote: git@github.com:Tubbanurr/Havelsan-SUIT-AP.git
+                host: mac
+                memory:
+                    total: "25769803776"
+                os: macOS-26.2-arm64-arm-64bit
+                program: /Users/tuba/Desktop/ap/agentic_nodes_loop/venv/bin/uvicorn
+                python: CPython 3.9.6
+                root: /Users/tuba/Desktop/ap/agentic_nodes_loop
+                startedAt: "2026-03-01T11:49:46.865001Z"
+                writerId: ng2lhjh87795vx9h79sv8d965268sqbb
+        m: []
+        python_version: 3.9.6
+        t:
+            "1":
+                - 105
+            "2":
+                - 105
+            "3":
+                - 2
+                - 13
+                - 16
+                - 61
+                - 62
+            "4": 3.9.6
+            "5": 0.25.0
+            "10":
+                - 20
+            "12": 0.25.0
+            "13": darwin-arm64
+judge_model:
+    value: DeepSeek-R1 (Ollama)
+llm_weight:
+    value: 0.3
+max_iterations:
+    value: 10
+model_1:
+    value: Qwen2.5-Coder (Ollama)
+model_2:
+    value: CodeLlama (Ollama)
+model_3:
+    value: Llama 3.1 (Ollama)
+quality_threshold:
+    value: 70
+static_weight:
+    value: 0.7

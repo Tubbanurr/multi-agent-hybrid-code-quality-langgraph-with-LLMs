@@ -1,0 +1,41 @@
+{
+  "os": "macOS-26.2-arm64-arm-64bit",
+  "python": "CPython 3.9.6",
+  "startedAt": "2026-03-01T11:49:46.865001Z",
+  "args": [
+    "main:app",
+    "--reload"
+  ],
+  "program": "/Users/tuba/Desktop/ap/agentic_nodes_loop/venv/bin/uvicorn",
+  "codePath": "agentic_nodes_loop/venv/bin/uvicorn",
+  "codePathLocal": "venv/bin/uvicorn",
+  "git": {
+    "remote": "git@github.com:Tubbanurr/Havelsan-SUIT-AP.git",
+    "commit": "6f0a7a1da3fbca21b55f4d3805277b2362f1aac0"
+  },
+  "email": "tubba.nurr41@gmail.com",
+  "root": "/Users/tuba/Desktop/ap/agentic_nodes_loop",
+  "host": "mac",
+  "executable": "/Users/tuba/Desktop/ap/agentic_nodes_loop/venv/bin/python3",
+  "cpu_count": 10,
+  "cpu_count_logical": 10,
+  "disk": {
+    "/": {
+      "total": "494384795648",
+      "used": "261523869696"
+    }
+  },
+  "memory": {
+    "total": "25769803776"
+  },
+  "apple": {
+    "name": "Apple M4",
+    "ecpuCores": 6,
+    "pcpuCores": 4,
+    "gpuCores": 10,
+    "memoryGb": 24,
+    "swapTotalBytes": "1073741824",
+    "ramTotalBytes": "25769803776"
+  },
+  "writerId": "ng2lhjh87795vx9h79sv8d965268sqbb"
+}

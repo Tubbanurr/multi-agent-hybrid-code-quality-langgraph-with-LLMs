@@ -15,7 +15,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=4">
 </head>
 
 <body>
@@ -37,6 +37,22 @@
                 <span>Generate Code</span>
                 <div id="loader" class="loader"></div>
             </button>
+
+            <!-- Canlı işlem durumu -->
+            <div id="status-message" style="
+                display: none;
+                margin-top: 1rem;
+                padding: 0.75rem 1.25rem;
+                background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+                border: 1px solid #334155;
+                border-radius: 10px;
+                color: #94a3b8;
+                font-size: 0.9rem;
+                font-weight: 500;
+                letter-spacing: 0.02em;
+                text-align: center;
+                animation: pulse-text 3s ease-in-out infinite;
+            "></div>
         </section>
 
         <!-- Round 1: 3 Model Results -->
@@ -96,7 +112,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
 
     <!-- App Logic -->
-    <script src="/static/js/script.js"></script>
+    <script src="/static/js/script.js?v=4"></script>
 
 </body>
 

@@ -170,28 +170,29 @@ class AdvancedCodeJudge:
                 f.write(code)
                 temp_file = f.name
             
-            # Run pylint with python -m
+            # TEXT format kullan - JSON format skor satırını döndürmüyor!
             proc = subprocess.run(
-                ['python3', '-m', 'pylint', temp_file, '--output-format=json', '--score=yes'],
+                ['python3', '-m', 'pylint', temp_file, '--score=yes',
+                 '--disable=C0114,C0115,C0116'],  # docstring uyarıları hariç
                 capture_output=True,
                 text=True,
                 timeout=15
             )
             
-            # Parse output
-            if proc.stdout:
-                try:
-                    data = json.loads(proc.stdout)
-                    result["issues"] = data if isinstance(data, list) else []
-                except json.JSONDecodeError:
-                    pass
-            
-            # Extract score from stderr (pylint puts score there)
-            score_match = re.search(r'Your code has been rated at ([\d\.]+)/10', proc.stderr)
+            # Skoru stdout'tan çek (text formatında buraya yazılıyor)
+            combined = proc.stdout + proc.stderr
+            score_match = re.search(r'Your code has been rated at ([\d\.\-]+)/10', combined)
             if score_match:
-                raw_score = float(score_match.group(1))
+                raw_score = max(0.0, float(score_match.group(1)))  # negatif olabilir
                 result["raw_score"] = raw_score
-                result["scaled_score"] = int((raw_score / 10) * 25)  # Scale to 25 points
+                result["scaled_score"] = int((raw_score / 10) * 25)  # Max 25 puan
+            
+            # Issue sayısını text'ten say (E: hata, W: uyarı, R: refactor satırları)
+            issue_lines = [
+                line for line in proc.stdout.split('\n')
+                if re.match(r'.+\.py:\d+:\d+:', line)
+            ]
+            result["issues"] = issue_lines
             
             # Cleanup
             os.unlink(temp_file)
@@ -204,6 +205,7 @@ class AdvancedCodeJudge:
             result["error"] = str(e)
         
         return result
+
     
     def analyze_complexity(self, code: str) -> Dict[str, Any]:
         """

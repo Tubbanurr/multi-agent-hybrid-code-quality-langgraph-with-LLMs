@@ -36,23 +36,42 @@ def log_request_to_csv(
     status: str,
     generated_code: str,
     judge_reasoning: str,
+    feedback_iterations: List[Dict[str, Any]] = None,
     log_file: str = "logs/workflow_log.csv"
 ):
     """
-    Append workflow summary to CSV file with detailed configuration and output.
+    Append workflow summary to CSV file.
+    İterasyon bilgileri Score_Progression ve Iteration_Notes kolonlarında özet olarak tutulur.
     """
-    # Create logs directory if it doesn't exist
     os.makedirs(os.path.dirname(log_file), exist_ok=True)
-    
-    # Check if file exists to determine if we need to write headers
     file_exists = os.path.isfile(log_file)
-    
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    
-    # Format weights as display string
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    
-    # Prepare row data
+
+    # --- İterasyon özeti oluştur ---
+    feedback_iterations = feedback_iterations or []
+
+    # Skor akışı: başlangıç skoru → iter1 → iter2 ...
+    if feedback_iterations:
+        initial_score = feedback_iterations[0].get("previous_score", 0)
+        score_steps = [f"{initial_score:.1f}"]
+        for it in feedback_iterations:
+            score_steps.append(f"{it.get('new_score', 0):.1f}")
+        score_progression = " → ".join(score_steps)
+    else:
+        score_progression = f"{final_score:.1f}" if not feedback_iterations else ""
+
+    # Iterasyon notları: her tur için [N] Δskor | öneriler
+    iter_notes_parts = []
+    for it in feedback_iterations:
+        n = it.get("iteration", "?")
+        delta = it.get("score_improvement", 0)
+        rollback = " [ROLLBACK]" if it.get("new_score", 0) < it.get("previous_score", 0) - 2 else ""
+        top_suggestions = ", ".join(
+            s.get("area", "") for s in it.get("suggestions", [])[:3]
+        )
+        iter_notes_parts.append(f"[{n}] {delta:+.1f}{rollback} ({top_suggestions})")
+    iteration_notes = " | ".join(iter_notes_parts) if iter_notes_parts else "-"
+
     row_data = [
         request_id,
         user_prompt[:500].replace("\n", " "),
@@ -62,31 +81,28 @@ def log_request_to_csv(
         judge_model,
         f"{static_weight:.2f}",
         f"{llm_weight:.2f}",
-        # Model 1 Scores
         f"{model_scores.get('model_1_static', 0):.1f}",
         f"{model_scores.get('model_1_llm', 0):.1f}",
         f"{model_scores.get('model_1_hybrid', 0):.1f}",
-        # Model 2 Scores
         f"{model_scores.get('model_2_static', 0):.1f}",
         f"{model_scores.get('model_2_llm', 0):.1f}",
         f"{model_scores.get('model_2_hybrid', 0):.1f}",
-        # Model 3 Scores
         f"{model_scores.get('model_3_static', 0):.1f}",
         f"{model_scores.get('model_3_llm', 0):.1f}",
         f"{model_scores.get('model_3_hybrid', 0):.1f}",
         initial_winner,
         iteration_count,
+        score_progression,      # YENİ
+        iteration_notes,         # YENİ
         f"{final_score:.1f}",
         status,
         timestamp,
         generated_code,
         judge_reasoning
     ]
-    
+
     with open(log_file, mode='a', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        
-        # Write header if file is new
+        writer = csv.writer(f, quoting=csv.QUOTE_ALL)  # Tüm alanları quote'la
         if not file_exists:
             writer.writerow([
                 "Request_ID",
@@ -108,15 +124,16 @@ def log_request_to_csv(
                 "Model_3_Hybrid_Score",
                 "Initial_Winner",
                 "Iteration_Count",
+                "Score_Progression",
+                "Iteration_Notes",
                 "Final_Score",
                 "Status",
                 "Timestamp",
                 "Generated_Code",
                 "Judge_Reasoning"
             ])
-        
-        # Write data row
         writer.writerow(row_data)
+
 
 
 # --- Dynamic Threshold Utility ---
@@ -219,6 +236,7 @@ class HybridState(TypedDict):
     final_score: float
     status: str  # "direct_output" | "improved_via_feedback"
     judge_reasoning: str # Final reasoning for logs
+    request_id: str      # Unique ID shared between summary + iteration logs
 
 
 # --- Helper: HYBRID Analysis (Static + LLM) ---
@@ -614,12 +632,13 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
             "score_improvement": new_score - previous_score,
             "suggestions": suggestions,
             "reasoning": llm_evaluation.get("reasoning", ""),
-            "chain_of_thought": chain_of_thought,  # CoT reasoning
+            "chain_of_thought": chain_of_thought,
             "static_breakdown": static_analysis.get("breakdown", {}),
             "metric_changes": metric_changes,
             "previous_categories": previous_categories,
             "new_categories": new_categories
         })
+
         
         # Kalite profilini güncelle - DİNAMİK ÖNERİLER ile
         reasoning = llm_evaluation.get("reasoning", "")
@@ -700,7 +719,7 @@ def finalize_node(state: HybridState) -> HybridState:
 def should_continue(state: HybridState) -> str:
     """Eşik kontrolü ve döngü kararı."""
     score = state["final_quality_score"]
-    threshold = state.get("quality_threshold", 70.0)
+    threshold = state.get("quality_threshold", 85.0)
     iteration = state.get("iteration_count", 0)
     
     print(f"\n⚖️  DÖNGÜ KONTROLÜ:")
@@ -774,7 +793,7 @@ def run_hybrid_workflow(prompt: str,
     print(f"🚀 HYBRID WORKFLOW BAŞLIYOR")
     print(f"{'='*60}")
     print(f"Prompt: {prompt[:100]}...")
-    print(f"Kalite Eşiği: {quality_threshold}/100 {'(📊 Dinamik)' if quality_threshold != 70.0 else ''}")
+    print(f"Kalite Eşiği: {quality_threshold}/100 {'(📊 Dinamik)' if quality_threshold != 85.0 else ''}")
     print(f"Max İterasyon: {max_iterations}")
     print(f"Ağırlıklar: Static={static_weight}, LLM={llm_weight}")
     if metric_weights:
@@ -805,7 +824,8 @@ def run_hybrid_workflow(prompt: str,
         "final_code": "",
         "final_score": 0.0,
         "status": "",
-        "judge_reasoning": ""
+        "judge_reasoning": "",
+        "request_id": f"REQ_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
     }
     
     result = hybrid_graph.invoke(
@@ -822,8 +842,8 @@ def run_hybrid_workflow(prompt: str,
     
     # --- CSV Logging ---
     try:
-        # Generate unique request ID
-        request_id = f"REQ_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
+        # Reuse the request_id already stored in state (same ID used by iteration logs)
+        request_id = result.get("request_id", f"REQ_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}")
         
         # Extract model scores from round1_scores
         round1_scores = result.get("round1_scores", {})
@@ -885,7 +905,8 @@ def run_hybrid_workflow(prompt: str,
             final_score=result.get("final_score", 0.0),
             status=status,
             generated_code=result.get("final_code", ""),
-            judge_reasoning=result.get("judge_reasoning", "")
+            judge_reasoning=result.get("judge_reasoning", ""),
+            feedback_iterations=result.get("feedback_iterations", [])
         )
         print(f"📝 Kapsamlı log kaydedildi: {request_id}")
         
@@ -902,5 +923,17 @@ def run_hybrid_workflow(prompt: str,
         import traceback
         traceback.print_exc()
     
+    # winner_score'u round1_scores'dan çıkar ve result'a ekle
+    # (HybridState TypedDict'de tanımlı değil, LangGraph otomatik döndürmüyor)
+    try:
+        round1_scores = result.get("round1_scores", {})
+        winner_model = result.get("winner_model", "")
+        if winner_model and winner_model in round1_scores:
+            result["winner_score"] = round1_scores[winner_model].get("hybrid_score", 0.0)
+        else:
+            result["winner_score"] = result.get("final_score", 0.0)
+    except Exception:
+        result["winner_score"] = 0.0
+
     return result
 

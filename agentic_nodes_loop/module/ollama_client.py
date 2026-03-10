@@ -50,7 +50,7 @@ def call_ollama(
     system_prompt: str = "",
     temperature: float = 0.1,
     max_tokens: int = 2048,
-    timeout: int = 120
+    timeout: int = None  # Süresiz bekle - Ollama ne kadar sürerse sürsün
 ) -> str:
     """
     Generic Ollama API call.
@@ -106,7 +106,7 @@ def call_ollama_chat(
     messages: list,
     temperature: float = 0.1,
     max_tokens: int = 2048,
-    timeout: int = 120,
+    timeout: int = None,  # Süresiz bekle - Ollama ne kadar sürerse sürsün
     format_json: bool = False
 ) -> str:
     """
@@ -278,7 +278,7 @@ Evaluate this code and return JSON scores."""
         messages=messages,
         temperature=0.1,
         max_tokens=1024,
-        timeout=180,  # Longer timeout for CoT reasoning
+        timeout=None,  # Süresiz bekle - CoT reasoning uzun sürebilir
         format_json=True
     )
     

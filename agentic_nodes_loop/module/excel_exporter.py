@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import csv
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
@@ -16,8 +17,15 @@ def export_to_excel(csv_path=LOG_FILE, excel_path=EXCEL_FILE):
 
     print(f"🔄 Reading CSV: {csv_path}...")
     try:
-        # Read CSV
-        df = pd.read_csv(csv_path)
+        # quoting=QUOTE_ALL ile yazılmış CSV'yi düzgün oku
+        # on_bad_lines='warn' ile bozuk satırları atla, hata verme
+        df = pd.read_csv(
+            csv_path,
+            quoting=csv.QUOTE_ALL,
+            on_bad_lines='warn',
+            engine='python'
+        )
+
         
         # Write to Excel with Pandas first
         writer = pd.ExcelWriter(excel_path, engine='openpyxl')

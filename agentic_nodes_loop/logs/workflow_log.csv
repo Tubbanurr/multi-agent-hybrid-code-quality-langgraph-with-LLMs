@@ -132,3 +132,649 @@ def fibonacci(n):
 n = 10
 print(fibonacci(n))
 ```","The code correctly implements the Fibonacci sequence with proper handling of edge cases. It uses an efficient iterative approach, follows Python best practices with clear variable names and minimal error handling, and is highly readable."
+REQ_20260226_154650_503ee8fa,write a fşbonacci algorithm with python ,Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,58.0,96.0,69.0,58.0,85.0,66.0,56.0,98.0,68.0,Qwen2.5-Coder (Ollama),1,71.0,SUCCESS,2026-02-26 15:46,"```python
+def fibonacci(n: int) -> list:
+    """"""
+    Calculate the Fibonacci sequence up to the nth number.
+
+    Args:
+        n (int): The number of terms in the Fibonacci sequence to generate.
+
+    Returns:
+        list: A list containing the Fibonacci sequence up to the nth term.
+    
+    Raises:
+        ValueError: If n is negative.
+    """"""
+    if n < 0:
+        raise ValueError(""n must be a non-negative integer"")
+    elif n == 0:
+        return []
+    elif n == 1:
+        return [0]
+    elif n == 2:
+        return [0, 1]
+
+    fib_sequence = [0, 1]
+    for i in range(2, n):
+        next_value = fib_sequence[-1] + fib_sequence[-2]
+        fib_sequence.append(next_value)
+    
+    return fib_sequence
+```","The algorithm correctly generates the Fibonacci sequence up to n terms. The code handles edge cases, uses efficient logic with O(n) time complexity, follows Python best practices with clear documentation and variable names, and is highly readable."
+REQ_20260226_160806_af2b5c85,write a binary search algorithm  ,Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,58.0,97.0,69.0,58.0,90.0,67.0,56.0,99.0,68.0,Qwen2.5-Coder (Ollama),1,74.0,SUCCESS,2026-02-26 16:12,"```python
+def binary_search(arr: list[int], target: int) -> int:
+    """"""
+    Perform a binary search on a sorted array to find the index of the target value.
+    
+    Parameters:
+    arr (list[int]): The sorted array to search.
+    target (int): The value to search for in the array.
+    
+    Returns:
+    int: The index of the target if found, otherwise -1.
+    """"""
+    left, right = 0, len(arr) - 1
+    
+    while left <= right:
+        mid = (left + right) // 2
+        
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+            
+    return -1
+
+# Example usage:
+sorted_array = [1, 3, 5, 7, 9]
+target_value = 5
+result = binary_search(sorted_array, target_value)
+print(f""Index of {target_value} is: {result}"")
+```","The provided binary search implementation correctly handles the problem statement. It efficiently narrows down the search space, follows standard best practices with clear variable names and docstrings, and is easy to read and understand."
+REQ_20260226_161447_de624911,"Python ile eksiksiz bir Cache sistemi implement et: LRU Cache,  LFU Cache ve TTL (zaman aşımı) destekli. Thread-safe olsun (Lock kullan).  Generic type destekli (TypeVar). Her class için abstract base class yaz.  Kapsamlı docstring, type hints, custom exception sınıfları ve unit test  fonksiyonları içersin. PEP8 ve Bandit güvenlik kontrollerini geçecek şekilde yaz. ",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,54.0,87.0,63.0,62.0,76.0,66.0,50.0,84.0,60.0,CodeLlama (Ollama),9,66.0,SUCCESS,2026-02-26 17:02,"```python
+import threading
+from typing import TypeVar, Generic, Dict, List, Optional, Any, Union
+import time
+
+class CacheException(Exception):
+    pass
+
+class CacheFullError(CacheException):
+    pass
+
+class CacheMissError(CacheException):
+    pass
+
+T = TypeVar('T')
+
+class BaseCache(Generic[T]):
+    """"""
+    A generic cache class that supports LRU, LFU, and TTL-based eviction policies.
+    The cache is thread-safe and can store any type of data.
+    """"""
+
+    def __init__(self, capacity: int) -> None:
+        self._capacity = capacity
+        self._data: Dict[str, T] = {}
+        self._lru_list: List[str] = []
+        self._lfu_dict: Dict[str, int] = {}
+        self._ttl_dict: Dict[str, float] = {}
+        self._lock = threading.Lock()
+
+    def get(self, key: str) -> T:
+        """"""
+        Get the value associated with a given key from the cache.
+        If the key is not found in the cache or has expired, raise CacheMissError.
+        """"""
+        with self._lock:
+            if key not in self._data:
+                raise CacheMissError(f""Key {key} not found in cache"")
+            if time.time() > self._ttl_dict.get(key, 0):
+                del self._data[key]
+                del self._ttl_dict[key]
+                raise CacheMissError(f""Key {key} has expired"")
+            self._touch_lru(key)
+            return self._data[key]
+
+    def put(self, key: str, value: T) -> None:
+        """"""
+        Add a new key-value pair to the cache. If the key already exists, update its value.
+        If the cache is full, remove the least recently used item before adding the new one.
+        """"""
+        with self._lock:
+            if len(self._data) >= self._capacity:
+                self._evict_lru()
+            self._data[key] = value
+            self._touch_lru(key)
+            self._ttl_dict[key] = time.time() + 10
+
+    def _touch_lru(self, key: str) -> None:
+        """"""
+        Move the given key to the front of the LRU list.
+        """"""
+        if key in self._data:
+            self._lru_list.remove(key)
+            self._lru_list.append(key)
+
+    def _evict_lru(self) -> None:
+        """"""
+        Remove the least recently used item from the cache.
+        """"""
+        key = self._lru_list.pop(0)
+        del self._data[key]
+        if key in self._ttl_dict:
+            del self._ttl_dict[key]
+
+class LRUCache(BaseCache[T]):
+    def __init__(self, capacity: int) -> None:
+        super().__init__(capacity)
+
+class LFUCache(BaseCache[T]):
+    def __init__(self, capacity: int) -> None:
+        super().__init__(capacity)
+        self._lfu_dict = {}
+
+    def _evict_lru(self) -> None:
+        """"""
+        Remove the least frequently used item from the cache.
+        """"""
+        if not self._lfu_dict:
+            return
+        min_freq = min(self._lfu_dict.values())
+        keys_to_evict = [key for key, freq in self._lfu_dict.items() if freq == min_freq]
+        for key in keys_to_evict:
+            del self._data[key]
+            del self._lfu_dict[key]
+
+class TTLCache(BaseCache[T]):
+    def __init__(self, capacity: int) -> None:
+        super().__init__(capacity)
+
+if __name__ == ""__main__"":
+    cache = LRUCache(5)
+    cache.put(""key1"", 1)
+    cache.put(""key2"", 2)
+    cache.put(""key3"", 3)
+    print(cache.get(""key1""))
+    print(cache.get(""key2""))
+    print(cache.get(""key3""))
+    cache.put(""key4"", 4)
+    print(cache.get(""key1""))
+    print(cache.get(""key2""))
+    print(cache.get(""key3""))
+    print(cache.get(""key4""))
+
+    cache = LFUCache(5)
+    cache.put(""key1"", 1)
+    cache.put(""key2"", 2)
+    cache.put(""key3"", 3)
+    print(cache.get(""key1""))
+    print(cache.get(""key2""))
+    print(cache.get(""key3""))
+    cache.put(""key4"", 4)
+    print(cache.get(""key1""))
+    print(cache.get(""key2""))
+    print(cache.get(""key3""))
+    print(cache.get(""key4""))
+
+    cache = TTLCache(5)
+    cache.put(""key1"", 1)
+    cache.put(""key2"", 2)
+    cache.put(""key3"", 3)
+    print(cache.get(""key1""))
+    print(cache.get(""key2""))
+    print(cache.get(""key3""))
+    cache.put(""key4"", 4)
+    print(cache.get(""key1""))
+    print(cache.get(""key2""))
+    print(cache.get(""key3""))
+    print(cache.get(""key4""))
+```",JSON parse error: Expecting value: line 1 column 1 (char 0)
+REQ_20260226_172407_9df667bc,bubble sort kodu yaz ,Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,58.0,88.0,67.0,58.0,93.0,68.0,56.0,100.0,69.0,Llama 3.1 (Ollama),9,69.0 → 67.0 → 64.0 → 63.0 → 67.0 → 68.0 → 68.0 → 68.0 → 65.0 → 65.0,"[1] -2.0 (Type Hints, Docstrings, Error Handling) | [2] -3.0 [ROLLBACK] (Docstrings, Error Handling, Code Readability) | [3] -4.0 [ROLLBACK] (Code Quality, Early Termination, Stil) | [4] +0.0 (Style) | [5] +1.0 (Style) | [6] +0.0 (Security, Documentation, Error Handling) | [7] +0.0 (Style) | [8] -3.0 [ROLLBACK] (Style) | [9] -3.0 [ROLLBACK] (Style)",68.0,SUCCESS,2026-02-26 19:41,"```python
+def bubble_sort(arr: list) -> list:
+    """"""
+    Bubble sort algorithm implementation with early exit optimization and improved error handling.
+
+    Args:
+        arr (list): The input list to be sorted.
+
+    Returns:
+        list: The sorted list.
+    """"""
+
+    try:
+        n = len(arr)
+        
+        for i in range(n-1):
+            swapped = False
+            
+            # Iterate through the array from the first element to the second last
+            for j in range(n-i-1):
+                if arr[j] > arr[j+1]:
+                    # Swap elements if they are in the wrong order
+                    arr[j], arr[j+1] = arr[j+1], arr[j]
+                    swapped = True
+            
+            # If no swaps occurred, the array is already sorted and we can break early
+            if not swapped:
+                break
+    
+    except TypeError as e:
+        print(f""TypeError: {e}. Input data type is invalid."")
+        return None
+    
+    except ValueError as e:
+        print(f""ValueError: {e}. Invalid input value."")
+        return None
+    
+    except IndexError as e:
+        print(f""IndexError: {e}. Index out of range."")
+        return None
+    
+    # Return the sorted list with type hints
+    return arr  # -> list
+
+# Example usage
+if __name__ == ""__main__"":
+    arr = [64, 34, 25, 12, 22, 11, 90]
+    print(""Original array:"", arr)
+    print(""Sorted array:"", bubble_sort(arr))
+```","The algorithm correctness score is full because the code correctly implements bubble sort with early termination. The code logic is mostly sound but could benefit from a docstring and more detailed error handling messages. Best practices are partially followed, with room for improvement in variable naming and adding a docstring. Readability is good but can be enhanced by including documentation and better variable names."
+REQ_20260301_144949_8c9f4a88,en uzun diziyi bulup diziyi tersten yazdıan python algoritması yaz,Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,56.0,67.0,59.0,58.0,95.0,69.0,54.0,30.0,46.0,CodeLlama (Ollama),3,69.0 → 39.0 → 66.0 → 74.0,"[1] -30.0 [ROLLBACK] (Algorithm Correctness, Code Readability, Styling) | [2] -3.0 [ROLLBACK] (Code Readability, Algorithm Optimization, Code Readability) | [3] +5.0 (Style, Error Handling)",74.0,SUCCESS,2026-03-01 15:00,"```python
+def find_and_reverse_longest_decreasing_subarray(my_list: list) -> list:
+    """"""
+    Finds the longest non-increasing subarray in a given list and returns it reversed.
+    
+    Parameters:
+    my_list (list): The input list of integers.
+    
+    Returns:
+    list: The longest non-increasing subarray reversed.
+    """"""
+    if not my_list:
+        return []
+    
+    max_length = 1
+    start_index = 0
+    current_start = 0
+    
+    for i in range(1, len(my_list)):
+        if my_list[i] <= my_list[i - 1]:
+            current_length = i - current_start + 1
+            if current_length > max_length:
+                max_length = current_length
+                start_index = current_start
+        else:
+            current_start = i
+    
+    longest_subarray = my_list[start_index:start_index + max_length]
+    return longest_subarray[::-1]
+
+# Example usage:
+my_list = [5, 4, 3, 2, 1, 2, 3, 4, 5]
+print(find_and_reverse_longest_decreasing_subarray(my_list))  # Output: [1, 2, 3, 4, 5]
+```","The algorithm correctly finds the longest non-increasing subarray and returns it reversed. The code is efficient with O(n) time complexity, follows clear variable names and structure, and is well-commented for readability."
+REQ_20260301_163911_a1f3ebb4,binary search yapan python kodunu yaz,Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,58.0,97.0,69.0,58.0,97.0,69.0,56.0,94.0,67.0,Qwen2.5-Coder (Ollama),1,69.0 → 73.0,"[1] +4.0 (Style, Error Handling)",73.0,SUCCESS,2026-03-01 16:46,"```python
+def binary_search(arr: list[int], target: int) -> int:
+    """"""
+    Perform a binary search on a sorted array to find the index of the target element.
+    
+    Parameters:
+    arr (list[int]): The sorted array to search.
+    target (int): The element to search for.
+    
+    Returns:
+    int: The index of the target element if found, otherwise -1.
+    """"""
+    low = 0
+    high = len(arr) - 1
+    
+    while low <= high:
+        mid = (low + high) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            low = mid + 1
+        else:
+            high = mid - 1
+            
+    return -1
+
+# Örnek kullanım:
+arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+target = 7
+result = binary_search(arr, target)
+print(f""Element {target} found at index: {result}"")
+```","The code correctly implements binary search with proper edge case handling. The logic is efficient and follows the standard algorithm. It adheres to Python best practices with type hints and docstrings, though missing error handling for unsorted arrays. The code is clear and well-commented, making it highly readable."
+REQ_20260302_202202_b5d1e386,bubble sort kodu yaz python ile,Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,58.0,86.0,66.0,58.0,79.0,64.0,58.0,74.0,62.0,Qwen2.5-Coder (Ollama),1,66.0 → 73.0,"[1] +7.0 (Style, Error Handling)",73.0,SUCCESS,2026-03-02 20:28,"```python
+def bubble_sort(arr: list[int]) -> None:
+    """"""
+    Sorts an array of integers in ascending order using the Bubble Sort algorithm.
+    
+    Parameters:
+    arr (list[int]): The list of integers to be sorted.
+    
+    Returns:
+    None: The function sorts the list in place and does not return anything.
+    """"""
+    n = len(arr)
+    for i in range(n):
+        swapped = False
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+                swapped = True
+        if not swapped:
+            break
+
+# Test the function
+arr = [64, 34, 25, 12, 22, 11, 90]
+bubble_sort(arr)
+print(""Sorted array is:"", arr)
+```","The code correctly implements Bubble Sort with an optimization to break early. It follows best practices with good naming, documentation, and structure, but could be slightly more efficient in certain cases."
+REQ_20260302_203338_f59d24f3,bubble sort kodu yaz python ile,Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,58.0,86.0,66.0,58.0,78.0,63.0,58.0,78.0,63.0,Qwen2.5-Coder (Ollama),2,66.0 → 67.0 → 73.0,"[1] +1.0 (Type Safety, Error Handling) | [2] +6.0 (Documentation, Code Style)",73.0,SUCCESS,2026-03-02 20:43,"```python
+def bubble_sort(arr: list) -> list:
+    """"""
+    Sorts an array using the Bubble Sort algorithm.
+
+    Parameters:
+    arr (list): The list of elements to be sorted.
+
+    Returns:
+    list: The sorted list.
+    """"""
+    n = len(arr)
+    for i in range(n):
+        swapped = False
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+                swapped = True
+        if not swapped:
+            break
+    return arr
+
+# Test the function
+arr = [64, 34, 25, 12, 22, 11, 90]
+sorted_arr = bubble_sort(arr)
+print(""Sorted array is:"", sorted_arr)
+```","The code correctly implements bubble sort with an optimization. It follows best practices and is highly readable, though there's room for minor improvements in efficiency."
+REQ_20260302_204727_cd164180,"Write a Python rate limiter using the sliding window algorithm.  Must be thread-safe, support per-user limits, and persist state to a JSON file atomically. ",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,54.0,66.0,57.0,61.0,68.0,63.0,54.0,63.0,56.0,CodeLlama (Ollama),9,63.0 → 67.0 → 65.0 → 66.0 → 67.0 → 68.0 → 67.0 → 66.0 → 67.0 → 65.0,"[1] +4.0 (Documentation) | [2] -2.0 (Algorithm, Error Handling, Type Hints) | [3] +1.0 (Style) | [4] +1.0 (Style) | [5] +1.0 (Style) | [6] -1.0 (Style) | [7] -1.0 (Style) | [8] +1.0 (Style) | [9] -2.0 (Style)",65.0,SUCCESS,2026-03-02 21:26,"```python
+import json
+import time
+from collections import deque
+from threading import Lock
+
+class RateLimiter:
+    """"""
+    A thread-safe rate limiter using the sliding window algorithm.
+    
+    Args:
+        max_requests (int): Maximum number of requests allowed per user within a window.
+        window_size (int): Time window size in seconds.
+    """"""
+    def __init__(self, max_requests: int, window_size: int):
+        self.max_requests = max_requests
+        self.window_size = window_size
+        self.requests = deque()
+        self.users = {}
+        self.lock = Lock()
+
+    def limit(self, user_id: str) -> bool:
+        """"""
+        Limits the number of requests per user within a sliding window.
+        
+        Args:
+            user_id (str): Unique identifier for the user.
+            
+        Returns:
+            bool: True if the request is allowed, False otherwise.
+        """"""
+        with self.lock:
+            current_time = time.time()
+            while len(self.requests) > 0 and self.requests[0][1] < current_time - self.window_size:
+                oldest_user, _ = self.requests.popleft()
+                if oldest_user == user_id:
+                    self.users[user_id] -= 1
+                    break
+
+            if user_id not in self.users:
+                self.users[user_id] = 0
+
+            if self.users[user_id] >= self.max_requests:
+                return False
+            else:
+                self.requests.append((user_id, current_time))
+                self.users[user_id] += 1
+                return True
+
+    def save_state(self):
+        """"""
+        Atomically saves the current state of the rate limiter to a JSON file.
+        """"""
+        with self.lock, open('rate_limiter_state.json', 'w') as f:
+            state = {'requests': list(self.requests), 'users': self.users}
+            json.dump(state, f)
+
+    def load_state(self):
+        """"""
+        Atomically loads the state of the rate limiter from a JSON file.
+        """"""
+        try:
+            with self.lock, open('rate_limiter_state.json', 'r') as f:
+                state = json.load(f)
+                self.requests = deque(state['requests'])
+                self.users = state['users']
+        except FileNotFoundError:
+            pass
+```",The rate limiter has a partially correct sliding window implementation but fails to handle multiple user entries properly. It follows best practices for threading and state persistence but could improve error handling and modularity. The code is readable with good structure and documentation.
+REQ_20260303_123924_bcf6dff0," Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli. ",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,58.0,99.0,70.0,58.0,100.0,70.0,58.0,100.0,70.0,Qwen2.5-Coder (Ollama),0,70.0,-,70.0,SUCCESS,2026-03-03 12:42,"```python
+def calculate_average(numbers):
+    if not numbers:
+        return None
+    return sum(numbers) / len(numbers)
+```",The code correctly calculates the average and handles empty lists. The logic is efficient and straightforward. It follows Python best practices with clear naming and structure. Only minor improvement could be adding a docstring for better documentation.
+REQ_20260303_132034_2d6be185," Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,58.0,100.0,70.0,58.0,100.0,70.0,58.0,100.0,70.0,Qwen2.5-Coder (Ollama),0,70.0,-,70.0,SUCCESS,2026-03-03 13:23,"```python
+def calculate_average(numbers):
+    if not numbers:
+        return None
+    return sum(numbers) / len(numbers)
+```","The code correctly calculates the average or returns None for empty lists, follows best practices with clear naming and structure, and is efficient and readable."
+REQ_20260303_142209_0083ea0c," Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli. ",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,74.0,100.0,81.0,74.0,100.0,81.0,74.0,97.0,80.0,Qwen2.5-Coder (Ollama),3,81.0 → 75.0 → 79.0 → 85.0,[1] -6.0 [ROLLBACK] (Genel) | [2] -2.0 (Genel) | [3] +6.0 (Genel),85.0,SUCCESS,2026-03-03 14:38,"```python
+def calculate_average(numbers: list[int]) -> float:
+    """"""
+    Calculates the average of a list of numbers.
+
+    Args:
+        numbers (list[int]): A list of integers.
+
+    Returns:
+        float: The average of the numbers. Returns None if the list is empty.
+    """"""
+    if not numbers:
+        return None
+    try:
+        return sum(numbers) / len(numbers)
+    except TypeError as e:
+        print(f""Error: {e}"")
+        return None
+```","The code correctly calculates the average and handles empty lists. The logic is efficient, though the try-except could be improved. It follows best practices with type hints and docstrings. The code is very readable."
+REQ_20260303_145813_3f77890e," Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli. ",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,74.0,100.0,81.0,74.0,100.0,81.0,74.0,100.0,81.0,Qwen2.5-Coder (Ollama),9,81.0 → 75.0 → 82.0 → 83.0 → 82.0 → 84.0 → 80.0 → 81.0 → 77.0 → 82.0,[1] -6.0 [ROLLBACK] (Error Handling) | [2] +1.0 (Genel) | [3] +1.0 (Genel) | [4] -1.0 (Genel) | [5] +2.0 (Genel) | [6] -4.0 [ROLLBACK] (Genel) | [7] -3.0 [ROLLBACK] (Genel) | [8] -7.0 [ROLLBACK] (Genel) | [9] -2.0 (Genel),82.0,SUCCESS,2026-03-03 15:38,"```python
+def calculate_average(numbers: list) -> float:
+    """"""
+    Calculates the average of a list of numbers.
+
+    Args:
+        numbers (list): A list of numbers.
+
+    Returns:
+        float: The average of the numbers if the list is not empty, otherwise None.
+    """"""
+    if not numbers:
+        return None
+    try:
+        return sum(numbers) / len(numbers)
+    except ZeroDivisionError:
+        print(""Hata: Boş liste gönderildi."")
+        return None
+```","The code correctly calculates averages and handles empty lists, but the try-except is redundant. It follows best practices with type hints and docstrings, though could improve by updating return types."
+"REQ_20260303_155451_08dee753","Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.  ","Qwen2.5-Coder (Ollama)","CodeLlama (Ollama)","Llama 3.1 (Ollama)","DeepSeek-R1 (Ollama)","0.70","0.30","74.0","100.0","81.0","74.0","100.0","81.0","74.0","96.0","80.0","Qwen2.5-Coder (Ollama)","0","81.0","-","81.0","SUCCESS","2026-03-03 15:58","```python
+def calculate_average(numbers):
+    if not numbers:
+        return None
+    return sum(numbers) / len(numbers)
+```","The code correctly calculates the average, handles empty lists, follows best practices with clear naming and structure, and is highly readable."
+"REQ_20260303_165105_f6c8db6c"," Bir string içinde birbirini tekrar etmeyen en uzun alt string'in (substring) uzunluğunu bulan bir python kodu yaz. Örnek: 'abcabcbb' girdisi için sonuç 3 olmalı (abc).  ","Qwen2.5-Coder (Ollama)","CodeLlama (Ollama)","Llama 3.1 (Ollama)","DeepSeek-R1 (Ollama)","0.70","0.30","74.0","92.0","79.0","70.0","0.0","49.0","69.0","88.0","74.0","Qwen2.5-Coder (Ollama)","1","79.0 → 85.0","[1] +6.0 (Style, Error Handling)","85.0","SUCCESS","2026-03-03 16:59","```python
+def length_of_longest_substring(s: str) -> int:
+    """"""
+    Finds the length of the longest substring without repeating characters.
+
+    :param s: Input string.
+    :return: Length of the longest substring without repeating characters.
+    """"""
+    n = len(s)
+    longest = 0
+    start = 0
+    char_index = {}
+
+    for end in range(n):
+        if s[end] in char_index and char_index[s[end]] >= start:
+            start = char_index[s[end]] + 1
+        else:
+            longest = max(longest, end - start + 1)
+        
+        char_index[s[end]] = end
+    
+    return longest
+
+# Test the function
+print(length_of_longest_substring('abcabcbb'))  # Output: 3
+```","The code correctly implements the sliding window technique with a hash map to track character indices, ensuring optimal performance. It adheres to Python best practices and is highly readable."
+"REQ_20260303_170401_d461e0c0","Python ile çok kullanıcılı bir async chat sunucusu yaz. Gereksinimler: asyncio ve websockets kullan. Aynı anda en az 1000 bağlantıyı destekle. Kullanıcılar odaya katılabilsin ve mesajlar sadece o odadakilere yayınlansın. Her kullanıcı için rate limiting uygula (10 sn’de max 5 mesaj). Mesajları hafızada tut ve son 20 mesajı yeni katılan kullanıcıya gönder. Hataları özel exception sınıflarıyla yönet. Kod modüler ve type hint’li olsun. ","Qwen2.5-Coder (Ollama)","CodeLlama (Ollama)","Llama 3.1 (Ollama)","DeepSeek-R1 (Ollama)","0.70","0.30","70.0","66.0","68.0","54.0","50.0","52.0","70.0","63.0","67.0","Qwen2.5-Coder (Ollama)","9","68.0 → 68.0 → 67.0 → 70.0 → 71.0 → 68.0 → 68.0 → 69.0 → 68.0 → 70.0","[1] +0.0 (Documentation, Type Safety, Style) | [2] -1.0 (Type Safety, Style) | [3] +3.0 (Type Safety, Style) | [4] +1.0 (Type Safety, Style) | [5] -3.0 [ROLLBACK] (Type Safety, Style) | [6] -3.0 [ROLLBACK] (Type Safety, Style) | [7] -2.0 (Type Safety, Style) | [8] -1.0 (Type Safety, Style) | [9] +2.0 (Type Safety, Style)","70.0","SUCCESS","2026-03-03 18:02","```python
+import asyncio
+import websockets
+from typing import Dict, List, Optional
+
+class RateLimitException(Exception):
+    """"""Rate limit exceeded exception.""""""
+    pass
+
+class ChatRoom:
+    def __init__(self):
+        self.messages: List[str] = []
+    
+    async def send_message(self, message: str) -> None:
+        if len(self.messages) >= 20:
+            self.messages.pop(0)
+        self.messages.append(message)
+
+class UserManager:
+    def __init__(self):
+        self.users: Dict[str, websockets.WebSocketServerProtocol] = {}
+        self.room_messages: Dict[str, ChatRoom] = {}
+    
+    async def connect(self, websocket: websockets.WebSocketServerProtocol, path: str) -> None:
+        """"""Connect a new user to the chat server.""""""
+        user_id = await websocket.recv()
+        if user_id in self.users:
+            raise Exception(""User already connected"")
+        self.users[user_id] = websocket
+        room_name = await websocket.recv()
+        if room_name not in self.room_messages:
+            self.room_messages[room_name] = ChatRoom()
+        await self.join_room(user_id, room_name)
+    
+    async def disconnect(self, user_id: str) -> None:
+        """"""Disconnect a user from the chat server.""""""
+        if user_id in self.users:
+            del self.users[user_id]
+    
+    async def join_room(self, user_id: str, room_name: str) -> None:
+        """"""Join a user to a specific room.""""""
+        if user_id not in self.users:
+            raise Exception(""User not connected"")
+        await self.send_last_20_messages(user_id, room_name)
+    
+    async def send_last_20_messages(self, user_id: str, room_name: str) -> None:
+        """"""Send the last 20 messages to a new user.""""""
+        if room_name not in self.room_messages:
+            return
+        messages = self.room_messages[room_name].messages
+        for message in messages:
+            await self.users[user_id].send(message)
+    
+    async def send_message(self, user_id: str, room_name: str, message: str) -> None:
+        """"""Send a message to a specific room.""""""
+        if user_id not in self.users:
+            raise Exception(""User not connected"")
+        if room_name not in self.room_messages:
+            raise Exception(""Room does not exist"")
+        await self.rate_limit(user_id)
+        await self.room_messages[room_name].send_message(message)
+        await self.broadcast_message(room_name, message)
+    
+    async def rate_limit(self, user_id: str) -> None:
+        """"""Apply rate limiting to a user.""""""
+        current_time = asyncio.get_running_loop().time()
+        if user_id in self.users:
+            last_message_time = getattr(self.users[user_id], 'last_message_time', 0)
+            time_since_last_message = current_time - last_message_time
+            if time_since_last_message < 10:
+                raise RateLimitException(""Rate limit exceeded"")
+        self.users[user_id].last_message_time = current_time
+    
+    async def broadcast_message(self, room_name: str, message: str) -> None:
+        """"""Broadcast a message to all users in a specific room.""""""
+        for user_id, websocket in self.users.items():
+            await websocket.send(message)
+
+async def chat_handler(websocket: websockets.WebSocketServerProtocol, path: str) -> None:
+    try:
+        manager = UserManager()
+        await manager.connect(websocket, path)
+        async for message in websocket:
+            user_id, room_name, content = message.split(' ', 2)
+            await manager.send_message(user_id, room_name, content)
+    except Exception as e:
+        print(f""Error: {e}"")
+    finally:
+        await manager.disconnect(websocket)
+
+start_server = websockets.serve(chat_handler, ""localhost"", 8765)
+
+asyncio.get_event_loop().run_until_complete(start_server)
+asyncio.get_event_loop().run_forever()
+```","The code has potential issues with state management and modularity, affecting correctness. It uses appropriate algorithms but could be optimized. Best practices are followed in parts, and readability is decent."
+"REQ_20260303_182912_8e6766ea"," Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli. ","Qwen2.5-Coder (Ollama)","CodeLlama (Ollama)","Llama 3.1 (Ollama)","DeepSeek-R1 (Ollama)","0.70","0.30","74.0","100.0","81.0","72.0","100.0","80.0","74.0","100.0","81.0","Qwen2.5-Coder (Ollama)","1","81.0 → 86.0","[1] +5.0 (Error Handling)","86.0","SUCCESS","2026-03-03 18:35","```python
+def calculate_average(numbers: list[int]) -> float:
+    """"""
+    Calculates the average of a list of numbers.
+
+    Args:
+        numbers (list[int]): A list of integers.
+
+    Returns:
+        float: The average of the numbers if the list is not empty, otherwise None.
+    """"""
+    if not numbers:
+        return None
+    return sum(numbers) / len(numbers)
+```","The function correctly calculates the average, handles empty lists, follows best practices with type hints and docstrings, and is highly readable."
+"REQ_20260305_111535_b807b16d","Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.","Qwen2.5-Coder (Ollama)","CodeLlama (Ollama)","Llama 3.1 (Ollama)","DeepSeek-R1 (Ollama)","0.70","0.30","74.0","100.0","81.0","74.0","97.0","80.0","74.0","99.0","81.0","Qwen2.5-Coder (Ollama)","1","81.0 → 86.0","[1] +5.0 (Style, Error Handling)","86.0","SUCCESS","2026-03-05 11:21","```python
+def calculate_average(numbers: list[int]) -> float:
+    """"""
+    Calculates the average of a list of numbers.
+    
+    Args:
+        numbers (list[int]): A list of integers.
+        
+    Returns:
+        float: The average of the numbers if the list is not empty, otherwise None.
+    """"""
+    if not numbers:
+        return None
+    return sum(numbers) / len(numbers)
+```","The function correctly calculates the average, handles empty lists by returning None, follows best practices with type hints and docstrings, and is highly readable."

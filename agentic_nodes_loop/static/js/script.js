@@ -2,6 +2,70 @@
 // NOW WITH HYBRID SCORING (Static + LLM)
 // Updated for Ollama support with dynamic model names
 
+// --- Canlı bekleme durumu ---
+let statusInterval = null;
+const statusMessages = [
+    "⏳ Modeller koda hazırlanıyor...",
+    "🤖 Ollama yerel modeller çalışıyor...",
+    "📝 Kod üretimi devam ediyor...",
+    "🔍 Statik analiz yürütülüyor...",
+    "🧠 LLM değerlendirmesi yapılıyor...",
+    "🏆 En iyi kod seçiliyor...",
+    "🔄 Feedback döngüsü işleniyor...",
+    "⚙️  Kalite eşiği kontrol ediliyor...",
+    "✨ Sonuçlar hazırlanıyor...",
+];
+
+function startStatusTicker() {
+    const statusEl = document.getElementById("status-message");
+    if (!statusEl) return;
+    statusEl.style.display = "block";
+    let i = 0;
+    statusEl.textContent = statusMessages[0];
+    statusInterval = setInterval(() => {
+        i = (i + 1) % statusMessages.length;
+        statusEl.textContent = statusMessages[i];
+    }, 3000);
+}
+
+function stopStatusTicker() {
+    if (statusInterval) {
+        clearInterval(statusInterval);
+        statusInterval = null;
+    }
+    const statusEl = document.getElementById("status-message");
+    if (statusEl) statusEl.style.display = "none";
+}
+
+function showError(message) {
+    let errEl = document.getElementById("error-banner");
+    if (!errEl) {
+        errEl = document.createElement("div");
+        errEl.id = "error-banner";
+        errEl.style.cssText = `
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            margin-top: 1rem;
+            color: #b91c1c;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        `;
+        document.querySelector(".input-section").appendChild(errEl);
+    }
+    errEl.innerHTML = `<span style="font-size:1.4rem">⚠️</span> ${message}`;
+    errEl.style.display = "flex";
+}
+
+function clearError() {
+    const errEl = document.getElementById("error-banner");
+    if (errEl) errEl.style.display = "none";
+}
+
 async function generate() {
     const prompt = document.getElementById("prompt").value;
     if (!prompt) return alert("Lütfen bir prompt girin");
@@ -12,50 +76,109 @@ async function generate() {
     // UI Loading
     btn.disabled = true;
     loader.style.display = "inline-block";
+    clearError();
 
-    // Hide sections
+    // Sonuç bölümlerini gizle
     document.getElementById("round1-section").style.display = "none";
     document.getElementById("winner-section").style.display = "none";
 
-    try {
-        // Longer timeout for Ollama (local models are slower)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 dakika timeout
+    // Canlı durum mesajını başlat
+    startStatusTicker();
 
+    try {
+        // 1. Job'ı başlat — sunucu ANINDA job_id döndürür
         const response = await fetch("/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt }),
-            signal: controller.signal
+            body: JSON.stringify({ prompt })
         });
 
-        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error(`Sunucu hatası: HTTP ${response.status}`);
 
-        if (!response.ok) throw new Error("API Hatası");
+        const { job_id } = await response.json();
+        console.log("Job başlatıldı:", job_id);
 
-        const data = await response.json();
-        console.log("Sonuç:", data);
-
-        // Round 1: 3 model kodları göster (HYBRID SCORES)
-        showRound1(data.round1_codes, data.round1_scores);
-
-        // Kazanan ve feedback
-        showWinner(data);
+        // 2. Polling — sonuç gelene kadar her 3sn'de sorgula
+        await pollStatus(job_id);
 
     } catch (error) {
-        if (error.name === 'AbortError') {
-            alert("İstek zaman aşımına uğradı. Ollama modelleri yavaş çalışıyor olabilir.");
-        } else {
-            alert("Hata: " + error.message);
-        }
-    } finally {
+        showError("Hata: " + error.message);
+        stopStatusTicker();
         btn.disabled = false;
         loader.style.display = "none";
     }
 }
 
+async function pollStatus(job_id) {
+    const btn = document.getElementById("btn-generate");
+    const loader = document.getElementById("loader");
+
+    const poll = async () => {
+        try {
+            const res = await fetch(`/status/${job_id}`);
+
+            // 404: sunucu restart olmuş, job bellekten silindi
+            if (res.status === 404) {
+                stopStatusTicker();
+                btn.disabled = false;
+                loader.style.display = "none";
+                showError("Sunucu yeniden başlatıldı, işlem kayboldu. Lütfen tekrar gönderin.");
+                return;
+            }
+
+            if (!res.ok) throw new Error(`Status sorgu hatası: HTTP ${res.status}`);
+
+
+            const data = await res.json();
+
+            if (data.status === "done") {
+                // İşlem tamamlandı
+                stopStatusTicker();
+                btn.disabled = false;
+                loader.style.display = "none";
+
+                const result = data.result;
+                console.log("Sonuç:", result);
+
+                // Null güvenlik kontrolü
+                if (!result || !result.round1_codes || !result.round1_scores) {
+                    showError("Sonuç verisi eksik veya hatalı. Terminali kontrol edin.");
+                    return;
+                }
+
+                showRound1(result.round1_codes, result.round1_scores);
+                showWinner(result);
+
+
+            } else if (data.status === "error") {
+                // Hata oluştu
+                stopStatusTicker();
+                btn.disabled = false;
+                loader.style.display = "none";
+                showError("İşlem hatası: " + (data.error || "Bilinmeyen hata"));
+
+            } else {
+                // Hâlâ çalışıyor (pending / running) — 3sn sonra tekrar sor
+                setTimeout(poll, 3000);
+            }
+
+        } catch (err) {
+            stopStatusTicker();
+            btn.disabled = false;
+            loader.style.display = "none";
+            showError("Polling hatası: " + err.message);
+        }
+    };
+
+    // İlk sorguyu 2sn sonra yap (workflow'un başlamasına zaman ver)
+    setTimeout(poll, 2000);
+}
+
+
 function showRound1(codes, scoresData) {
+    if (!codes || !scoresData) return;  // null guard
     document.getElementById("round1-section").style.display = "block";
+
 
     // Dinamik model isimleri - backend'den gelen isimleri kullan
     const modelKeys = Object.keys(codes);
@@ -226,7 +349,15 @@ function showWinner(data) {
         : "Feedback döngüsü ile iyileştirildi";
 
     const hybridScore = data.final_score || 0;
-    const initialScore = data.winner_score || 0;
+
+    // Başlangıç skoru: backend'den gelen winner_score (round1 hybrid skoru)
+    // Fallback: round1_scores içinden kazananın skorunu bul
+    let initialScore = data.winner_score;
+    if (!initialScore && data.round1_scores && data.winner_model) {
+        const winnerData = data.round1_scores[data.winner_model];
+        initialScore = winnerData?.hybrid_score || winnerData?.total_score || 0;
+    }
+    initialScore = initialScore || 0;
 
     winnerInfo.innerHTML = `
         <div class="winner-title">Kazanan Model</div>

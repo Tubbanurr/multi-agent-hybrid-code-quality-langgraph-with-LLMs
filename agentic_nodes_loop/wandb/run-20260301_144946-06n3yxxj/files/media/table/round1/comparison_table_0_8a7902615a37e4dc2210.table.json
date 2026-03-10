@@ -1,0 +1,1 @@
+{"columns": ["Model", "Static Score", "LLM Score", "Hybrid Score"], "data": [["Qwen2.5-Coder (Ollama)", 56, 67, 59], ["CodeLlama (Ollama)", 58, 95, 69], ["Llama 3.1 (Ollama)", 54, 30, 46]]}
