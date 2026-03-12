@@ -175,17 +175,27 @@ def call_gemini(prompt: str) -> str:
 
 def get_model_names() -> dict:
     """Return display names for the current model configuration."""
-    if USE_OLLAMA and OLLAMA_AVAILABLE:
-        models = get_ollama_models()
-        return {
-            "model_1": models["coder_1"],
-            "model_2": models["coder_2"],
-            "model_3": models["coder_3"]
-        }
-    else:
-        return {
-            "model_1": "Llama 3.3 70B (Groq)",
-            "model_2": "DeepSeek V3",
-            "model_3": "Gemini 2.0 Flash"
-        }
+    from dotenv import load_dotenv, find_dotenv
+    load_dotenv(find_dotenv(), override=True)
+    
+    use_ollama_dynamic = os.getenv("USE_OLLAMA", "false").lower() == "true"
+    
+    if use_ollama_dynamic:
+        try:
+            from module.ollama_client import get_ollama_models, check_ollama_available
+            if check_ollama_available():
+                models = get_ollama_models()
+                return {
+                    "model_1": models["coder_1"],
+                    "model_2": models["coder_2"],
+                    "model_3": models["coder_3"]
+                }
+        except Exception as e:
+            print(f"Error getting dynamic model names: {e}")
+            
+    return {
+        "model_1": "Llama 3.3 70B (Groq)",
+        "model_2": "DeepSeek V3",
+        "model_3": "Gemini 2.0 Flash"
+    }
 

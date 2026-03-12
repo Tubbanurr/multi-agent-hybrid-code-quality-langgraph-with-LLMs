@@ -58,7 +58,7 @@ function showRound1(codes, scoresData) {
 
     // Dinamik model isimleri - backend'den gelen isimleri kullan
     const modelKeys = Object.keys(codes);
-    const modelSlots = ["llama", "deepseek", "gemini"];
+    const modelSlots = ["model-1", "model-2", "model-3"];
 
     modelKeys.forEach((modelName, index) => {
         const slotId = modelSlots[index] || `model-${index}`;
@@ -375,9 +375,9 @@ async function updateModelHeaders() {
         const response = await fetch("/models");
         const models = await response.json();
 
-        document.getElementById("header-llama").textContent = models.model_1 || "Model 1";
-        document.getElementById("header-deepseek").textContent = models.model_2 || "Model 2";
-        document.getElementById("header-gemini").textContent = models.model_3 || "Model 3";
+        document.getElementById("header-model-1").textContent = models.model_1 || "Model 1";
+        document.getElementById("header-model-2").textContent = models.model_2 || "Model 2";
+        document.getElementById("header-model-3").textContent = models.model_3 || "Model 3";
     } catch (err) {
         console.error("Modeller yüklenemedi:", err);
     }

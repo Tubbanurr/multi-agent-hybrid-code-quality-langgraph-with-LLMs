@@ -1707,3 +1707,93 @@ def binary_search(arr: list, target: int) -> int:
             high = mid - 1
     return -1
 ```",Parse error: Expecting value: line 1 column 1 (char 0)
+REQ_20260312_145724_a4d7f374,fibonacci python kod,qwen2.5-coder:7b,qwen2.5-coder:3b,phi4-mini,deepseek-r1:1.5b (Ollama),74.0,25.0,7.5,15.0,12.0,15.0,0.0,qwen2.5-coder:7b,0,74.0,SUCCESS,2026-03-12 14:57,"```python
+def fibonacci(n):
+    if n <= 0:
+        return []
+    elif n == 1:
+        return [0]
+    elif n == 2:
+        return [0, 1]
+    
+    fib_sequence = [0, 1]
+    for i in range(2, n):
+        next_value = fib_sequence[-1] + fib_sequence[-2]
+        fib_sequence.append(next_value)
+    
+    return fib_sequence
+
+# Example usage
+n = 10
+print(fibonacci(n))
+```",
+REQ_20260312_150653_d28b7f90,bubble sort python kodu ver,deepseek-r1:1.5b,qwen2.5-coder:7b,qwen2.5-coder:3b,phi4-mini (Ollama),77.0,24.0,12.0,14.0,12.0,15.0,0.0,deepseek-r1:1.5b,0,77.0,SUCCESS,2026-03-12 15:06,"To implement the bubble sort algorithm in Python, you can follow these steps:
+
+1. **Initialize Variables**: Keep track of the number of passes through the list and whether any swaps were made during a pass.
+
+2. **Bubble Sort Algorithm**:
+   - Loop through each element in the list until no more swaps are needed.
+   - For each element, compare it with the next one. If they are out of order, swap them.
+   - Repeat this process for all elements and continue until the entire list is sorted.
+
+Here's a Python implementation of the bubble sort algorithm:
+
+```python
+def bubblesort(lst):
+    n = len(lst)
+    swapped = True
+    while swapped:
+        swapped = False
+        for i in range(n - 1):
+            if lst[i] > lst[i + 1]:
+                # Swap the elements
+                lst[i], lst[i + 1] = lst[i + 1], lst[i]
+                swapped = True
+        n -= 1
+    return lst
+
+# Example usage:
+list = [6, 5, 3, 8, 7]
+sorted_list = bubblesort(list)
+print(""Sorted list:"", sorted_list)
+```
+
+This code sorts the input list using the bubble sort algorithm and returns the sorted list.",
+REQ_20260312_150838_411f83bd,python kod ver,deepseek-r1:1.5b,qwen2.5-coder:7b,qwen2.5-coder:3b,phi4-mini (Ollama),80.0,19.0,14.5,14.0,12.0,15.0,6.0,qwen2.5-coder:7b,0,80.0,SUCCESS,2026-03-12 15:08,"```python
+import random
+
+def guess_number():
+    number = random.randint(1, 100)
+    attempts = 0
+
+    while True:
+        try:
+            guess = int(input(""Tahmin etmek istediğiniz sayıyı girin (1-100 arası): ""))
+            attempts += 1
+
+            if guess < number:
+                print(""Daha yüksek bir sayı deneyin."")
+            elif guess > number:
+                print(""Daha düşük bir sayı deneyin."")
+            else:
+                print(f""Tebrikler! {number} sayısını {attempts} denemede buldunuz."")
+                break
+        except ValueError:
+            print(""Lütfen geçerli bir sayı girin."")
+
+if __name__ == ""__main__"":
+    guess_number()
+```",
+REQ_20260312_151239_9a7d245e,python kodu ver,deepseek-r1:1.5b,qwen2.5-coder:7b,qwen2.5-coder:3b,phi4-mini (Ollama),80.0,25.0,2.5,15.0,12.0,14.0,0.0,qwen2.5-coder:7b,2,80.0,SUCCESS,2026-03-12 15:12,"```python
+def greet_world() -> None:
+    """"""
+    Prints 'Hello World!' to the console.
+    """"""
+    try:
+        print(""Hello World!"")
+    except Exception as e:
+        print(f""An error occurred: {e}"")
+
+if __name__ == ""__main__"":
+    greet_world()
+```","The function name 'greet_world' is clear but slightly less domain-specific than expected; the code reliably prints a greeting, handles exceptions gracefully."

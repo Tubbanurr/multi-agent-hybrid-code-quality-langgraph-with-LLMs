@@ -5,6 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict
 import os
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv(), override=True)
 
 from module.llm_clients import call_codellama, call_deepseek, call_gemini, get_model_names
 from module.agentic_workflow import run_hybrid_workflow  # NEW: Hybrid workflow
@@ -50,7 +53,7 @@ def generate_endpoint(req: PromptRequest) -> Dict:
     """
     result = run_hybrid_workflow(
         prompt=req.prompt,
-        quality_threshold=70.0,
+        quality_threshold=85.0,
         max_iterations=3,
         static_weight=req.static_weight,
         llm_weight=req.llm_weight,

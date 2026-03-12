@@ -9,9 +9,9 @@ import os
 import json
 import re
 from typing import Dict, Any, List
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv()
+load_dotenv(find_dotenv(), override=True)
 
 USE_OLLAMA = os.getenv("USE_OLLAMA", "false").lower() == "true"
 
