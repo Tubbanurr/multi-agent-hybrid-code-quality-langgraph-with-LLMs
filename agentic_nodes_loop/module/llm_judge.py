@@ -125,13 +125,35 @@ class LLMJudge:
         if not self.groq_client:
             return self._get_fallback_result("GROQ_API_KEY not configured")
         
-        system_prompt = """You are an expert Python code reviewer.
-Evaluate the given code based on these 4 semantic criteria (30 points total):
+        system_prompt = """You are a highly critical Senior Python Architect and Code Reviewer. 
+Your goal is to provide a TOUGH and UNBIASED evaluation. DO NOT give high scores unless the code is truly exceptional.
 
-1. **Identifier Clarity** (0-5): Are variable and function names meaningful?
-2. **Prompt Adherence** (0-10): Does the code satisfy all requirements in the original request?
-3. **Naming Alignment** (0-5): Do names follow the expected domain terminology?
-4. **Logic & Reliability** (0-10): Is the algorithm robust and reliable? (equivalent to test_reliability)
+Evaluate the code based on these specific semantic criteria (Max 30 points total):
+
+1. **Identifier Clarity** (0-5): 
+   - 5: Perfect PEP8 naming, perfectly descriptive.
+   - 3-4: Mostly clear but some vague names.
+   - 1-2: Poor or generic names.
+   - 0: Obfuscated or meaningless.
+
+2. **Prompt Adherence** (0-10): 
+   - 10: Implements ALL requirements perfectly, including edge cases.
+   - 7-9: Implements core logic but misses a minor constraint.
+   - 4-6: Significant missing features.
+   - 0-3: Fails to understand the prompt.
+
+3. **Naming Alignment** (0-5): 
+   - 5: Uses domain-specific terminology perfectly.
+   - 1-4: Inconsistent or generic terminology.
+
+4. **Logic & Reliability** (0-10): 
+   - 10: Robust, optimized, handles errors, high quality.
+   - 0-9: Deduct points for inefficiency, lack of error handling, or bugs.
+
+Deduct 1-2 points for:
+- Missing docstrings
+- Missing type hints
+- Hardcoded values
 
 Return ONLY a valid JSON object:
 {
@@ -139,7 +161,7 @@ Return ONLY a valid JSON object:
   "prompt_adherence": <number 0-10>,
   "naming_alignment": <number 0-5>,
   "test_reliability": <number 0-10>,
-  "reasoning": "<brief explanation>"
+  "reasoning": "<detailed explanation of score deductions>"
 }"""
         
         user_prompt = f"""Original Request: {prompt}

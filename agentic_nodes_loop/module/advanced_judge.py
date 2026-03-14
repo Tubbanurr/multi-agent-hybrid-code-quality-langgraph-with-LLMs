@@ -377,22 +377,36 @@ class AdvancedCodeJudge:
         return result
 
     def analyze_error_handling(self, code: str) -> int:
-        """Check for try-except, assert, and Optional patterns."""
+        """Check for try-except, raise, and assert patterns."""
         score = 0
         try:
             tree = ast.parse(code)
             has_try = False
             has_assert = False
+            has_raise = False
+            
             for node in ast.walk(tree):
                 if isinstance(node, ast.Try):
                     has_try = True
                 if isinstance(node, ast.Assert):
                     has_assert = True
+                if isinstance(node, (ast.Raise, ast.Raise)):
+                    has_raise = True
             
-            if has_try: score += 6
-            if has_assert: score += 4
-        except:
-            pass
+            # Weighted scoring (Max 10)
+            if has_try: score += 5
+            if has_raise: score += 3
+            if has_assert: score += 2
+            
+            # If no explicit error handling but no dangerous operations, 
+            # we could give a small baseline, but better to keep it strict.
+            
+        except Exception as e:
+            # If AST fails, we can fallback to simple text search for keywords
+            if "try:" in code or "except " in code: score += 5
+            if "raise " in code: score += 3
+            if "assert " in code: score += 2
+            
         return min(score, 10)
     
     def analyze_duplications(self, code: str) -> Dict[str, Any]:

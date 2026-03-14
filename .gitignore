@@ -1,8 +1,14 @@
-# Virtual Environment
-venv/
-env/
+# Repository-wide .gitignore
+
+# Environments
 .env
-.venv/
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
 
 # Python
 __pycache__/
@@ -11,20 +17,36 @@ __pycache__/
 *.so
 .Python
 
-# OS Files
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+.vscode/*.code-workspace
+
+# OS files
 .DS_Store
 .DS_Store?
 ._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# IDEs
-.vscode/
-.idea/
-
-# Logs and Reports
+# Project Logs and Reports
 agentic_nodes_loop/logs/*.csv
 agentic_nodes_loop/logs/*.xlsx
+agentic_nodes_loop/logs/*.log
 !agentic_nodes_loop/logs/.gitkeep
 
-# Local Configuration
-.python-version
+# Root/Generic Logs
+*.log
+workflow_log.csv
+iteration_log.csv
+
+# Machine Learning
+wandb/

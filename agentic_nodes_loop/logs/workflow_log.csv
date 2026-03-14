@@ -1,1799 +1,343 @@
-Request_ID,User_Prompt,Model_1_Name,Model_2_Name,Model_3_Name,Judge_Model,Static_Weight,LLM_Weight,Model_1_Static_Score,Model_1_LLM_Score,Model_1_Hybrid_Score,Model_2_Static_Score,Model_2_LLM_Score,Model_2_Hybrid_Score,Model_3_Static_Score,Model_3_LLM_Score,Model_3_Hybrid_Score,Initial_Winner,Iteration_Count,Final_Score,Status,Timestamp,Generated_Code,Judge_Reasoning
-REQ_20260222_200033_c0569574,"Python ile bubble sort algoritmasını yaz, type hint ve docstring ekle ",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,65.0,91.0,72.0,65.0,86.0,71.0,60.0,87.0,68.0,Qwen2.5-Coder (Ollama),0,72.0,SUCCESS,2026-02-22 20:00,"```python
-def bubble_sort(arr: list[int]) -> list[int]:
-    """"""
-    Bubble Sort algorithm implementation.
-
-    Args:
-        arr (list[int]): The list of integers to be sorted.
-
-    Returns:
-        list[int]: The sorted list.
-    """"""
-    n = len(arr)
-    for i in range(n):
-        # Flag to check if any swap occurred
-        swapped = False
-        for j in range(0, n-i-1):
-            if arr[j] > arr[j+1]:
-                # Swap the elements
-                arr[j], arr[j+1] = arr[j+1], arr[j]
-                swapped = True
-        # If no swap occurred, the list is already sorted
-        if not swapped:
-            break
-    return arr
-```","The code correctly implements the bubble sort algorithm with proper type hints and a docstring. It efficiently handles early termination when no swaps occur, indicating the array is sorted. The code follows Python best practices by using meaningful variable names and includes necessary documentation. However, minor improvements could be made to enhance readability and variable naming conventions."
-REQ_20260222_200718_a6420e4a,"Python ile bağlı liste (linked list) veri yapısını class olarak yaz, ekleme, silme ve arama metodlarını ekle, hata yönetimi ve type hint kullan ",Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,69.0,0.0,48.0,58.0,74.0,62.0,67.0,96.0,75.0,Llama 3.1 (Ollama),0,75.0,SUCCESS,2026-02-22 20:07,"```python
-from typing import TypeVar, Generic, Optional
+Request_ID,User_Prompt,Model_1_Name,Model_2_Name,Model_3_Name,Judge_Model,Total_Score,Cat1_Kod_Kalitesi,Cat2_Teknik_Borc,Cat3_Test_Build,Cat4_Stil_Standart,Cat5_Semantic_Alignment,Cat6_Robustness_Safety,Initial_Winner,Iteration_Count,Final_Score,Status,Timestamp,Generated_Code,Judge_Reasoning
+REQ_20260314_180140_a60072b3,"Sadece standart kütüphaneleri kullanarak thread-safe (iş parçacığı güvenli) ve asenkron (async/await) çalışan bir ""Gelişmiş Bellek İçi Önbellek (Advanced In-Memory Cache)"" sınıfı yaz.   Şu özellikleri mutlaka barındırmalıdır: 1. Her öğe için ayrı bir TTL (Time-to-Live / Yaşam Süresi) desteği olmalı ve süresi dolan öğeler otomatik olarak temizlenmeli. 2. LRU (Least Recently Used) tahliye mantığı (eviction policy) olmalı. Cache boyutu dolduğunda en az kullanılanları silmeli. 3. Race condition (yar",qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),71.0,25.0,9.0,14.0,7.0,15.0,0.0,qwen2.5-coder:7b,9,71.0,SUCCESS,2026-03-14 18:01,"```python
+import asyncio
+from collections import OrderedDict
+from typing import Any, Dict, Optional, TypeVar, Generic, Callable, Awaitable
 
 T = TypeVar('T')
 
-class Node(Generic[T]):
-    """"""Linked list node.""""""
-    
-    def __init__(self, value: T):
-        self.value = value
-        self.next = None
-
-
-class LinkedList(Generic[T]):
-    """"""Linked list data structure.""""""
-    
-    def __init__(self):
-        self.head = None
-
-    def append(self, value: T) -> None:
-        """"""Add a new node to the end of the linked list.""""""
-        
-        if not self.head:
-            self.head = Node(value)
-        else:
-            current = self.head
-            while current.next:
-                current = current.next
-            current.next = Node(value)
-
-    def remove(self, value: T) -> bool:
-        """"""Remove the first occurrence of a node with the given value.""""""
-        
-        if not self.head:
-            return False
-
-        if self.head.value == value:
-            self.head = self.head.next
-            return True
-
-        current = self.head
-        while current.next:
-            if current.next.value == value:
-                current.next = current.next.next
-                return True
-            current = current.next
-
-        return False
-
-    def search(self, value: T) -> Optional[T]:
-        """"""Find the first occurrence of a node with the given value.""""""
-        
-        current = self.head
-        while current:
-            if current.value == value:
-                return current.value
-            current = current.next
-
-        return None
-
-    def __str__(self) -> str:
-        """"""Return a string representation of the linked list.""""""
-        
-        values = []
-        current = self.head
-        while current:
-            values.append(str(current.value))
-            current = current.next
-        return ' -> '.join(values)
-
-
-# Example usage:
-
-linked_list = LinkedList[int]
-
-linked_list.append(1)
-linked_list.append(2)
-linked_list.append(3)
-
-print(linked_list)  # Output: 1 -> 2 -> 3
-
-print(linked_list.search(2))  # Output: 2
-print(linked_list.remove(2))   # Output: True
-print(linked_list)           # Output: 1 -> 3
-
-linked_list.append(4)
-print(linked_list)          # Output: 1 -> 3 -> 4
-```","The provided Python code correctly implements a linked list with standard operations (append, remove, search) and follows good practices. The code is logically sound and efficient for the given problem. Minor improvements could be made to enhance error handling and documentation, but overall, it meets high standards of correctness and readability."
-REQ_20260222_201142_ab3d357e,write a fibonacci algorithm code with python ,Qwen2.5-Coder (Ollama),CodeLlama (Ollama),Llama 3.1 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,58.0,100.0,70.0,58.0,81.0,64.0,53.0,0.0,37.0,Qwen2.5-Coder (Ollama),0,70.0,SUCCESS,2026-02-22 20:11,"```python
-def fibonacci(n):
-    if n <= 0:
-        return []
-    elif n == 1:
-        return [0]
-    elif n == 2:
-        return [0, 1]
-    
-    fib_sequence = [0, 1]
-    for i in range(2, n):
-        next_value = fib_sequence[-1] + fib_sequence[-2]
-        fib_sequence.append(next_value)
-    
-    return fib_sequence
-
-# Example usage:
-n = 10
-print(fibonacci(n))
-```","The code correctly implements the Fibonacci sequence with proper handling of edge cases. It uses an efficient iterative approach, follows Python best practices with clear variable names and minimal error handling, and is highly readable."
-REQ_20260301_141111_b521a215,Python ile fibonacci yaz ,Qwen2.5-Coder (Ollama),DeepSeek-R1 (Ollama),Llama 3.2 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,0.0,29.0,31.0,0.0,21.0,40.0,0.0,28.0,Qwen2.5-Coder (Ollama),9,35.0,SUCCESS,2026-03-01 14:11,"```python
-def fibonacci(n: int) -> list:
-    """"""
-    Calculate the Fibonacci sequence up to n terms.
-
-    Parameters:
-    n (int): The number of terms in the Fibonacci sequence to generate.
-
-    Returns:
-    list: A list containing the first n terms of the Fibonacci sequence.
-    """"""
-    if n <= 0:
-        return []
-    elif n == 1:
-        return [0]
-    elif n == 2:
-        return [0, 1]
-    
-    fib_sequence = [0, 1]
-    for i in range(2, n):
-        next_value = fib_sequence[-1] + fib_sequence[-2]
-        fib_sequence.append(next_value)
-    
-    return fib_sequence
-
-# Example usage:
-n = 10
-print(fibonacci(n))
-```",Ollama Error: HTTP 500
-REQ_20260302_121722_639ca5ef,pyhton ile fibonacci yaz ,Qwen2.5-Coder (Ollama),DeepSeek-R1 (Ollama),Llama 3.2 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,0.0,29.0,42.0,0.0,29.0,40.0,0.0,28.0,Qwen2.5-Coder (Ollama),9,35.0,SUCCESS,2026-03-02 12:17,"```python
-def fibonacci(n: int) -> int:
-    """"""
-    Calculate the nth Fibonacci number using an iterative approach.
-
-    Parameters:
-    n (int): The position in the Fibonacci sequence to calculate.
-
-    Returns:
-    int: The nth Fibonacci number.
-    """"""
-    if n < 0:
-        raise ValueError(""Input must be a non-negative integer."")
-    
-    a, b = 0, 1
-    for _ in range(n):
-        a, b = b, a + b
-    return a
-
-# Example usage:
-n = 10
-print(f""Fibonacci number at position {n} is {fibonacci(n)}"")
-```",Ollama Error: HTTP 404
-REQ_20260302_122457_cc2aeaaa,pyhton ile fibonacci yaz ,Qwen2.5-Coder (Ollama),DeepSeek-R1 (Ollama),Llama 3.2 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,0.0,29.0,42.0,0.0,29.0,40.0,0.0,28.0,Qwen2.5-Coder (Ollama),9,35.0,SUCCESS,2026-03-02 12:24,"```python
-def fibonacci(n: int) -> int:
-    """"""
-    Calculate the nth Fibonacci number using an iterative approach.
-
-    Args:
-        n (int): The position in the Fibonacci sequence to calculate.
-
-    Returns:
-        int: The nth Fibonacci number.
-    """"""
-    if n < 0:
-        raise ValueError(""Input must be a non-negative integer."")
-    
-    a, b = 0, 1
-    for _ in range(n):
-        a, b = b, a + b
-    return a
-
-# Example usage:
-n = 10
-print(f""Fibonacci number at position {n} is {fibonacci(n)}"")
-```",Ollama Error: HTTP 404
-REQ_20260302_124204_2d67110e,pyhton ile fibonacci yaz,Qwen2.5-Coder (Ollama),DeepSeek-R1 (Ollama),Llama 3.2 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,31.0,0.0,21.0,31.0,43.0,34.0,31.0,53.0,37.0,Llama 3.2 (Ollama),9,63.0,SUCCESS,2026-03-02 12:42,"```python
-def fibonacci(n: int) -> int:
-    """"""
-    Calculates the nth Fibonacci number using memoization.
-
-    Args:
-        n (int): The position of the Fibonacci number to calculate.
-
-    Returns:
-        int: The nth Fibonacci number.
-    """"""
-
-    # Initialize a dictionary to store memoized values
-    memo = {0: 0, 1: 1}
-
-    def fib_helper(x: int) -> int:
-        """"""
-        Recursive helper function for Fibonacci calculation.
-
-        Args:
-            x (int): The current term in the Fibonacci sequence.
-
-        Returns:
-            int: The value of the nth term.
-        """"""
-
-        # If the value is already memoized, return it
-        if x in memo:
-            return memo[x]
-
-        # Otherwise, calculate and store the value
-        result = fib_helper(x - 1) + fib_helper(x - 2)
-        memo[x] = result
-
-        return result
-
-    try:
-        # Check for negative input
-        if n < 0:
-            raise ValueError(""Input must be a non-negative integer."")
-
-        # Calculate and return the nth term
-        return fib_helper(n)
-
-    except Exception as e:
-        print(f""An error occurred: {e}"")
-        return None
-
-
-# Example usage:
-if __name__ == ""__main__"":
-    n = 10
-    result = fibonacci(n)
-    if result is not None:
-        print(f""The {n}th Fibonacci number is: {result}"")
-```
-
-```python
-def fibonacci(n: int) -> int:
-    """"""
-    Calculates the nth Fibonacci number using memoization.
-
-    Args:
-        n (int): The position of the Fibonacci number to calculate.
-
-    Returns:
-        int: The nth Fibonacci number.
-    """"""
-
-    # Initialize a dictionary to store memoized values
-    memo = {0: 0, 1: 1}
-
-    def fib_helper(x: int) -> int:
-        """"""
-        Recursive helper function for Fibonacci calculation.
-
-        Args:
-            x (int): The current term in the Fibonacci sequence.
-
-        Returns:
-            int: The value of the nth term.
-        """"""
-
-        # If the value is already memoized, return it
-        if x in memo:
-            return memo[x]
-
-        # Otherwise, calculate and store the value
-        result = fib_helper(x - 1) + fib_helper(x - 2)
-        memo[x] = result
-
-        return result
-
-    try:
-        # Check for negative input
-        if n < 0:
-            raise ValueError(""Input must be a non-negative integer."")
-
-        # Calculate and return the nth term
-        return fib_helper(n)
-
-    except Exception as e:
-        print(f""An error occurred: {e}"")
-        return None
-
-
-# Example usage:
-if __name__ == ""__main__"":
-    n = 10
-    result = fibonacci(n)
-    if result is not None:
-        print(f""The {n}th Fibonacci number is: {result}"")
-```
-
-```python
-def fibonacci(n: int) -> int:
-    """"""
-    Calculates the nth Fibonacci number using memoization.
-
-    Args:
-        n (int): The position of the Fibonacci number to calculate.
-
-    Returns:
-        int: The nth Fibonacci number.
-    """"""
-
-    # Initialize a dictionary to store memoized values
-    memo = {0: 0, 1: 1}
-
-    def fib_helper(x: int) -> int:
-        """"""
-        Recursive helper function for Fibonacci calculation.
-
-        Args:
-            x (int): The current term in the Fibonacci sequence.
-
-        Returns:
-            int: The value of the nth term.
-        """"""
-
-        # If the value is already memoized, return it
-        if x in memo:
-            return memo[x]
-
-        # Otherwise, calculate and store the value
-        result = fib_helper(x - 1) + fib_helper(x - 2)
-        memo[x] = result
-
-        return result
-
-    try:
-        # Check for negative input
-        if n < 0:
-            raise ValueError(""Input must be a non-negative integer."")
-
-        # Calculate and return the nth term
-        return fib_helper(n)
-
-    except Exception as e:
-        print(f""An error occurred: {e}"")
-        return None
-
-
-# Example usage:
-if __name__ == ""__main__"":
-    n = 10
-    result = fibonacci(n)
-    if result is not None:
-        print(f""The {n}th Fibonacci number is: {result}"")
-```
-
-```python
-def fibonacci(n: int) -> int:
-    """"""
-    Calculates the nth Fibonacci number using memoization.
-
-    Args:
-        n (int): The position of the Fibonacci number to calculate.
-
-    Returns:
-        int: The nth Fibonacci number.
-    """"""
-
-    # Initialize a dictionary to store memoized values
-    memo = {0: 0, 1: 1}
-
-    def fib_helper(x: int) -> int:
-        """"""
-        Recursive helper function for Fibonacci calculation.
-
-        Args:
-            x (int): The current term in the Fibonacci sequence.
-
-        Returns:
-            int: The value of the nth term.
-        """"""
-
-        # If the value is already memoized, return it
-        if x in memo:
-            return memo[x]
-
-        # Otherwise, calculate and store the value
-        result = fib_helper(x - 1) + fib_helper(x - 2)
-        memo[x] = result
-
-        return result
-
-    try:
-        # Check for negative input
-        if n < 0:
-            raise ValueError(""Input must be a non-negative integer."")
-
-        # Calculate and return the nth term
-        return fib_helper(n)
-
-    except Exception as e:
-        print(f""An error occurred: {e}"")
-        return None
-
-
-# Example usage:
-if __name__ == ""__main__"":
-    n = 10
-    result = fibonacci(n)
-    if result is not None:
-        print(f""The {n}th Fibonacci number is: {result}"")
-```
-
-```python
-def fibonacci(n: int) -> int:
-    """"""
-    Calculates the nth Fibonacci number using memoization.
-
-    Args:
-        n (int): The position of the Fibonacci number to calculate.
-
-    Returns:
-        int: The nth Fibonacci number.
-    """"""
-
-    # Initialize a dictionary to store memoized values
-    memo = {0: 0, 1: 1}
-
-    def fib_helper(x: int) -> int:
-        """"""
-        Recursive helper function for Fibonacci calculation.
-
-        Args:
-            x (int): The current term in the Fibonacci sequence.
-
-        Returns:
-            int: The value of the nth term.
-        """"""
-
-        # If the value is already memoized, return it
-        if x in memo:
-            return memo[x]
-
-        # Otherwise, calculate and store the value
-        result = fib_helper(x - 1) + fib_helper(x - 2)
-        memo[x] = result
-
-        return result
-
-    try:
-        # Check for negative input
-        if n < 0:
-            raise ValueError(""Input must be a non-negative integer."")
-
-        # Calculate and return the nth term
-        return fib_helper(n)
-
-    except Exception as e:
-        print(f""An error occurred: {e}"")
-        return None
-
-
-# Example usage:
-if __name__ == ""__main__"":
-    n = 10
-    result = fibonacci(n)
-    if result is not None:
-        print(f""The {n}th Fibonacci number is: {result}"")
-```
-
-```python
-def fibonacci(n: int) -> int:
-    """"""
-    Calculates the nth Fibonacci number using memoization.
-
-    Args:
-        n (int): The position of the Fibonacci number to calculate.
-
-    Returns:
-        int: The nth Fibonacci number.
-    """"""
-
-    # Initialize a dictionary to store memoized values
-    memo = {0: 0, 1: 1}
-
-    def fib_helper(x: int) -> int:
-        """"""
-        Recursive helper function for Fibonacci calculation.
-
-        Args:
-            x (int): The current term in the Fibonacci sequence.
-
-        Returns:
-            int: The value of the nth term.
-        """"""
-
-        # If the value is already memoized, return it
-        if x in memo:
-            return memo[x]
-
-        # Otherwise, calculate and store the value
-        result = fib_helper(x - 1) + fib_helper(x - 2)
-        memo[x] = result
-
-        return result
-
-    try:
-        # Check for negative input
-        if n < 0:
-            raise ValueError(""Input must be a non-negative integer."")
-
-        # Calculate and return the nth term
-        return fib_helper(n)
-
-    except Exception as e:
-        print(f""An error occurred: {e}"")
-        return None
-
-
-# Example usage:
-if __name__ == ""__main__"":
-    n = 10
-    result = fibonacci(n)
-    if result is not None:
-        print(f""The {n}th Fibonacci number is: {result}"")
-```
-
-```python
-def fibonacci(n: int) -> int:
-    """"""
-    Calculates the nth Fibonacci number using memoization.
-
-    Args:
-        n (int): The position of the Fibonacci number to calculate.
-
-    Returns:
-        int: The nth Fibonacci number.
-    """"""
-
-    # Initialize a dictionary to store memoized values
-    memo = {0: 0, 1: 1}
-
-    def fib_helper(x: int) -> int:
-        """"""
-        Recursive helper function for Fibonacci calculation.
-
-        Args:
-            x (int): The current term in the Fibonacci sequence.
-
-        Returns:
-            int: The value of the nth term.
-        """"""
-
-        # If the value is already memoized, return it
-        if x in memo:
-            return memo[x]
-
-        # Otherwise, calculate and store the value
-        result = fib_helper(x - 1) + fib_helper(x - 2)
-        memo[x] = result
-
-        return result
-
-    try:
-        #",No reasoning provided
-REQ_20260302_131934_5aa6ae0a,bublle sort yaz pyhton ile,Qwen2.5-Coder (Ollama),DeepSeek-R1 (Ollama),Llama 3.2 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,42.0,42.0,42.0,88.0,55.0,42.0,0.0,29.0,DeepSeek-R1 (Ollama),9,65.0,MAX_ITER_REACHED,2026-03-02 13:19,"```python
-def bubble_sort(arr: list) -> list:
-    """"""
-    Sorts the input list using the bubble sort algorithm.
-
-    Args:
-        arr (list): The input list to be sorted.
-
-    Returns:
-        list: The sorted list.
-    """"""
-
-    try:
-        n = len(arr)
-        
-        for i in range(n-1):
-            swapped = False
-            
-            # Iterate through the array from the first element to the second last element
-            for j in range(0, n-i-1):
-                if arr[j] > arr[j+1]:
-                    # Swap elements if they are in the wrong order
-                    arr[j], arr[j+1] = arr[j+1], arr[j]
-                    swapped = True
-            
-            # If no swaps were made in a pass, the array is sorted and we can break out of the loop
-            if not swapped:
-                break
-    
-    except IndexError as e:
-        print(f""IndexError occurred: {e}. Array index out of range."")
-        return arr  # Return original list to maintain consistency
-    except TypeError as e:
-        print(f""TypeError occurred: {e}. Invalid data type in array."")
-        raise  # Re-raise the exception for better error handling
-    except Exception as e:
-        print(f""An unexpected error occurred: {e}"")
-        return arr  # Return original list to maintain consistency
-    
-    return sorted(arr)  # Use built-in sorted function for efficiency
-
-# Test the function
-if __name__ == ""__main__"":
-    arr = [64, 34, 25, 12, 22, 11, 90]
-    print(""Original array:"", arr)
-    print(""Sorted array:"", bubble_sort(arr))
-```",JSON parse error or invalid format. Raw starting: 
-REQ_20260302_201713_ba676470,bubble sort yaz pyhton,Qwen2.5-Coder (Ollama),DeepSeek-R1 (Ollama),Llama 3.2 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,31.0,73.0,43.0,42.0,0.0,29.0,40.0,100.0,58.0,Llama 3.2 (Ollama),9,63.0,MAX_ITER_REACHED,2026-03-02 20:17,"### TALİMATLAR
-1. Yukarıdaki ÖNCELİKLİ önerileri MUTLAKA uygula
-2. Docstring ekle (fonksiyon/class varsa)
-3. Type hints ekle (parametreler ve dönüş değeri)
-4. Error handling ekle (try-except)
-5. Değişken isimleri ve değerleri anlamlı olarak ayarlamalıyım.
-
-### ÖNEMLI:
-- **TEST CASEL**: Kullanıcıya verilen test case'ları ekleyerek debug yapmam gerekiyor.
-- **ERROR HANDLING**: Bu kodda hata eklenebilir. Try-except bloğu kullanarak hata eklentir.
-- **DOCSTRING**: Fonsiyon'ın ne olduğunu anlatmak için docstring eklemeliyim.
-
-### ZORUNLU İYİLEŞTİRMELER
-Öne çıkan test case'ları ekleyerek debug yapmam gerekiyor. Bu yüzden try-except bloğu kullanarak hata eklentir.
-
-```python
-def bubble_sort(lst: list) -> list:
-    """"""Sorts a list using the bubble sort algorithm. Returns the sorted list.""""""
-    if not isinstance(lst, list):
-        raise ValueError(""Input must be a list"")
-
-    # Handle empty or single-element lists
-    if len(lst) <= 1:
-        return lst
-
-    n = len(lst)
-    swapped = True
-    count_passes = 0
-
-    for pass_num in range(n - 1):
-        changed = False
-        current_index = 0
-        while current_index < n - 1 and swapped:
-            if lst[current_index] > lst[current_index + 1]:
-                # Swap the adjacent elements
-                lst[current_index], lst[current_index + 1] = lst[current_index + 1], lst[current_index]
-                changed = True
-
-            current_index += 1
-        count_passes += 1
-        if not changed:
-            break  # No swaps occurred, the list is sorted
-
-    return lst
-```
-
-### Özet
-Bu kod, bir list'yibubbleort algoritması ile sortecek. Variable isimleri ve kısımları düzenleyerek kod uygulamalı ve readability'ye indirmiştir. Try-except bloğu kullanarak hata eklentir.","The bubble sort algorithm correctly sorts a list by repeatedly swapping adjacent elements. The code includes proper input validation, error handling with try-except, and clear variable names. It is efficient and well-structured for readability."
-REQ_20260302_204006_ac1d6ae3,bubble sort yaz pyhton,Qwen2.5-Coder (Ollama),DeepSeek-R1 (Ollama),Llama 3.2 (Ollama),DeepSeek-R1 (Ollama),0.70,0.30,42.0,86.0,55.0,40.0,0.0,28.0,40.0,0.0,28.0,Qwen2.5-Coder (Ollama),9,58.0,MAX_ITER_REACHED,2026-03-02 20:40,"```python
-def bubble_sort(arr):
-    """"""
-    Sorts an array using the Bubble Sort algorithm.
-
-    Parameters:
-    arr (list): The list of integers to be sorted.
-
-    Returns:
-    list: The sorted list.
-    """"""
-    n = len(arr)
-    # Traverse through all array elements
-    for i in range(n):
-        # Last i elements are already in place
-        for j in range(0, n-i-1):
-            # Traverse the array from 0 to n-i-1
-            # Swap if the element found is greater than the next element
-            if arr[j] > arr[j+1]:
-                arr[j], arr[j+1] = arr[j+1], arr[j]
-    return arr
-
-# Example usage:
-arr = [64, 34, 25, 12, 22, 11, 90]
-sorted_arr = bubble_sort(arr)
-print(""Sorted array is:"", sorted_arr)
-```","The code correctly implements the bubble sort algorithm, handling edge cases and providing clear documentation. However, it lacks proper exception handling and could benefit from more concise function implementations. The docstrings are redundant and not optimized for readability."
-REQ_20260303_134941_a3c67264,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),61.0,4.0,5.0,15.0,15.0,9.0,0.0,gemma2:2b,9,61.0,MAX_ITER_REACHED,2026-03-03 13:49,"```python
-from typing import List
-
-def ortalama(liste: List[float]) -> float:
-  """"""
-  Liste içindeki sayıların ortalamasını hesaplayan fonksiyon.
-
-  Args:
-    liste: Liste.
-
-  Returns:
-    Liste içindeki sayıların ortalaması. 
-    Boş bir liste ise None döndürür.
-  """"""
-  if not liste:
-    return None
-  
-  try:
-    toplam = sum(liste)
-    ortalama = toplam / len(liste)
-    return ortalama
-  except TypeError:
-    return None
-```","The code imports List from typing, defines a function ortalama with a clear name, handles empty lists by returning None, and uses sum and division. It catches TypeError for non-numeric elements and returns None. The logic is correct and reliable."
-REQ_20260303_140512_91c34277,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),29.0,5.0,4.0,5.0,15.0,0.0,0.0,tinyllama,9,29.0,MAX_ITER_REACHED,2026-03-03 14:05,"In the original code, the function ""calculate_sums"" calculates the sum of all elements in a list using the ""sum += num"" statement. However, this function is not optimized for performance, and it may cause issues with the function's execution.
-
-To optimize the function's implementation, we can use a loop to iterate over the list and calculate the sum of each element. We can also use a list comprehension to create a new list with the calculated sums.
-
-Here's an updated version of the function that uses a loop and a list comprehension:
-
-```python
-def calculate_sums(lst):
-    """"""
-    Calculates the sum of all elements in a given list.
-    :param lst: a list of integers
-    :return: the sum of all elements in the list
-    """"""
-    sum = 0
-    for num in lst:
-        sum += num
-    return sum
-
-# Example usage:
-lst = [1, 2, 3]
-sum = calculate_sums(lst)
-print(sum)      # Output: 6
-```
-
-In this updated version, we use a loop to iterate over the list and calculate the sum of each element. The function returns the sum of all elements in the list.
-
-By using a loop, we can avoid the overhead of creating a new list with the calculated sums. This optimization can improve the function's performance and reduce the function's execution time.",LLM evaluation unavailable: Ollama evaluation failed: cannot access local variable 'chain_of_thought' where it is not associated with a value
-REQ_20260303_141828_faf3b435,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),59.0,9.0,4.0,15.0,15.0,15.0,0.0,tinyllama,9,59.0,MAX_ITER_REACHED,2026-03-03 14:18,"In the original code, the function `count_numbers_in_list` is defined as follows:
-
-```python
-def count_numbers_in_list(numbers_list):
-    """"""
-    Returns the number of occurrences of each number in a list.
-    """"""
-    # Define a function to count occurrences of each number
-    def count_occurrence(num):
-        return numbers_list.count(num)
-
-    # Initialize a dictionary to store the counts
-    counts = {}
-
-    # Iterate over the list and count the occurrences
-    for num in numbers_list:
-        if num in counts:
-            counts[num] += 1
-        else:
-            counts[num] = 1
-
-    # Return the counts as a dictionary
-    return counts
-```
-
-In this example, the function `count_numbers_in_list` takes a list `numbers_list` as input and returns a dictionary `counts` that maps each number in the list to its occurrence count. The function uses a dictionary comprehension to iterate over the list and count the occurrences of each number. The function also initializes a dictionary `counts` to store the counts, and returns the counts as a dictionary.
-
-In the current implementation, the function `count_numbers_in_list` uses a dictionary comprehension to iterate over the list and count the occurrences of each number. However, this approach has several limitations:
-
-1. The function assumes that the list is already sorted, which may not be the case in some cases.
-2. The function does not take into account the occurrence of repeated numbers.
-3. The function does not take into account the occurrence of zero or negative numbers.
-
-To address these limitations, the following changes can be made to the current implementation:
-
-1. The function can be modified to use a sorted list as input. This can be achieved by sorting the list before passing it to the function.
-
-```python
-def count_numbers_in_list(numbers_list):
-    """"""
-    Returns the number of occurrences of each number in a list.
-    """"""
-    # Define a function to count occurrences of each number
-    def count_occurrence(num):
-        return numbers_list.count(num)
-
-    # Initialize a dictionary to store the counts
-    counts = {}
-
-    # Iterate over the list and count the occurrences
-    for num in sorted(numbers_list):
-        if num in counts:
-            counts[num] += 1
-        else:
-            counts[num] = 1
-
-    # Return the counts as a dictionary
-    return counts
-```
-
-In this modified implementation, the function `count_numbers_in_list` uses a sorted list as input, which ensures that the list is already sorted. This ensures that the function can handle cases where the list is already sorted, and does not require any additional sorting.
-
-In addition, the function can be modified to take into account the occurrence of zero or negative numbers. To do this, the function can be modified to check if the number is less than or equal to zero before adding it to the dictionary.
-
-```python
-def count_numbers_in_list(numbers_list):
-    """"""
-    Returns the number of occurrences of each number in a list.
-    """"""
-    # Define a function to count occurrences of each number
-    def count_occurrence(num):
-        return numbers_list.count(num)
-
-    # Initialize a dictionary to store the counts
-    counts = {}
-
-    # Iterate over the list and count the occurrences
-    for num in sorted(numbers_list):
-        if num in counts:
-            counts[num] += 1
-        elif num < 0:
-            counts[num] = 1
-        else:
-            counts[num] = 0
-
-    # Return the counts as a dictionary
-    return counts
-```
-
-In this modified implementation, the function `count_numbers_in_list` checks if the number is less than or equal to zero before adding it to the dictionary. This ensures that the function can handle cases where the list contains zero or negative numbers.
-
-In summary, these modifications to the current implementation address the limitations of the original function by using a sorted list as input, checking for zero or negative numbers, and adding them to the dictionary.",Parse error recovery: Unterminated string starting at: line 3 column 99 (char 101)
-REQ_20260303_142334_48e48081,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),84.0,25.0,14.0,15.0,15.0,15.0,0.0,tinyllama,0,84.0,SUCCESS,2026-03-03 14:23,"Sure, here's an example of how the Python function ""calculate_sums"" works:
-
-```python
-def calculate_sums(lst):
-    """"""
-    Calculates the sum of all elements in a list.
-    :param lst: A list of integers.
-    :return: The sum of all elements in the list.
-    """"""
-    if not lst:
-        return None  # If the list is empty, return None
-    else:
-        sum = 0
-        for num in lst:
-            sum += num
-        return sum
-
-# Example usage:
-lst = [1, 2, 3]
-sum = calculate_sums(lst)
-print(sum)  # Output: 6
-```
-
-In this example, the function ""calculate_sums"" takes a list as an argument and returns the sum of all elements in the list. The function checks if the list is empty (i.e., if it contains no elements) by using the ""if not lst"" statement. If the list is empty, the function returns None, which is the default value for the ""return"" statement in Python.",
-REQ_20260303_143009_df778a9c,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),81.0,24.0,12.5,15.0,15.0,15.0,0.0,gemma2:2b,0,81.0,SUCCESS,2026-03-03 14:30,"```python
-def ortalama(liste):
-  if liste:
-    toplam = sum(liste)
-    ortalama = toplam / len(liste)
-    return ortalama
-  else:
-    return None
-```",
-REQ_20260303_143822_bf030895,"FastAPI kullanarak, kullanıcıların resim yükleyebildiği bir REST API iskeleti oluştur. Resimler S3'e kaydedilmeli, dosya boyutu 5MB ile sınırlandırılmalı ve sadece .jpg/.png uzantılarına izin verilmeli. Ayrıca bu işlemi asenkron (async/await) yapıda tasarla.",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),88.0,25.0,12.5,15.0,15.0,15.0,6.0,gemma2:2b,0,88.0,SUCCESS,2026-03-03 14:38,"```python
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from typing import Dict
-import uvicorn
-import os
-import boto3
-
-app = FastAPI()
-
-s3 = boto3.client('s3')
-
-@app.post(""/upload"")
-async def upload_image(file: bytes = None, file_name: str = None):
-    if file is None or file_name is None:
-        return JSONResponse({""error"": ""File is not provided""}, status_code=400)
-
-    try:
-        # Check file size
-        if os.path.getsize(file_name) > 5 * 1024 * 1024:
-            return JSONResponse({""error"": ""File size exceeds 5MB""}, status_code=400)
-
-        # Check file extension
-        if not file_name.endswith(("".jpg"", "".png"")):
-            return JSONResponse({""error"": ""Invalid file extension""}, status_code=400)
-
-        # Upload file to S3
-        s3.upload_fileobj(file, ""your-bucket-name"", file_name)
-
-        return JSONResponse({""message"": ""Image uploaded successfully""}, status_code=200)
-
-    except Exception as e:
-        return JSONResponse({""error"": str(e)}, status_code=500)
-``` 
-",
-REQ_20260303_144321_161e901a,"FastAPI kullanarak, kullanıcıların resim yükleyebildiği bir REST API iskeleti oluştur. Resimler S3'e kaydedilmeli, dosya boyutu 5MB ile sınırlandırılmalı ve sadece .jpg/.png uzantılarına izin verilmeli. Ayrıca bu işlemi asenkron (async/await) yapıda tasarla.",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),88.0,25.0,12.5,15.0,15.0,15.0,6.0,gemma2:2b,0,88.0,SUCCESS,2026-03-03 14:43,"```python
-from fastapi import FastAPI
-from fastapi.responses import FileResponse
-from fastapi.middleware.cors import CORSMiddleware
-import os
-import boto3
-import io
-from PIL import Image
-import asyncio
-
-app = FastAPI()
-
-# AWS S3 client
-s3 = boto3.client('s3')
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[""*""],
-    allow_credentials=True,
-    allow_methods=[""*""],
-    allow_headers=[""*""],
-)
-
-@app.post(""/upload"")
-async def upload_image(file: UploadFile = None):
-    if file is None:
-        return {""message"": ""No file provided""}
-
-    try:
-        # Check file size and extension
-        if file.content_length > 5 * 1024 * 1024:
-            return {""message"": ""File size exceeds 5MB limit""}
-        if not file.filename.endswith(("".jpg"", "".png"")):
-            return {""message"": ""Invalid file extension. Only .jpg and .png allowed""}
-
-        # Upload image to S3
-        image_data = await file.read()
-        
-        # Save image to S3
-        s3.upload_fileobj(image_data, ""your-bucket-name"", file.filename)
-
-        # Return response
-        return {""message"": ""Image uploaded successfully"", ""filename"": file.filename}
-
-    except Exception as e:
-        return {""message"": f""Error uploading image: {e}""}
-``` 
-
-
-
-",
-REQ_20260303_144532_b0024d72,"FastAPI kullanarak, kullanıcıların resim yükleyebildiği bir REST API iskeleti kodu oluştur. Resimler S3'e kaydedilmeli, dosya boyutu 5MB ile sınırlandırılmalı ve sadece .jpg/.png uzantılarına izin verilmeli. Ayrıca bu işlemi asenkron (async/await) yapıda tasarla.",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),87.0,24.0,12.5,15.0,15.0,15.0,6.0,gemma2:2b,0,87.0,SUCCESS,2026-03-03 14:45,"```python
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from typing import Dict
-import uvicorn
-import os
-import boto3
-
-app = FastAPI()
-
-s3 = boto3.client('s3')
-
-@app.post(""/upload"")
-async def upload_image(file: bytes = None, file_name: str = None):
-    if file is None or file_name is None:
-        return JSONResponse({""error"": ""File is not provided""}, status_code=400)
-    
-    try:
-        # Check file size
-        if os.path.getsize(file_name) > 5 * 1024 * 1024:
-            return JSONResponse({""error"": ""File size exceeds 5MB""}, status_code=400)
-
-        # Check file extension
-        if not file_name.endswith(("".jpg"", "".png"")):
-            return JSONResponse({""error"": ""Invalid file extension""}, status_code=400)
-
-        # Upload file to S3
-        s3.upload_fileobj(file, 'your-bucket-name', file_name)
-        
-        return JSONResponse({""message"": ""Image uploaded successfully""}, status_code=200)
-    
-    except Exception as e:
-        return JSONResponse({""error"": str(e)}, status_code=500)
-``` 
-
-
-",
-REQ_20260303_145030_6c9a2c0b,"FastAPI kullanarak, kullanıcıların resim yükleyebildiği bir REST API iskeleti kodu oluştur. Resimler S3'e kaydedilmeli, dosya boyutu 5MB ile sınırlandırılmalı ve sadece .jpg/.png uzantılarına izin verilmeli. Ayrıca bu işlemi asenkron (async/await) yapıda tasarla.",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),88.0,25.0,12.5,15.0,15.0,15.0,6.0,gemma2:2b,0,88.0,SUCCESS,2026-03-03 14:50,"```python
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from typing import List
-import uvicorn
-import os
-import boto3
-import io
-from PIL import Image
-from fastapi.middleware.cors import CORSMiddleware
-
-app = FastAPI()
-
-# AWS S3 client
-s3 = boto3.client('s3')
-
-# Allowed image extensions
-ALLOWED_EXTENSIONS = {'jpg', 'png'}
-
-# Upload image function
-async def upload_image(file: UploadFile = None):
-    try:
-        if file is None:
-            return JSONResponse(status_code=400, content={""message"": ""No file provided.""})
-        
-        # Check if file is valid
-        if file.filename.lower().endswith(('.jpg', '.png')):
-            # Get file content
-            content = await file.read()
-            
-            # Check if file size is within limit
-            if len(content) > 5 * 1024 * 1024:
-                return JSONResponse(status_code=400, content={""message"": ""File size exceeds 5MB limit.""})
-            
-            # Upload image to S3
-            s3.upload_fileobj(content, 'your-bucket-name', file.filename)
-            
-            # Return success response
-            return JSONResponse(status_code=200, content={""message"": ""Image uploaded successfully.""})
-        else:
-            return JSONResponse(status_code=400, content={""message"": ""Invalid file type. Only .jpg and .png allowed.""})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={""message"": f""Error uploading image: {e}""})
-
-# CORS middleware
-origins = [
-    ""http://localhost:3000"",
-    ""http://localhost:8000"",
-    ""http://127.0.0.1:8000""
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=[""*""],
-    allow_headers=[""*""],
-)
-
-# Define the endpoint for image upload
-@app.post(""/upload"")
-async def upload_image_endpoint(file: UploadFile = None):
-    # Call the upload_image function
-    response = await upload_image(file)
-    return response
-
-# Run the API
-if __name__ == ""__main__"":
-    uvicorn.run(""main:app"", host=""0.0.0.0"", port=8000)
-``` 
-",
-REQ_20260303_154155_acc914d1,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli. ",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),80.0,25.0,12.5,13.0,15.0,15.0,0.0,tinyllama,0,80.0,SUCCESS,2026-03-03 15:41,"Sure! Here's an example of how to use the `sum()` function in Python to calculate the sum of a list of integers:
-
-```python
-import random
-
-# Generate a list of random integers between 1 and 10
-numbers = [random.randint(1, 10) for _ in range(10)]
-
-# Calculate the sum of the integers in the list
-sum_of_integers = sum(numbers)
-
-# Print the sum of the integers
-print(""The sum of the integers in the list is:"", sum_of_integers)
-```
-
-In this example, we're using the `sum()` function to calculate the sum of the integers in the list `numbers`. The `sum()` function takes a list of numbers as an argument and returns the sum of all the numbers in the list.
-
-The `sum_of_integers` variable is assigned the calculated sum of the integers in the list. Finally, we print the value of `sum_of_integers` to the console.",
-REQ_20260303_154443_43482004,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli. ",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),82.0,25.0,12.5,15.0,15.0,15.0,0.0,codegemma:2b,0,82.0,SUCCESS,2026-03-03 15:44,"def ortalama_hesapla(liste):
-    if len(liste) == 0:
-        return None
-    toplam = sum(liste)
-    ortalama = toplam / len(liste)
-    return ortalama
-
-# Örnek kullanım
-liste = [1, 2, 3, 4, 5]
-print(ortalama_hesapla(liste))  # Çıktı: 3.0
-
-liste = []
-print(ortalama_hesapla(liste))  # Çıktı: None
-",
-REQ_20260303_155906_ff967c2b,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli. ",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),80.0,19.0,12.5,14.0,15.0,13.0,0.0,tinyllama,9,80.0,MAX_ITER_REACHED,2026-03-03 15:59,"In the original Python code, the actual Python code is as follows:
-
-```python
-import os
-
-# Import sys to get the current directory
-if __name__ == '_main__':
-     if len(sys.argv) != 2:
-         print(""Usage: python3 sum_list.py <list_filename>""
-             "" <list_filename> <list_filename> ..."")
-         sys.exit()
-
-     # Read the list filename from the command line arguments
-     list_filename = sys.argv[1]
-
-     # Open the list file using the open() function and read its contents
-     with open(list_filename, 'r') as f:
-         # Read the contents of the file into a list of integers
-         list_data = f.readlines()
-
-     # Convert the list of integers into a list of float
-     list_data = [int(x.strip()) for x in list_data]
-
-     # Calculate the sum of all elements in the list
-     sum_list = sum(list_data)
-
-     # Print the result to the console
-     print(f""Sum of {len(list_data)} elements in {list_filename} is: {sum_list}"")
-```
-
-In this example, we first import the `sum` function from the `sys` module, which is used to handle command-line arguments. We then check if the number of arguments is equal to 2 (i.e., the filename of the list file). If this is the case, we open the file using the `open()` function and read its contents using the `readlines()` method. We then create a list of integers from the contents of the file using the `list()` function and assign it to the `list_data` variable. We then use the `sum()` function to calculate the sum of all elements in the list. Finally, we print the result to the console using the `print()` function.
-
-The original Python code is well-structured, clear, and reliable. It handles empty lists by returning None, which aligns with the prompt. However, the code is incomplete as it doesn't handle non-empty lists, which is necessary for reliability. The code follows standard Python naming conventions and meets all the requirements specified in the original request.","The code is well-structured, clear, and handles all required cases. It reads from a file, converts each line to an integer, sums them, and prints the result. It correctly handles empty lists by returning None, which aligns with the prompt. The code is clean, well-named, and reliable. There are no issues with variable or function names, adherence to the prompt, naming alignment, or logic reliability."
-REQ_20260303_160204_28c283b5,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),77.0,24.0,12.5,13.0,15.0,15.0,0.0,gemma2:2b,2,77.0,SUCCESS,2026-03-03 16:02,"```python
-def ortalama(liste):
-  """"""
-  Liste içindeki sayıların ortalamasını hesaplar. 
-  
-  Args:
-    liste: Liste.
-
-  Returns:
-    Liste içindeki sayıların ortalaması, liste boşsa None döndürür.
-  """"""
-  if not liste:
-    return None
-  toplam = sum(liste)
-  ortalama = toplam / len(liste)
-  return ortalama
-```","The code is mostly correct but lacks proper error handling. It should handle empty lists by returning None or raising an error. The try-except block catches TypeError, but it's not comprehensive. The docstring is clear, but the function name and variable names are correct. The function returns None when the list is empty, which is correct. The code is mostly reliable but has some missing error handling. The reasoning is that the code is mostly correct but lacks proper error handling beyond the try-except. The scores are 4 for identifier clarity, prompt adherence, and naming alignment, 3 for test reliability, and 4 for reasoning."
-REQ_20260303_161522_35fa2783,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),77.0,20.0,12.5,14.0,15.0,12.0,6.0,tinyllama,2,77.0,SUCCESS,2026-03-03 16:15,"In summary, the original code is mostly correct but has some naming and logical issues that need improvement. The author recommends adding docstrings, class and function variables, and error handling to make the code more robust and reliable. They also suggest adding type hints to improve error handling and error messages. The author suggests muting the original suggestions to avoid overwhelming the code with too many changes.","The code is mostly correct but lacks comments, making it hard to understand. It should be improved by adding detailed comments and better docstrings. The function name is clear but could be more descriptive. The logic is correct but lacks comments, which could help in future maintenance. The code should be enhanced with better error handling and type hints to improve reliability and robustness."
-REQ_20260303_162703_9b8ca79a,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.kod yaz",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),82.0,25.0,12.5,15.0,15.0,15.0,0.0,tinyllama,2,82.0,SUCCESS,2026-03-03 16:27,"Sure, here's an example of how to use the `sum()` function in Python to calculate the sum of a list of integers:
-
-```python
-import os
-
-def calculate_sum(lst):
-    sum = 0
-    for num in lst:
-        sum += num
-    return sum
-
-# Example usage
-lst = [1, 2, 3, 4]
-sum = calculate_sum(lst)
-print(sum)  # Output: 10
-```
-
-In this example, we define a function called `calculate_sum` that takes a list of integers as an argument. The function first initializes a variable `sum` to 0 and iterates through the list `lst`. For each integer in the list, the function adds it to the `sum` variable. Finally, the function returns the `sum`.
-
-When we call the `calculate_sum` function with a list of integers, it will calculate the sum of all integers in the list and return the result.","The code calculates the sum of a list, which is appropriate for the original request. The variable names are clear and follow common conventions. The code handles empty lists by returning 0, which is correct. The logic is straightforward and reliable. The code is well-commented for clarity and readability."
-REQ_20260303_163014_d13803b1,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli.kod yaz",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),82.0,25.0,12.5,15.0,15.0,15.0,0.0,gemma2:2b,0,82.0,SUCCESS,2026-03-03 16:30,"```python
-def ortalama(liste):
-  if not liste:
-    return None
-  toplam = sum(liste)
-  ortalama = toplam / len(liste)
-  return ortalama
-```",
-REQ_20260303_163507_97c51ce7," FastAPI kullanarak, kullanıcıların resim yükleyebildiği bir REST API iskeleti oluştur. Resimler S3'e kaydedilmeli, dosya boyutu 5MB ile sınırlandırılmalı ve sadece .jpg/.png uzantılarına izin verilmeli. Ayrıca bu işlemi asenkron (async/await) yapıda tasarla. ",gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),79.0,22.0,12.5,13.0,15.0,11.0,6.0,gemma2:2b,0,79.0,SUCCESS,2026-03-03 16:35,"```python
-from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import JSONResponse
-import uvicorn
-import boto3
-import os
-
-app = FastAPI()
-
-s3 = boto3.client('s3')
-
-@app.post(""/upload"")
-async def upload_file(file: UploadFile = File(...)):
-    try:
-        if file.content_type not in [""image/jpeg"", ""image/png""]:
-            return JSONResponse(status_code=400, content={""message"": ""Invalid file type.""})
-        if file.size > 5 * 1024 * 1024:
-            return JSONResponse(status_code=400, content={""message"": ""File size exceeds 5MB.""})
-        
-        # Upload file to S3
-        s3.upload_fileobj(file.file, 'your-bucket-name', file.filename)
-        
-        return JSONResponse(content={""message"": ""File uploaded successfully.""}, status_code=200)
-    except Exception as e:
-        return JSONResponse(status_code=500, content={""message"": str(e)})
-``` 
-",
-REQ_20260303_163937_48973c5d,Bir string içinde birbirini tekrar etmeyen en uzun alt string'in (substring) uzunluğunu bulan bir python kodu yaz. Örnek: 'abcabcbb' girdisi için sonuç 3 olmalı (abc). ,gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),79.0,25.0,12.0,12.0,15.0,15.0,0.0,tinyllama,0,79.0,SUCCESS,2026-03-03 16:39,"```python
-def longest_substring(s):
-    # Define empty lists to store the longest substring and its length
-    longest_substring = []
-    longest_length = 0
-    
-    # Loop through each character in the string
-    for I in range(len(s)):
-        
-        # If the current character is not the start of a substring, add it to the longest substring
-        if i != 0:
-            if s[i-1] == s[i]:
-                longest_substring.append(s[i-1])
-                longest_length += 1
-                
-        # If the current character is the start of a substring, update the length of the longest substring
-        elif s[i] == s[i-1]:
-            longest_length += 1
-                
-    # Return the longest substring and its length
-    return longest_substring, longest_length
-```",
-REQ_20260303_165701_6d3dba46,Python ile çok kullanıcılı bir async chat sunucusu yaz. Gereksinimler: asyncio ve websockets kullan. Aynı anda en az 1000 bağlantıyı destekle. Kullanıcılar odaya katılabilsin ve mesajlar sadece o odadakilere yayınlansın. Her kullanıcı için rate limiting uygula (10 sn’de max 5 mesaj). Mesajları hafızada tut ve son 20 mesajı yeni katılan kullanıcıya gönder. Hataları özel exception sınıflarıyla yönet. Kod modüler ve type hint’li olsun.,gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),82.0,20.0,11.5,15.0,15.0,15.0,6.0,gemma2:2b,0,82.0,SUCCESS,2026-03-03 16:57,"```python
-import asyncio
-import websockets
-from typing import List, Dict, Any, Tuple
-from datetime import datetime
-
-class WebSocketException(Exception):
+class CacheMissError(Exception):
+    """"""Raised when an item is not found in the cache.""""""
     pass
 
-class RateLimitExceeded(WebSocketException):
+class CacheFullError(Exception):
+    """"""Raised when the cache is full and no items can be added.""""""
     pass
 
-class MessageBuffer:
-    def __init__(self, max_size: int = 20):
-        self.buffer = []
+class AdvancedInMemoryCache(Generic[T]):
+    def __init__(self, max_size: int, ttl: int):
+        """"""
+        Initialize the cache with a maximum size and a default TTL for items.
+
+        :param max_size: Maximum number of items the cache can hold.
+        :param ttl: Default time-to-live (TTL) for items in seconds.
+        """"""
         self.max_size = max_size
+        self.ttl = ttl
+        self.cache: OrderedDict[str, (T, float)] = OrderedDict()
+        self.lock = asyncio.Lock()
 
-    def add_message(self, message: str) -> None:
-        if len(self.buffer) >= self.max_size:
-            self.buffer.pop(0)
-        self.buffer.append(message)
+    async def _remove_expired_items(self):
+        """"""
+        Remove items from the cache that have expired.
+        """"""
+        current_time = asyncio.get_running_loop().time()
+        while self.cache and current_time - self.cache.peekitem(0)[1][1] > self.ttl:
+            self.cache.popitem(last=False)
 
-    def get_last_messages(self) -> List[str]:
-        return self.buffer
+    async def get(self, key: str) -> T:
+        """"""
+        Get an item from the cache by key.
 
-class WebSocketServer:
-    def __init__(self, port: int = 8765):
-        self.port = port
-        self.clients = {}
-        self.message_buffer = MessageBuffer()
-        self.rate_limit_seconds = 10
-        self.rate_limit_messages = 5
-
-    async def handle_client(self, websocket: websockets.WebSocket):
-        client_id = str(websocket.remote_address)
-        self.clients[client_id] = websocket
-        try:
-            while True:
-                try:
-                    message = await websocket.recv()
-                    if message:
-                        self.message_buffer.add_message(message)
-                        await self.broadcast_message(client_id, message)
-                except websockets.exceptions.ConnectionClosed:
-                    del self.clients[client_id]
-                    break
-        except WebSocketException as e:
-            print(f""WebSocketException: {e}"")
-            await websocket.close()
-            del self.clients[client_id]
-
-    async def broadcast_message(self, sender_id: str, message: str) -> None:
-        for client_id in self.clients:
-            if client_id != sender_id:
-                try:
-                    await self.clients[client_id].send(message)
-                except websockets.exceptions.ConnectionClosed:
-                    del self.clients[client_id]
-
-    async def start(self) -> None:
-        async with websockets.serve(self.handle_client, ""localhost"", self.port):
-            print(f""WebSocket server started on port {self.port}"")
-            await asyncio.Future()
-
-async def main():
-    server = WebSocketServer()
-    await server.start()
-
-if __name__ == ""__main__"":
-    asyncio.run(main())
-``` 
-",
-REQ_20260303_170917_483dbae9,Python ile çok kullanıcılı bir async chat sunucusu yaz. Gereksinimler: asyncio ve websockets kullan. Aynı anda en az 1000 bağlantıyı destekle. Kullanıcılar odaya katılabilsin ve mesajlar sadece o odadakilere yayınlansın. Her kullanıcı için rate limiting uygula (10 sn’de max 5 mesaj). Mesajları hafızada tut ve son 20 mesajı yeni katılan kullanıcıya gönder. Hataları özel exception sınıflarıyla yönet. Kod modüler ve type hint’li olsun. ,gemma2:2b,codegemma:2b,tinyllama,DeepSeek-R1 (Ollama),74.0,24.0,11.5,9.0,15.0,15.0,0.0,tinyllama,0,74.0,SUCCESS,2026-03-03 17:09,"Sure, here's an actual Python code only:
-
-```python
-import os
-
-async def chat_server():
-    # Implement logic for handling incoming connections
-    while True:
-        try:
-            async with websockets.connect('ws://localhost:8000') as websocket:
-                # Handle incoming messages
-                async for message in websocket:
-                    print(f""{message}"")
-
-                # Handle disconnects
-                async for message in websocket:
-                    print(f""{message}"")
-
-                # Handle errors
-                async def exception_handler(exc):
-                    print(f""{exc}"")
-                    raise exc
-
-                websocket.exception_handler = exception_handler
-
-    # Implement logic for handling outgoing messages
-    while True:
-        try:
-            async with websockets.send_text('Hello, world!') as message:
-                print(f""Sent message: {message}"")
-        except websockets.exceptions.ConnectionClosed:
-            print(""Connection closed"")
-
-if __name__ == '__main__':
-    chat_server()
-```
-
-This code is a basic implementation of a Python async chat server. It uses the `websockets` library to create a WebSocket server, and the `async` and `await` syntax to handle asynchronous tasks. The `chat_server()` function is the main entry point for the server. It connects to a WebSocket server and handles incoming messages, and also handles disconnects and errors. The `exception_handler` function is called by the `websockets.exceptions.ConnectionClosed` exception to handle outgoing messages.",
-REQ_20260303_171146_6d578bf3,Python ile çok kullanıcılı bir async chat sunucusu yaz. Gereksinimler: asyncio ve websockets kullan. Aynı anda en az 1000 bağlantıyı destekle. Kullanıcılar odaya katılabilsin ve mesajlar sadece o odadakilere yayınlansın. Her kullanıcı için rate limiting uygula (10 sn’de max 5 mesaj). Mesajları hafızada tut ve son 20 mesajı yeni katılan kullanıcıya gönder. Hataları özel exception sınıflarıyla yönet. Kod modüler ve type hint’li olsun. ,qwen2.5-coder:7b,llama3.2:3b,gemma2:2b,DeepSeek-R1 (Ollama),86.0,23.0,12.0,15.0,15.0,15.0,6.0,qwen2.5-coder:7b,0,86.0,SUCCESS,2026-03-03 17:11,"```python
-import asyncio
-import websockets
-from typing import Dict, List, Set, Tuple
-from collections import defaultdict, deque
-
-class RateLimitException(Exception):
-    pass
-
-class ChatRoom:
-    def __init__(self):
-        self.messages: List[str] = []
-        self.users: Set[str] = set()
-
-    async def send_message(self, user: str, message: str):
-        if len(self.messages) >= 20:
-            self.messages.pop(0)
-        self.messages.append(f""{user}: {message}"")
-
-    async def get_messages(self) -> List[str]:
-        return self.messages
-
-class ChatServer:
-    def __init__(self):
-        self.rooms: Dict[str, ChatRoom] = defaultdict(ChatRoom)
-        self.user_rooms: Dict[str, str] = {}
-        self.rate_limits: Dict[str, int] = {}
-
-    async def handle_connection(self, websocket, path):
-        try:
-            async for message in websocket:
-                data = message.split(' ', 1)
-                if len(data) != 2:
-                    await websocket.send(""Invalid message format"")
-                    continue
-
-                command, payload = data
-                if command == ""JOIN"":
-                    room_name = payload
-                    if room_name not in self.rooms:
-                        self.rooms[room_name] = ChatRoom()
-                    await self.join_room(websocket, room_name)
-                elif command == ""MESSAGE"":
-                    room_name = self.user_rooms[websocket]
-                    await self.send_message(websocket, room_name, payload)
-                else:
-                    await websocket.send(""Unknown command"")
-        except websockets.exceptions.ConnectionClosed:
-            pass
-
-    async def join_room(self, websocket, room_name):
-        user = await self.authenticate(websocket)
-        if user in self.user_rooms:
-            await websocket.send(""Already in a room"")
-            return
-
-        if room_name not in self.rooms:
-            self.rooms[room_name] = ChatRoom()
-
-        self.user_rooms[websocket] = room_name
-        self.rooms[room_name].users.add(user)
-
-        await self.send_welcome_message(websocket, room_name)
-        await self.send_last_messages(websocket, room_name)
-
-    async def send_message(self, websocket, room_name, payload):
-        user = await self.authenticate(websocket)
-        if user not in self.user_rooms:
-            await websocket.send(""Not in a room"")
-            return
-
-        if room_name != self.user_rooms[websocket]:
-            await websocket.send(""Not in the correct room"")
-            return
-
-        if user in self.rate_limits:
-            if self.rate_limits[user] > 0:
-                self.rate_limits[user] -= 1
+        :param key: Key of the item to retrieve.
+        :return: The item if found, otherwise raise CacheMissError.
+        """"""
+        async with self.lock:
+            await self._remove_expired_items()
+            if key in self.cache:
+                value, timestamp = self.cache[key]
+                self.cache.move_to_end(key)
+                return value
             else:
-                raise RateLimitException(""Rate limit exceeded"")
+                raise CacheMissError(f""Key '{key}' not found in cache."")
 
-        await self.rooms[room_name].send_message(user, payload)
-        await self.broadcast_message(websocket, room_name, payload)
+    async def set(self, key: str, value: T, ttl: Optional[int] = None) -> None:
+        """"""
+        Set an item in the cache with an optional TTL.
 
-    async def broadcast_message(self, websocket, room_name, payload):
-        for user, ws in self.user_rooms.items():
-            if ws != websocket and ws in self.rooms[room_name].users:
-                await ws.send(f""{user}: {payload}"")
+        :param key: Key of the item to set.
+        :param value: Value to store in the cache.
+        :param ttl: Time-to-live (TTL) for the item in seconds. If None, use the default TTL.
+        """"""
+        async with self.lock:
+            await self._remove_expired_items()
+            if len(self.cache) >= self.max_size:
+                raise CacheFullError(""Cache is full. Cannot add more items."")
+            ttl = ttl if ttl is not None else self.ttl
+            self.cache[key] = (value, asyncio.get_running_loop().time() + ttl)
+            self.cache.move_to_end(key)
 
-    async def send_welcome_message(self, websocket, room_name):
-        await websocket.send(""Welcome to the chat room"")
+    async def aget(self, key: str) -> T:
+        """"""
+        Asynchronously get an item from the cache by key.
 
-    async def send_last_messages(self, websocket, room_name):
-        messages = await self.rooms[room_name].get_messages()
-        for message in messages:
-            await websocket.send(message)
+        :param key: Key of the item to retrieve.
+        :return: The item if found, otherwise raise CacheMissError.
+        """"""
+        return await self.get(key)
 
-    async def authenticate(self, websocket):
-        # Implement authentication logic here
-        return ""user1""
+    async def aset(self, key: str, value: T, ttl: Optional[int] = None) -> None:
+        """"""
+        Asynchronously set an item in the cache with an optional TTL.
 
-async def main():
-    server = ChatServer()
-    async with websockets.serve(server.handle_connection, ""localhost"", 8765):
-        await asyncio.Future()  # run forever
-
-if __name__ == ""__main__"":
-    asyncio.run(main())
-```",
-REQ_20260303_174915_67d6f0aa,Python ile çok kullanıcılı bir async chat sunucusu yaz. Gereksinimler: asyncio ve websockets kullan. Aynı anda en az 1000 bağlantıyı destekle. Kullanıcılar odaya katılabilsin ve mesajlar sadece o odadakilere yayınlansın. Her kullanıcı için rate limiting uygula (10 sn’de max 5 mesaj). Mesajları hafızada tut ve son 20 mesajı yeni katılan kullanıcıya gönder. Hataları özel exception sınıflarıyla yönet. Kod modüler ve type hint’li olsun. ,qwen2.5-coder:7b,llama3.2:3b,gemma2:2b,DeepSeek-R1 (Ollama),75.0,19.0,11.5,12.0,15.0,12.0,6.0,qwen2.5-coder:7b,0,75.0,SUCCESS,2026-03-03 17:49,"```python
-import asyncio
-import websockets
-from typing import Dict, List, Set, Optional
-from collections import defaultdict, deque
-
-class RateLimitException(Exception):
-    pass
-
-class ChatRoom:
-    def __init__(self):
-        self.messages: List[str] = []
-        self.users: Set[str] = set()
-
-    async def add_user(self, user: str):
-        if user in self.users:
-            raise ValueError(""User already in room"")
-        self.users.add(user)
-
-    async def remove_user(self, user: str):
-        if user not in self.users:
-            raise ValueError(""User not in room"")
-        self.users.remove(user)
-
-    async def send_message(self, user: str, message: str):
-        if len(self.messages) > 20:
-            self.messages.pop(0)
-        self.messages.append(f""{user}: {message}"")
-
-    async def get_messages(self) -> List[str]:
-        return self.messages
-
-class ChatServer:
-    def __init__(self):
-        self.rooms: Dict[str, ChatRoom] = defaultdict(ChatRoom)
-        self.user_rooms: Dict[str, str] = {}
-        self.rate_limits: Dict[str, int] = {}
-
-    async def connect(self, websocket, path):
-        try:
-            user = await websocket.recv()
-            if user in self.user_rooms:
-                await websocket.close()
-                return
-
-            room_name = await websocket.recv()
-            if room_name not in self.rooms:
-                await websocket.close()
-                return
-
-            room = self.rooms[room_name]
-            await room.add_user(user)
-            self.user_rooms[user] = room_name
-
-            await self.send_initial_messages(websocket, user)
-            await self.handle_messages(websocket, user)
-        except Exception as e:
-            await websocket.close()
-            print(f""Error: {e}"")
-
-    async def send_initial_messages(self, websocket, user):
-        room_name = self.user_rooms[user]
-        room = self.rooms[room_name]
-        messages = await room.get_messages()
-        await websocket.send(""\n"".join(messages))
-
-    async def handle_messages(self, websocket, user):
-        last_message_time = 0
-        while True:
-            try:
-                message = await websocket.recv()
-                current_time = asyncio.get_running_loop().time()
-                if user in self.rate_limits and current_time - self.rate_limits[user] < 60:
-                    raise RateLimitException(""Too many messages in 60 seconds"")
-                self.rate_limits[user] = current_time
-                room_name = self.user_rooms[user]
-                room = self.rooms[room_name]
-                await room.send_message(user, message)
-                await self.broadcast_message(room_name, message)
-            except websockets.exceptions.ConnectionClosed:
-                await websocket.close()
-                break
-            except RateLimitException as e:
-                await websocket.send(str(e))
-            except Exception as e:
-                await websocket.close()
-                print(f""Error: {e}"")
-
-    async def broadcast_message(self, room_name: str, message: str):
-        room = self.rooms[room_name]
-        for user in room.users:
-            await self.user_rooms[user].send(message)
-
-start_server = websockets.serve(ChatServer().connect, ""localhost"", 8765)
-
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()
-```",
-REQ_20260303_175234_9278d14e,Python ile çok kullanıcılı bir async chat sunucusu yaz. Gereksinimler: asyncio ve websockets kullan. Aynı anda en az 1000 bağlantıyı destekle. Kullanıcılar odaya katılabilsin ve mesajlar sadece o odadakilere yayınlansın. Her kullanıcı için rate limiting uygula (10 sn’de max 5 mesaj). Mesajları hafızada tut ve son 20 mesajı yeni katılan kullanıcıya gönder. Hataları özel exception sınıflarıyla yönet. Kod modüler ve type hint’li olsun. ,qwen2.5-coder:7b,llama3.2:3b,gemma2:2b,DeepSeek-R1 (Ollama),78.0,24.0,12.0,10.0,15.0,11.0,6.0,gemma2:2b,0,78.0,SUCCESS,2026-03-03 17:52,"```python
-import asyncio
-import websockets
-from typing import List, Dict, Any
-from datetime import datetime
-
-class WebSocketException(Exception):
-    pass
-
-class RateLimitExceeded(WebSocketException):
-    pass
-
-class MessageBuffer:
-    def __init__(self, max_messages: int = 20):
-        self.messages = []
-        self.max_messages = max_messages
-
-    def add_message(self, message: str):
-        self.messages.append(message)
-        if len(self.messages) > self.max_messages:
-            self.messages.pop(0)
-
-    def get_last_messages(self) -> List[str]:
-        return self.messages
-
-class WebSocketServer:
-    def __init__(self, port: int = 8765):
-        self.server = websockets.serve(self.handle_client, ""localhost"", port)
-        asyncio.get_event_loop().run_until_complete(self.server)
-
-    async def handle_client(self, websocket: websockets.WebSocket):
-        try:
-            async for message in websocket:
-                await self.process_message(message, websocket)
-        except WebSocketException as e:
-            print(f""WebSocketException: {e}"")
-        except Exception as e:
-            print(f""Error: {e}"")
-
-    async def process_message(self, message: str, websocket: websockets.WebSocket):
-        try:
-            # TODO: implement message processing logic here
-            # Example: broadcast message to other connected users
-            await self.broadcast_message(message, websocket)
-        except Exception as e:
-            print(f""Error processing message: {e}"")
-
-    async def broadcast_message(self, message: str, websocket: websockets.WebSocket):
-        # TODO: implement broadcast logic here
-        # Example: broadcast message to other connected users
-        pass
-
-async def main():
-    # TODO: implement main logic here
-    # Example: start WebSocket server
-    server = WebSocketServer()
-    await asyncio.Future()
-
-if __name__ == ""__main__"":
-    asyncio.run(main())
-``` 
-",
-REQ_20260303_175643_464ac956,"Python kullanarak bir listenin içindeki sayıların ortalamasını hesaplayan bir fonksiyon yaz. Fonksiyon, boş bir liste gönderilirse None döndürmeli. ",qwen2.5-coder:7b,llama3.2:3b,gemma2:2b,DeepSeek-R1 (Ollama),82.0,25.0,12.5,15.0,15.0,15.0,0.0,qwen2.5-coder:7b,0,82.0,SUCCESS,2026-03-03 17:56,"```python
-def calculate_average(numbers):
-    if not numbers:
-        return None
-    return sum(numbers) / len(numbers)
-```",
-REQ_20260303_175812_dffce6e5, Bir string içinde birbirini tekrar etmeyen en uzun alt string'in (substring) uzunluğunu bulan bir python kodu yaz. Örnek: 'abcabcbb' girdisi için sonuç 3 olmalı (abc).  ,qwen2.5-coder:7b,llama3.2:3b,gemma2:2b,DeepSeek-R1 (Ollama),82.0,25.0,12.5,15.0,15.0,15.0,0.0,qwen2.5-coder:7b,0,82.0,SUCCESS,2026-03-03 17:58,"```python
-def length_of_longest_substring(s):
-    n = len(s)
-    longest = 0
-    start = 0
-    char_index = {}
-
-    for end in range(n):
-        if s[end] in char_index and char_index[s[end]] >= start:
-            start = char_index[s[end]] + 1
-        char_index[s[end]] = end
-        longest = max(longest, end - start + 1)
-
-    return longest
-
-# Test
-print(length_of_longest_substring('abcabcbb'))  # Output: 3
-```",
-REQ_20260303_182902_5ce5cb38,"""Python ile bilgisayarın 1-100 arası rastgele bir sayı tuttuğu ve benim tahmin etmeye çalıştığım bir oyun yaz. Her tahminimde bilgisayar beni 'daha yukarı' veya 'daha aşağı' diye yönlendirsin. Doğru bildiğimde kaç denemede bulduğumu söylesin.""",qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,DeepSeek-R1 (Ollama),82.0,20.0,12.5,14.0,15.0,15.0,6.0,qwen2.5-coder:3b,0,82.0,SUCCESS,2026-03-03 18:29,"```python
-import random
-
-def guess_number_game():
-    number = random.randint(1, 100)
-    attempts = 0
-
-    print(""1-100 arasında bir sayı tuttum. Tahmin etmeye çalışın!"")
-
-    while True:
-        try:
-            guess = int(input(""Tahmininiz: ""))
-            attempts += 1
-
-            if guess < number:
-                print(""Daha yukarı!"")
-            elif guess > number:
-                print(""Daha aşağı!"")
-            else:
-                print(f""Bravo! Doğru bildiniz. Toplam {attempts} denemede buldunuz."")
-                break
-        except ValueError:
-            print(""Lütfen bir sayı girin."")
-
-guess_number_game()
-```",
-REQ_20260309_164007_55ba49ec,python ile search algorithm yaz ,deepseek-r1:7b,qwen2.5-coder:7b,,DeepSeek-R1 (Ollama),46.0,15.0,11.0,5.0,12.0,0.0,0.0,qwen2.5-coder:7b,2,46.0,SUCCESS,2026-03-09 16:40,"```python
-def linear_search(arr: list, target: int) -> int:
+        :param key: Key of the item to set.
+        :param value: Value to store in the cache.
+        :param ttl: Time-to-live (TTL) for the item in seconds. If None, use the default TTL.
+        """"""
+        await self.set(key, value, ttl)
+```","The code effectively implements a thread-safe, async-capable advanced in-memory cache with all specified features, using appropriate terminology and clear identifiers."
+REQ_20260314_183902_b1eb64e9,"""Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir Python fonksiyonu yaz. Ancak bu kodu yazarken; liste üreteçleri (list comprehensions) kullanma, değişken isimlerini 'list1', 'x', 'temp' gibi anlamsız seç, her işlem için gereksiz yere yeni bir boş liste tanımlayıp append kullan ve kodun içine hiçbir açıklama ekleme."" ",qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),77.0,23.0,9.5,14.0,12.0,13.0,0.0,qwen2.5-coder:7b,9,77.0,SUCCESS,2026-03-14 18:39,"```python
+def square_even_numbers(numbers: list[int]) -> list[int]:
     """"""
-    Perform linear search on a list to find the index of the target element.
-    
-    Parameters:
-    arr (list): The list to search through.
-    target (int): The element to search for.
-    
+    Returns a list of squares of even numbers from the given list.
+
+    Args:
+        numbers (list[int]): A list of integers.
+
     Returns:
-    int: The index of the target element if found, otherwise -1.
-    """"""
-    for i in range(len(arr)):
-        if arr[i] == target:
-            return i
-    return -1
-
-def binary_search(arr: list, target: int) -> int:
-    """"""
-    Perform binary search on a sorted list to find the index of the target element.
-    
-    Parameters:
-    arr (list): The sorted list to search through.
-    target (int): The element to search for.
-    
-    Returns:
-    int: The index of the target element if found, otherwise -1.
-    """"""
-    low, high = 0, len(arr) - 1
-    while low <= high:
-        mid = (low + high) // 2
-        if arr[mid] == target:
-            return mid
-        elif arr[mid] < target:
-            low = mid + 1
-        else:
-            high = mid - 1
-    return -1
-```",Parse error: Expecting value: line 1 column 1 (char 0)
-REQ_20260312_145724_a4d7f374,fibonacci python kod,qwen2.5-coder:7b,qwen2.5-coder:3b,phi4-mini,deepseek-r1:1.5b (Ollama),74.0,25.0,7.5,15.0,12.0,15.0,0.0,qwen2.5-coder:7b,0,74.0,SUCCESS,2026-03-12 14:57,"```python
-def fibonacci(n):
-    if n <= 0:
-        return []
-    elif n == 1:
-        return [0]
-    elif n == 2:
-        return [0, 1]
-    
-    fib_sequence = [0, 1]
-    for i in range(2, n):
-        next_value = fib_sequence[-1] + fib_sequence[-2]
-        fib_sequence.append(next_value)
-    
-    return fib_sequence
-
-# Example usage
-n = 10
-print(fibonacci(n))
-```",
-REQ_20260312_150653_d28b7f90,bubble sort python kodu ver,deepseek-r1:1.5b,qwen2.5-coder:7b,qwen2.5-coder:3b,phi4-mini (Ollama),77.0,24.0,12.0,14.0,12.0,15.0,0.0,deepseek-r1:1.5b,0,77.0,SUCCESS,2026-03-12 15:06,"To implement the bubble sort algorithm in Python, you can follow these steps:
-
-1. **Initialize Variables**: Keep track of the number of passes through the list and whether any swaps were made during a pass.
-
-2. **Bubble Sort Algorithm**:
-   - Loop through each element in the list until no more swaps are needed.
-   - For each element, compare it with the next one. If they are out of order, swap them.
-   - Repeat this process for all elements and continue until the entire list is sorted.
-
-Here's a Python implementation of the bubble sort algorithm:
-
-```python
-def bubblesort(lst):
-    n = len(lst)
-    swapped = True
-    while swapped:
-        swapped = False
-        for i in range(n - 1):
-            if lst[i] > lst[i + 1]:
-                # Swap the elements
-                lst[i], lst[i + 1] = lst[i + 1], lst[i]
-                swapped = True
-        n -= 1
-    return lst
-
-# Example usage:
-list = [6, 5, 3, 8, 7]
-sorted_list = bubblesort(list)
-print(""Sorted list:"", sorted_list)
-```
-
-This code sorts the input list using the bubble sort algorithm and returns the sorted list.",
-REQ_20260312_150838_411f83bd,python kod ver,deepseek-r1:1.5b,qwen2.5-coder:7b,qwen2.5-coder:3b,phi4-mini (Ollama),80.0,19.0,14.5,14.0,12.0,15.0,6.0,qwen2.5-coder:7b,0,80.0,SUCCESS,2026-03-12 15:08,"```python
-import random
-
-def guess_number():
-    number = random.randint(1, 100)
-    attempts = 0
-
-    while True:
-        try:
-            guess = int(input(""Tahmin etmek istediğiniz sayıyı girin (1-100 arası): ""))
-            attempts += 1
-
-            if guess < number:
-                print(""Daha yüksek bir sayı deneyin."")
-            elif guess > number:
-                print(""Daha düşük bir sayı deneyin."")
-            else:
-                print(f""Tebrikler! {number} sayısını {attempts} denemede buldunuz."")
-                break
-        except ValueError:
-            print(""Lütfen geçerli bir sayı girin."")
-
-if __name__ == ""__main__"":
-    guess_number()
-```",
-REQ_20260312_151239_9a7d245e,python kodu ver,deepseek-r1:1.5b,qwen2.5-coder:7b,qwen2.5-coder:3b,phi4-mini (Ollama),80.0,25.0,2.5,15.0,12.0,14.0,0.0,qwen2.5-coder:7b,2,80.0,SUCCESS,2026-03-12 15:12,"```python
-def greet_world() -> None:
-    """"""
-    Prints 'Hello World!' to the console.
+        list[int]: A list containing the squares of even numbers.
     """"""
     try:
-        print(""Hello World!"")
+        return [x ** 2 for x in numbers if x % 2 == 0]
     except Exception as e:
         print(f""An error occurred: {e}"")
+        return []
+```","The code effectively squares even numbers using a list comprehension, adhering to the constraints and using appropriate variable names."
+REQ_20260314_204144_6a54582d,Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir Python fonksiyonu yaz.,qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),84.0,25.0,2.5,15.0,12.0,15.0,0.0,qwen2.5-coder:7b,1,84.0,SUCCESS,2026-03-14 20:41,"```python
+def square_of_even_numbers(numbers: list[int]) -> list[int]:
+    """"""
+    Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir fonksiyon.
 
-if __name__ == ""__main__"":
-    greet_world()
-```","The function name 'greet_world' is clear but slightly less domain-specific than expected; the code reliably prints a greeting, handles exceptions gracefully."
+    Args:
+        numbers (list[int]): İşlenecek tam sayı listesi.
+
+    Returns:
+        list[int]: Çift sayıların kareleri listesi.
+    """"""
+    try:
+        return [x**2 for x in numbers if x % 2 == 0]
+    except TypeError as e:
+        print(f""Hata: Geçersiz giriş - {e}"")
+        return []
+```","The code effectively processes the list, squares even numbers, and handles errors gracefully."
+REQ_20260314_205432_e318b4ee,Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir Python fonksiyonu yaz.,qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),85.0,25.0,2.5,15.0,12.0,15.0,0.0,qwen2.5-coder:7b,1,85.0,SUCCESS,2026-03-14 20:54,"```python
+def square_of_evens(numbers: list[int]) -> list[int]:
+    """"""
+    Returns a list of squares of even numbers from the given list.
+
+    Parameters:
+    numbers (list[int]): A list of integers.
+
+    Returns:
+    list[int]: A list containing the squares of even numbers from the input list.
+    """"""
+    try:
+        return [x**2 for x in numbers if x % 2 == 0]
+    except TypeError as e:
+        print(f""Error: {e}"")
+        return []
+```","The code effectively implements the requested functionality with clear and appropriate names, handling even numbers and returning their squares."
+REQ_20260314_212243_d0360423,Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir Python fonksiyonu yaz. ,qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),82.0,25.0,2.5,15.0,12.0,15.0,0.0,qwen2.5-coder:7b,2,82.0,SUCCESS,2026-03-14 21:22,"```python
+def square_of_evens(numbers: list[int]) -> list[int]:
+    """"""
+    Returns a list of squares of even numbers from the given list.
+
+    Parameters:
+    numbers (list[int]): A list of integers.
+
+    Returns:
+    list[int]: A list containing the squares of even numbers from the input list.
+    """"""
+    try:
+        return [x**2 for x in numbers if x % 2 == 0]
+    except Exception as e:
+        print(f""An error occurred: {e}"")
+        return []
+```","The code effectively meets the requirements with clear and appropriate names, and robust logic."
+REQ_20260314_221522_da715aa1,Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir Python fonksiyonu yaz. ,qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),82.0,25.0,2.5,15.0,12.0,15.0,0.0,qwen2.5-coder:7b,2,82.0,SUCCESS,2026-03-14 22:15,"```python
+def square_of_evens(numbers: list[int]) -> list[int]:
+    """"""
+    Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir fonksiyon.
+
+    Args:
+        numbers (list[int]): İşlenecek tam sayı listesi.
+
+    Returns:
+        list[int]: Çift sayıların kareleri listesi.
+    """"""
+    try:
+        return [x**2 for x in numbers if x % 2 == 0]
+    except Exception as e:
+        print(f""An error occurred: {e}"")
+        return []
+```",The code effectively implements the requested functionality with clear names and robust error handling.
+REQ_20260314_222036_1459cac2,"def f(a):     b = open(a, 'r')     c = b.read().split()     total = 0     for x in c:         total = total + int(x)     b.close()     return total  bu kodu için   int(x) işlemi, dosya içinde harf varsa programı çökerterek Reliability skorunu düşürür. Hata yönetimi (try-except) yok. İsimlendirme çok zayıf.   olduğunu tespit ettim bu kodu daha kaliteli bir hale getir",qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),80.0,20.0,12.0,15.0,12.0,15.0,6.0,qwen2.5-coder:7b,0,80.0,SUCCESS,2026-03-14 22:20,"```python
+def calculate_total(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            content = file.read().split()
+            total = sum(int(x) for x in content)
+        return total
+    except ValueError as e:
+        print(f""Error: {e}. Non-numeric value encountered in the file."")
+        return None
+    except FileNotFoundError:
+        print(f""Error: The file {file_path} does not exist."")
+        return None
+```",
+REQ_20260314_223732_e8ef4a6c,"""Python ile bir 'Rate Limiter' (Hız Sınırlayıcı) sistemi yaz. Şu kriterlere tam uyum bekliyorum:  'Token Bucket' algoritmasını kullanmalı. Sistem tamamen 'Thread-safe' olmalı (threading.Lock kullanılmalı). Her kullanıcının (user_id) kendine özel bir bucket kapasitesi ve dolum hızı (refill rate) olmalı. Kodda kesinlikle 'Type Hints' (List, Dict, Optional vb.) kullanılmalı. Tüm class ve metodlar için detaylı 'Google Style Docstrings' yazılmalı. Hata yönetimi (negatif değerler veya geçersiz user_id",qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),80.0,25.0,13.0,15.0,12.0,15.0,0.0,mistral:7b,0,80.0,SUCCESS,2026-03-14 22:37," ```python
+import threading
+import time
+
+class RateLimiter:
+    """"""Rate Limiter class using Token Bucket algorithm.
+
+    Attributes:
+        users (Dict[str, User]): A dictionary containing all users and their rate limiters.
+        lock (threading.Lock): A lock to ensure thread safety.
+    """"""
+
+    def __init__(self):
+        self.users = {}
+        self.lock = threading.Lock()
+
+    class User:
+        """"""User class for rate limiter.
+
+        Attributes:
+            user_id (str): The unique identifier of the user.
+            capacity (int): The maximum number of tokens in the bucket.
+            refill_rate (int): The rate at which tokens are refilled per second.
+            tokens (int): The current number of tokens in the bucket.
+            last_refill (float): The timestamp of the last token refill.
+        """"""
+
+        def __init__(self, user_id: str, capacity: int, refill_rate: int):
+            self.user_id = user_id
+            self.capacity = capacity
+            self.refill_rate = refill_rate
+            self.tokens = self.capacity
+            self.last_refill = time.time()
+
+        def acquire_token(self) -> bool:
+            """"""Acquires a token from the bucket if available.
+
+            Returns:
+                True if a token was acquired, False otherwise.
+            """"""
+            with self.lock:
+                if self.tokens > 0:
+                    self.tokens -= 1
+                    return True
+                else:
+                    return False
+
+        def refill(self):
+            """"""Refills the bucket with tokens at the specified rate.""""""
+            current_time = time.time()
+            refill_time = self.last_refill + (1 / self.refill_rate)
+            if current_time >= refill_time:
+                self.tokens = self.capacity
+                self.last_refill = current_time
+
+    def add_user(self, user_id: str, capacity: int, refill_rate: int):
+        """"""Adds a new user to the rate limiter.
+
+        Args:
+            user_id (str): The unique identifier of the user.
+            capacity (int): The maximum number of tokens in the user's bucket.
+            refill_rate (int): The rate at which tokens are refilled per second for the user.
+        """"""
+        if user_id in self.users:
+            raise ValueError(f""User with ID {user_id} already exists."")
+        self.users[user_id] = self.User(user_id, capacity, refill_rate)
+
+    def remove_user(self, user_id: str):
+        """"""Removes a user from the rate limiter.
+
+        Args:
+            user_id (str): The unique identifier of the user to be removed.
+        """"""
+        if user_id not in self.users:
+            raise ValueError(f""User with ID {user_id} does not exist."")
+        del self.users[user_id]
+
+    def acquire_token_for_user(self, user_id: str) -> bool:
+        """"""Acquires a token from the user's bucket if available.
+
+        Args:
+            user_id (str): The unique identifier of the user.
+
+        Returns:
+            True if a token was acquired, False otherwise.
+        """"""
+        if user_id not in self.users:
+            raise ValueError(f""User with ID {user_id} does not exist."")
+        return self.users[user_id].acquire_token()
+
+    def refill_all_users(self):
+        """"""Refills the buckets of all users.""""""
+        with self.lock:
+            for user in self.users.values():
+                user.refill()
+```",
+REQ_20260314_224857_96859258,"Bir banka hesabı (BankAccount) sınıfı yaz. Bu sınıfın içinde bir bakiye (balance) değişkeni olsun. Para yatırma (deposit) ve para çekme (withdraw) metodları ekle. Ancak yazarken; bakiyeyi doğrudan dışarıdan erişilebilir yap, para çekerken bakiyenin eksiye düşüp düşmediğine bakma, yatırılan veya çekilen tutarın sayı olup olmadığını kontrol etme, tip ipuçlarını ve dökümantasyonu kullanma, isimlendirmeleri de b, d, w şeklinde kısalt.",qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),82.0,25.0,12.0,15.0,12.0,15.0,3.0,qwen2.5-coder:7b,0,82.0,SUCCESS,2026-03-14 22:48,"```python
+class BankAccount:
+    def __init__(self, initial_balance=0):
+        self.balance = initial_balance
+
+    def deposit(self, amount):
+        """"""
+        Yatırılan tutarın sayı olup olmadığını kontrol eder ve bakiyeye ekler.
+        :param amount: Yatırılacak tutar
+        :type amount: float
+        """"""
+        if not isinstance(amount, (int, float)):
+            raise ValueError(""Yatırılan tutar sayı olmalıdır."")
+        self.balance += amount
+
+    def withdraw(self, amount):
+        """"""
+        Çekilen tutarın sayı olup olmadığını kontrol eder ve bakiyeden çıkarır.
+        Eğer bakiyenin eksiye düşmesini engeller.
+        :param amount: Çekilecek tutar
+        :type amount: float
+        """"""
+        if not isinstance(amount, (int, float)):
+            raise ValueError(""Çekilen tutar sayı olmalıdır."")
+        if amount > self.balance:
+            raise ValueError(""Yetersiz bakiye"")
+        self.balance -= amount
+```",
+REQ_20260314_232735_eee548e7,"Bir banka hesabı (BankAccount) sınıfı yaz. Bu sınıfın içinde bir bakiye (balance) değişkeni olsun. Para yatırma (deposit) ve para çekme (withdraw) metodları ekle. Ancak yazarken; bakiyeyi doğrudan dışarıdan erişilebilir yap, para çekerken bakiyenin eksiye düşüp düşmediğine bakma, yatırılan veya çekilen tutarın sayı olup olmadığını kontrol etme, tip ipuçlarını ve dökümantasyonu kullanma, isimlendirmeleri de b, d, w şeklinde kısalt.",qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),82.0,25.0,12.0,15.0,12.0,15.0,3.0,qwen2.5-coder:7b,10,82.0,SUCCESS,2026-03-14 23:27,"```python
+class BankAccount:
+    def __init__(self, initial_balance: float = 0):
+        """"""
+        Banka hesabını başlatır.
+        :param initial_balance: Başlangıç bakiyesi
+        :type initial_balance: float
+        """"""
+        self.balance = initial_balance
+
+    def deposit(self, amount: float) -> None:
+        """"""
+        Para yatırır.
+        :param amount: Yatırılacak tutar
+        :type amount: float
+        """"""
+        if not isinstance(amount, (int, float)):
+            raise ValueError(""Yatırılan tutar sayı olmalıdır."")
+        self.balance += amount
+
+    def withdraw(self, amount: float) -> None:
+        """"""
+        Para çeker.
+        :param amount: Çekilecek tutar
+        :type amount: float
+        """"""
+        if not isinstance(amount, (int, float)):
+            raise ValueError(""Çekilecek tutar sayı olmalıdır."")
+        if amount > self.balance:
+            raise ValueError(""Yetersiz bakiye."")
+        self.balance -= amount
+```","The code has perfect identifier clarity with descriptive names. It adheres well to the prompt, implementing all core requirements except for checking if the balance goes negative. Naming aligns perfectly with domain-specific terms. The logic is robust and reliable with proper error handling and type checks."

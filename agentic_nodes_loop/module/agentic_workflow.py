@@ -593,8 +593,8 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
         final_score = new_score
         final_categories = new_categories
         
-        if new_score < previous_score - 2:  # 2 puandan fazla düşüş varsa rollback
-            print(f"⚠️  ROLLBACK: Skor {previous_score:.1f} → {new_score:.1f} düştü. Önceki kod korunuyor.")
+        if new_score < previous_score:  # En ufak bir düşüş olsa bile kabul etmiyoruz
+            print(f"⚠️  ROLLBACK: Skor {previous_score:.1f} → {new_score:.1f} düştü. Önceki daha iyi kod korunuyor.")
             rollback_applied = True
             final_code = previous_code
             final_score = previous_score
@@ -653,6 +653,10 @@ def finalize_node(state: HybridState) -> HybridState:
     return {
         "final_code": state["current_code"],
         "final_score": state["current_score"],
+        "round1_codes": state.get("round1_codes", {}),
+        "round1_scores": state.get("round1_scores", {}),
+        "winner_model": state.get("winner_model", ""),
+        "winner_score": state.get("winner_score", 0),
         "feedback_iterations": state.get("feedback_iterations", []),
         "status": "improved_via_feedback" if state["iteration_count"] > 1 else "direct_output",
         "judge_reasoning": reasoning

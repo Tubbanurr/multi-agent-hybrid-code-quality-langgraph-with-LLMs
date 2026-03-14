@@ -1,5 +1,13 @@
 // Updated for Ollama support with dynamic model names
-console.log("HAVELSAN UI v3.1.0 Loaded - Fixed Scores Persistence");
+console.log("HAVELSAN UI v3.1.1 Loaded - Active Debugging");
+
+window.onerror = function(message, source, lineno, colno, error) {
+    console.error(`JS HATA: ${message} @ ${source}:${lineno}:${colno}`);
+    if (message.includes("innerHTML")) {
+        console.warn("Lütfen HTML dosyasındaki ID'lerin script.js ile eşleştiğinden ve sayfayı yenilediğinizden emin olun.");
+    }
+    return false;
+};
 
 async function generate() {
     const prompt = document.getElementById("prompt").value;
@@ -17,18 +25,11 @@ async function generate() {
     document.getElementById("winner-section").style.display = "none";
 
     try {
-        // Longer timeout for Ollama (local models are slower)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1800000); // 30 dakika timeout
-
         const response = await fetch("/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt }),
-            signal: controller.signal
+            body: JSON.stringify({ prompt })
         });
-
-        clearTimeout(timeoutId);
 
         if (!response.ok) throw new Error("API Hatası");
 
@@ -42,11 +43,7 @@ async function generate() {
         showWinner(data);
 
     } catch (error) {
-        if (error.name === 'AbortError') {
-            alert("İstek zaman aşımına uğradı. Ollama modelleri yavaş çalışıyor olabilir.");
-        } else {
-            alert("Hata: " + error.message);
-        }
+        alert("Hata: " + error.message);
     } finally {
         btn.disabled = false;
         loader.style.display = "none";
@@ -75,6 +72,10 @@ function showRound1(codes, scoresData) {
 
         // Display HYBRID score with breakdown
         const scorePanel = document.getElementById(`score-${slotId}`);
+        if (!scorePanel) {
+            console.error(`Missing element: score-${slotId}`);
+            return;
+        }
 
         if (!scoreData || scoreData.is_error) {
             // API HATASI - ÖZEL GÖSTER
@@ -238,6 +239,10 @@ function showWinner(data) {
     document.getElementById("winner-section").style.display = "block";
 
     const winnerInfo = document.getElementById("winner-info");
+    if (!winnerInfo) {
+        console.error("Missing element: winner-info");
+        return;
+    }
     const statusText = data.status === "direct_output"
         ? "Eşik sağlandı - Direkt çıktı"
         : "Feedback döngüsü ile iyileştirildi";
@@ -275,6 +280,10 @@ function showWinner(data) {
 
 function showDetailedFeedback(iterations) {
     const container = document.getElementById("feedback-iterations");
+    if (!container) {
+        console.error("Missing element: feedback-iterations");
+        return;
+    }
     container.innerHTML = "";
 
     iterations.forEach((iter, index) => {

@@ -212,9 +212,9 @@ def call_coder_1(prompt: str) -> str:
         max_tokens=2048
     )
     
-    # Retry once if validation fails
     if not validate_code(code):
-        print(f"⚠️ Model 1 (Gemma) hallucination detected, retrying...")
+        coder_name = get_ollama_models()["coder_1"]
+        print(f"⚠️ {coder_name} hallucination detected, retrying...")
         code = call_ollama(
             model=get_ollama_models()["coder_1"],
             prompt=f"CRITICAL: The previous output was incorrect. Write the actual Python code for: {prompt}",
@@ -243,7 +243,8 @@ def call_coder_2(prompt: str) -> str:
     
     # Specific check for common Codegemma hallucination
     if not validate_code(code) or ".ipynb" in code.lower():
-        print(f"⚠️ Model 2 (Codegemma) hallucination detected (.ipynb or invalid), retrying...")
+        coder_name = get_ollama_models()["coder_2"]
+        print(f"⚠️ {coder_name} hallucination detected (.ipynb or invalid), retrying...")
         code = call_ollama(
             model=get_ollama_models()["coder_2"],
             prompt=f"CRITICAL: DO NOT WRITE '.ipynb'. Write ACTUAL Python code for: {prompt}",
@@ -272,7 +273,8 @@ def call_coder_3(prompt: str) -> str:
     )
     
     if not validate_code(code):
-        print(f"⚠️ Model 3 (TinyLlama) hallucination detected, retrying...")
+        coder_name = get_ollama_models()["coder_3"]
+        print(f"⚠️ {coder_name} hallucination detected, retrying...")
         code = call_ollama(
             model=get_ollama_models()["coder_3"],
             prompt=f"ACTUAL PYTHON CODE ONLY: {prompt}",
@@ -332,15 +334,43 @@ def call_deepseek_r1_judge(code: str, prompt: str) -> Dict[str, Any]:
             "error": False
         }
     """
-    system_prompt = """You are an expert Python code reviewer. Evaluate the code based on these specific semantic criteria:
+    system_prompt = """You are a highly critical Senior Python Architect and Code Reviewer. 
+Your goal is to provide a TOUGH and UNBIASED evaluation. DO NOT give high scores unless the code is truly exceptional.
 
-1. **Identifier Clarity** (0-5): Are variable and function names meaningful?
-2. **Prompt Adherence** (0-10): Does the code satisfy all requirements in the original request?
-3. **Naming Alignment** (0-5): Do names follow the expected domain terminology?
-4. **Logic & Reliability** (0-10): Is the algorithm robust and reliable?
+Evaluate the code based on these specific semantic criteria (Max 30 points total):
+
+1. **Identifier Clarity** (0-5): 
+   - 5: Perfect PEP8 naming, perfectly descriptive.
+   - 3-4: Mostly clear but some vague names (e.g., 'data', 'temp').
+   - 1-2: Poor names (e.g., 'a', 'b', 'list1').
+   - 0: Obfuscated or completely meaningless.
+
+2. **Prompt Adherence** (0-10): 
+   - 10: Implements ALL requirements perfectly, including edge cases.
+   - 7-9: Implements core logic but misses a minor constraint or edge case.
+   - 4-6: Significant missing features or logic errors.
+   - 0-3: Fails to understand the prompt or produces completely wrong algorithm.
+
+3. **Naming Alignment** (0-5): 
+   - 5: Uses domain-specific terminology perfectly.
+   - 3-4: Acceptable domain names but generic in places.
+   - 1-2: Inconsistent or wrong terminology for the requested domain.
+   - 0: Completely random names.
+
+4. **Logic & Reliability** (0-10): 
+   - 10: Robust, optimized, handles errors, no race conditions, high quality.
+   - 7-9: Logic is correct but could be more efficient or lacks advanced error handling.
+   - 4-6: Works for simple cases but crashes on empty input or invalid types.
+   - 0-3: Broken logic, infinite loops, or major bugs.
+
+Deduct points for:
+- Lack of docstrings (-1 or -2)
+- Hardcoded values that should be parameters (-1)
+- Redundant logic (-1)
+- Lack of type hints (-1)
 
 Return ONLY a valid JSON object:
-{"identifier_clarity":<0-5>,"prompt_adherence":<0-10>,"naming_alignment":<0-5>,"test_reliability":<0-10>,"reasoning":"<one sentence summary>"}"""
+{"identifier_clarity":<0-5>,"prompt_adherence":<0-10>,"naming_alignment":<0-5>,"test_reliability":<0-10>,"reasoning":"<detailed explanation of why points were deducted>"}"""
 
     user_prompt = f"""Original Request: {prompt}
 
