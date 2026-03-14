@@ -17,18 +17,11 @@ async function generate() {
     document.getElementById("winner-section").style.display = "none";
 
     try {
-        // Longer timeout for Ollama (local models are slower)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1800000); // 30 dakika timeout
-
         const response = await fetch("/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ prompt }),
-            signal: controller.signal
+            body: JSON.stringify({ prompt })
         });
-
-        clearTimeout(timeoutId);
 
         if (!response.ok) throw new Error("API Hatası");
 
@@ -42,11 +35,7 @@ async function generate() {
         showWinner(data);
 
     } catch (error) {
-        if (error.name === 'AbortError') {
-            alert("İstek zaman aşımına uğradı. Ollama modelleri yavaş çalışıyor olabilir.");
-        } else {
-            alert("Hata: " + error.message);
-        }
+        alert("Hata: " + error.message);
     } finally {
         btn.disabled = false;
         loader.style.display = "none";

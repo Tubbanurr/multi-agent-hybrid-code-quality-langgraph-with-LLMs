@@ -45,15 +45,20 @@ def generate_endpoint(req: PromptRequest) -> Dict:
     1. İlk tur: 3 model kod üretir
     2. 4 metrikle analiz → Kazanan seçilir  
     3. Eşik kontrolü:
-       - >= 70 → Direkt çıktı
-       - < 70 → Feedback döngüsü (sadece kazananla)
+       - >= 80 → Direkt çıktı
+       - < 80 → Feedback döngüsü (sadece kazananla)
     """
     result = run_hybrid_workflow(
         prompt=req.prompt,
-        quality_threshold=70.0,
-        max_iterations=3,
+        quality_threshold=80.0,
+        max_iterations=10,
         static_weight=req.static_weight,
         llm_weight=req.llm_weight,
         metric_weights=req.metric_weights
     )
     return result
+
+if __name__ == "__main__":
+    import uvicorn
+    # Set a very high keep-alive timeout (e.g. 1 hour = 3600 seconds)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True, timeout_keep_alive=3600)

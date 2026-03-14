@@ -593,8 +593,8 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
         final_score = new_score
         final_categories = new_categories
         
-        if new_score < previous_score - 2:  # 2 puandan fazla düşüş varsa rollback
-            print(f"⚠️  ROLLBACK: Skor {previous_score:.1f} → {new_score:.1f} düştü. Önceki kod korunuyor.")
+        if new_score < previous_score:  # En ufak bir düşüş olsa bile kabul etmiyoruz
+            print(f"⚠️  ROLLBACK: Skor {previous_score:.1f} → {new_score:.1f} düştü. Önceki daha iyi kod korunuyor.")
             rollback_applied = True
             final_code = previous_code
             final_score = previous_score

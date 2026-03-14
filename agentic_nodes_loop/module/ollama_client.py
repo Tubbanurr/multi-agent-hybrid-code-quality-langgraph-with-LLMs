@@ -212,9 +212,9 @@ def call_coder_1(prompt: str) -> str:
         max_tokens=2048
     )
     
-    # Retry once if validation fails
     if not validate_code(code):
-        print(f"⚠️ Model 1 (Gemma) hallucination detected, retrying...")
+        coder_name = get_ollama_models()["coder_1"]
+        print(f"⚠️ {coder_name} hallucination detected, retrying...")
         code = call_ollama(
             model=get_ollama_models()["coder_1"],
             prompt=f"CRITICAL: The previous output was incorrect. Write the actual Python code for: {prompt}",
@@ -243,7 +243,8 @@ def call_coder_2(prompt: str) -> str:
     
     # Specific check for common Codegemma hallucination
     if not validate_code(code) or ".ipynb" in code.lower():
-        print(f"⚠️ Model 2 (Codegemma) hallucination detected (.ipynb or invalid), retrying...")
+        coder_name = get_ollama_models()["coder_2"]
+        print(f"⚠️ {coder_name} hallucination detected (.ipynb or invalid), retrying...")
         code = call_ollama(
             model=get_ollama_models()["coder_2"],
             prompt=f"CRITICAL: DO NOT WRITE '.ipynb'. Write ACTUAL Python code for: {prompt}",
@@ -272,7 +273,8 @@ def call_coder_3(prompt: str) -> str:
     )
     
     if not validate_code(code):
-        print(f"⚠️ Model 3 (TinyLlama) hallucination detected, retrying...")
+        coder_name = get_ollama_models()["coder_3"]
+        print(f"⚠️ {coder_name} hallucination detected, retrying...")
         code = call_ollama(
             model=get_ollama_models()["coder_3"],
             prompt=f"ACTUAL PYTHON CODE ONLY: {prompt}",

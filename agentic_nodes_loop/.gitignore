@@ -1,0 +1,50 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# VS Code specific
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+.vscode/*.code-workspace
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+workflow_log.csv
+iteration_log.csv
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Weights and Biases
+wandb/
+
