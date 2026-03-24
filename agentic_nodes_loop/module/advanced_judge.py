@@ -376,38 +376,104 @@ class AdvancedCodeJudge:
                     result["score"] = max(0, result["score"] - 1)
         return result
 
+    def _check_risk_level(self, tree: ast.AST) -> Dict[str, Any]:
+        """Detect risky operations (I/O, Network, Parsing, Volatile) using AST."""
+        risky_modules = {
+            "requests": "network", "urllib": "network", "http": "network", "socket": "network",
+            "json": "parsing", "pickle": "parsing", "yaml": "parsing", "xml": "parsing",
+            "os": "system", "subprocess": "system", "shutil": "system", "glob": "system",
+            "pathlib": "system", "sqlite3": "database", "sqlalchemy": "database",
+            "pandas": "data_parsing", "csv": "data_parsing"
+        }
+        
+        found_risks = set()
+        for node in ast.walk(tree):
+            # Check imports
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    base_module = alias.name.split('.')[0]
+                    if base_module in risky_modules:
+                        found_risks.add(risky_modules[base_module])
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                base_module = node.module.split('.')[0]
+                if base_module in risky_modules:
+                    found_risks.add(risky_modules[base_module])
+            
+            # Check built-in risky functions/calls
+            if isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Name):
+                    if node.func.id in ["open", "eval", "exec", "input"]:
+                        found_risks.add("io_or_volatile")
+                elif isinstance(node.func, ast.Attribute):
+                    if node.func.attr in ["remove", "rmdir", "rmtree", "unlink"]:
+                        found_risks.add("destructive_io")
+
+            # Check for potential runtime errors: Division by variable
+            if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+                if not isinstance(node.right, ast.Constant):
+                    found_risks.add("potential_zero_division")
+
+        return {
+            "is_risky": len(found_risks) > 0,
+            "categories": list(found_risks)
+        }
+
     def analyze_error_handling(self, code: str) -> int:
-        """Check for try-except, raise, and assert patterns."""
-        score = 0
+        """
+        Check for error handling patterns with risk awareness.
+        Simple, safe code gets a high baseline (7/10).
+        Risky code without try-except is penalized.
+        Bare 'except:' handlers are penalized as bad practice.
+        """
         try:
             tree = ast.parse(code)
+            risk_info = self._check_risk_level(tree)
+            
             has_try = False
-            has_assert = False
             has_raise = False
+            has_assert = False
+            has_bare_except = False
             
             for node in ast.walk(tree):
                 if isinstance(node, ast.Try):
                     has_try = True
+                    for handler in node.handlers:
+                        if handler.type is None: # Bare except:
+                            has_bare_except = True
+                if isinstance(node, ast.Raise):
+                    has_raise = True
                 if isinstance(node, ast.Assert):
                     has_assert = True
-                if isinstance(node, (ast.Raise, ast.Raise)):
-                    has_raise = True
             
-            # Weighted scoring (Max 10)
-            if has_try: score += 5
-            if has_raise: score += 3
-            if has_assert: score += 2
+            # Logic for score (Max 10)
+            if risk_info["is_risky"]:
+                if has_try:
+                    score = 10
+                else:
+                    # Penalize risky code missing error handling
+                    score = 4 + (2 if has_raise or has_assert else 0)
+            else:
+                # Low risk code: baseline 7
+                score = 7
+                if has_try:
+                    score = 10
+                elif has_raise or has_assert:
+                    score = 9
+
+            # Apply penalty for bad practices
+            if has_bare_except:
+                score = max(2, score - 3) # Heavy penalty for bare except
             
-            # If no explicit error handling but no dangerous operations, 
-            # we could give a small baseline, but better to keep it strict.
+            return min(score, 10)
             
-        except Exception as e:
-            # If AST fails, we can fallback to simple text search for keywords
-            if "try:" in code or "except " in code: score += 5
-            if "raise " in code: score += 3
-            if "assert " in code: score += 2
-            
-        return min(score, 10)
+        except Exception:
+            # Fallback for syntax errors (can't analyze risk accurately)
+            score = 3
+            if "try:" in code: score += 2
+            if "except " in code: score += 1
+            if "except:" in code: score -= 1 # Bare except penalty even in text search
+            if "raise " in code or "assert " in code: score += 2
+            return max(0, min(score, 10))
     
     def analyze_duplications(self, code: str) -> Dict[str, Any]:
         """
