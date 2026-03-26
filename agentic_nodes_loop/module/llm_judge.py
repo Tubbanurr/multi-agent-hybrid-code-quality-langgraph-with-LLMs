@@ -161,7 +161,7 @@ Return ONLY a valid JSON object:
   "prompt_adherence": <number 0-10>,
   "naming_alignment": <number 0-5>,
   "test_reliability": <number 0-10>,
-  "reasoning": "<detailed explanation of score deductions>"
+  "reasoning": "<detailed explanation of score deductions IN TURKISH LANGUAGE>"
 }"""
         
         user_prompt = f"""Original Request: {prompt}

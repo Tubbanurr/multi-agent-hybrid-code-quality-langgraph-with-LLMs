@@ -73,13 +73,13 @@ SADECE aşağıdaki JSON formatında yanıt ver (markdown veya açıklama YOOOK)
   "suggestions": [
     {
       "priority": 1,
-      "area": "Error Handling|Documentation|Security|Complexity|Naming",
-      "issue": "<issue description>",
-      "action": "<specific recovery action>",
-      "code_example": "optional code snippet"
+      "area": "Hata Yönetimi|Dokümantasyon|Güvenlik|Karmaşıklık|İsimlendirme",
+      "issue": "<sorun açıklaması - TÜRKÇE>",
+      "action": "<iyileştirme aksiyonu - TÜRKÇE>",
+      "code_example": "isteğe bağlı kod örneği"
     }
   ],
-  "summary": "1-2 cümlelik genel özet"
+  "summary": "1-2 cümlelik genel Türkçe özet"
 }"""
 
     user_prompt = f"""Orijinal İstek: {original_prompt}

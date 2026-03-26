@@ -370,7 +370,7 @@ Deduct points for:
 - Lack of type hints (-1)
 
 Return ONLY a valid JSON object:
-{"identifier_clarity":<0-5>,"prompt_adherence":<0-10>,"naming_alignment":<0-5>,"test_reliability":<0-10>,"reasoning":"<detailed explanation of why points were deducted>"}"""
+{"identifier_clarity":<0-5>,"prompt_adherence":<0-10>,"naming_alignment":<0-5>,"test_reliability":<0-10>,"reasoning":"<detailed explanation of why points were deducted IN TURKISH LANGUAGE>"}"""
 
     user_prompt = f"""Original Request: {prompt}
 
@@ -399,7 +399,7 @@ Evaluate this code and return JSON scores."""
         return {
             "semantic_score": 0,
             "breakdown": {"identifier_clarity": 0, "prompt_adherence": 0, "naming_alignment": 0, "test_reliability": 0},
-            "reasoning": "Ollama Error: Empty response.",
+            "reasoning": "Ollama Hatası: Boş yanıt.",
             "chain_of_thought": "",
             "error": True
         }
@@ -452,7 +452,7 @@ Evaluate this code and return JSON scores."""
                 fallback_breakdown[key] = safe_int_extract(match.group(1))
         
         reasoning_match = re.search(r'"reasoning"\s*:\s*"(.*?)"', json_response)
-        reasoning = reasoning_match.group(1) if reasoning_match else "Evaluation successful (recovered from partial response)."
+        reasoning = reasoning_match.group(1) if reasoning_match else "Değerlendirme başarılı (kısmi yanıttan kurtarıldı)."
         
         # If we got at least some scores, don't return error
         if sum(fallback_breakdown.values()) > 0:
@@ -467,7 +467,7 @@ Evaluate this code and return JSON scores."""
         return {
             "semantic_score": 0,
             "breakdown": {"identifier_clarity": 0, "prompt_adherence": 0, "naming_alignment": 0, "test_reliability": 0},
-            "reasoning": f"Parse error: {str(e)}",
+            "reasoning": f"Ayrıştırma hatası: {str(e)}",
             "chain_of_thought": chain_of_thought,
             "error": True
         }

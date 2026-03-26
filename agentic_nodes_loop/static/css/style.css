@@ -246,6 +246,36 @@ textarea::placeholder {
     height: 420px;
     overflow: auto;
     background: #1a1b26;
+    position: relative; /* For Copy Button positioning */
+}
+
+.copy-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 999; /* Extremely high to stay on top */
+}
+
+.copy-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.copy-btn.copied {
+    background: var(--success);
+    color: white;
+    border-color: transparent;
 }
 
 .code-container::-webkit-scrollbar {

@@ -1,11 +1,66 @@
-// Updated for Ollama support with dynamic model names
-console.log("HAVELSAN UI v3.1.1 Loaded - Active Debugging");
+// Global Functions (attached to window for direct HTML access)
+window.copyCode = function(elementId) {
+    const codeElement = document.getElementById(elementId);
+    if (!codeElement) {
+        console.error("Copy failed: Element not found", elementId);
+        return;
+    }
 
+    const text = codeElement.innerText || codeElement.textContent || "";
+    if (!text) return;
+
+    const triggerFeedback = () => {
+        const container = codeElement.closest('.code-container') || codeElement.closest('.comparison-col');
+        const btn = container ? container.querySelector('.copy-btn') : null;
+        if (btn) {
+            const originalText = btn.textContent;
+            btn.textContent = "Copied!";
+            btn.classList.add("copied");
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.classList.remove("copied");
+            }, 2000);
+        }
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text)
+            .then(() => triggerFeedback())
+            .catch(err => {
+                console.warn("Modern copy failed, trying fallback...", err);
+                if (window.fallbackCopyTextToClipboard(text)) triggerFeedback();
+            });
+    } else {
+        if (window.fallbackCopyTextToClipboard(text)) triggerFeedback();
+    }
+};
+
+window.fallbackCopyTextToClipboard = function(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-9999px";
+    textArea.style.top = "0";
+    textArea.style.opacity = "0";
+    textArea.setAttribute("readonly", "");
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    textArea.setSelectionRange(0, 999999);
+
+    let successful = false;
+    try {
+        successful = document.execCommand('copy');
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+    }
+    document.body.removeChild(textArea);
+    return successful;
+};
+
+// Error Handler
 window.onerror = function(message, source, lineno, colno, error) {
     console.error(`JS HATA: ${message} @ ${source}:${lineno}:${colno}`);
-    if (message.includes("innerHTML")) {
-        console.warn("Lütfen HTML dosyasındaki ID'lerin script.js ile eşleştiğinden ve sayfayı yenilediğinizden emin olun.");
-    }
     return false;
 };
 
@@ -356,11 +411,17 @@ function showDetailedFeedback(iterations) {
                 <div class="comparison-grid">
                     <div class="comparison-col">
                         <div class="comparison-label">Önceki Kod (${iter.previous_score}/100)</div>
-                        <pre><code class="language-python">${iter.previous_code || 'N/A'}</code></pre>
+                        <div class="code-container" style="height: auto; max-height: 400px;">
+                            <button class="copy-btn" onclick="copyCode('prev-code-${index}')">Copy</button>
+                            <pre><code id="prev-code-${index}" class="language-python">${iter.previous_code || 'N/A'}</code></pre>
+                        </div>
                     </div>
                     <div class="comparison-col">
                         <div class="comparison-label">İyileştirilmiş Kod (${iter.new_score}/100)</div>
-                        <pre><code class="language-python">${iter.new_code || 'N/A'}</code></pre>
+                        <div class="code-container" style="height: auto; max-height: 400px;">
+                            <button class="copy-btn" onclick="copyCode('new-code-${index}')">Copy</button>
+                            <pre><code id="new-code-${index}" class="language-python">${iter.new_code || 'N/A'}</code></pre>
+                        </div>
                     </div>
                 </div>
             </details>
@@ -407,3 +468,6 @@ function getMetricLabel(metric) {
     };
     return labels[metric] || metric;
 }
+
+
+// End of Script

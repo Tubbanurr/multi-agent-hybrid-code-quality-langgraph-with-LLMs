@@ -13,6 +13,9 @@
 
     <!-- PrismJS Theme -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    
+    <!-- App Logic (Loaded early with defer to ensure copyCode is defined) -->
+    <script src="/static/js/script.js?v=3.1.2" defer></script>
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/css/style.css">
@@ -47,6 +50,7 @@
                 <div class="model-card">
                     <div class="model-header" id="header-model-1">Model 1</div>
                     <div class="code-container">
+                        <button class="copy-btn" onclick="copyCode('code-model-1')">Copy</button>
                         <pre><code id="code-model-1" class="language-python">Generating code...</code></pre>
                     </div>
                     <div class="score-panel" id="score-model-1"></div>
@@ -55,6 +59,7 @@
                 <div class="model-card">
                     <div class="model-header" id="header-model-2">Model 2</div>
                     <div class="code-container">
+                        <button class="copy-btn" onclick="copyCode('code-model-2')">Copy</button>
                         <pre><code id="code-model-2" class="language-python">Generating code...</code></pre>
                     </div>
                     <div class="score-panel" id="score-model-2"></div>
@@ -63,6 +68,7 @@
                 <div class="model-card">
                     <div class="model-header" id="header-model-3">Model 3</div>
                     <div class="code-container">
+                        <button class="copy-btn" onclick="copyCode('code-model-3')">Copy</button>
                         <pre><code id="code-model-3" class="language-python">Generating code...</code></pre>
                     </div>
                     <div class="score-panel" id="score-model-3"></div>
@@ -84,6 +90,7 @@
             <div class="final-code-section">
                 <h3>Final Code</h3>
                 <div class="code-container">
+                    <button class="copy-btn" onclick="copyCode('final-code')">Copy</button>
                     <pre><code id="final-code" class="language-python">Final code will appear here...</code></pre>
                 </div>
             </div>
@@ -95,8 +102,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
 
-    <!-- App Logic -->
-    <script src="/static/js/script.js?v=3.1.1"></script>
 
 </body>
 
