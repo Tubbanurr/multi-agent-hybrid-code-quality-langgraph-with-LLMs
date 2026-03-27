@@ -155,10 +155,9 @@ Evaluate the code based on these specific semantic criteria (Max 30 points total
    - 10: Robust, optimized, handles errors, high quality.
    - 0-9: Deduct points for inefficiency, lack of error handling, or bugs.
 
-Deduct 1-2 points for:
-- Missing docstrings
-- Missing type hints
+Deduct 1-2 points from `test_reliability` for:
 - Hardcoded values
+- Bad architectural choices or inefficiencies
 
 Return ONLY a valid JSON object:
 {

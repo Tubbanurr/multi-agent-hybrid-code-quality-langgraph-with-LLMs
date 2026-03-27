@@ -72,7 +72,7 @@ class AdvancedCodeJudge:
     def analyze_pylint(self, code: str) -> Dict[str, Any]:
         """
         Run Pylint for comprehensive code quality check.
-        Returns score out of 10, scaled to 25 points.
+        Returns score out of 10, scaled to 15 points.
         """
         result = {
             "raw_score": 0.0,
@@ -102,13 +102,13 @@ class AdvancedCodeJudge:
             if score_match:
                 raw_score = float(score_match.group(1))
                 result["raw_score"] = raw_score
-                result["scaled_score"] = int((raw_score / 10) * 25)
+                result["scaled_score"] = int((raw_score / 10) * 15)
             else:
                 # If pylint fails to give a score because code is too short or weird,
                 # give a neutral baseline (7.0/10) if no major errors exist
                 if not proc.stderr or "error" not in proc.stderr.lower():
                     result["raw_score"] = 7.0
-                    result["scaled_score"] = 17
+                    result["scaled_score"] = 10
             
             # Cleanup
             os.unlink(temp_file)
@@ -168,6 +168,7 @@ class AdvancedCodeJudge:
             
             # Scoring logic - Max 15 points
             avg = result["average_complexity"]
+            
             if avg == 0: 
                 result["score"] = 15
             elif avg <= 5:
@@ -341,15 +342,48 @@ class AdvancedCodeJudge:
         """Calculate comment density: (comment_lines / total_lines)."""
         result = {"density": 0.0, "score": 0, "total_lines": 0, "comment_lines": 0}
         lines = code.splitlines()
-        result["total_lines"] = len(lines)
+        
+        # Exclude completely empty lines from total lines to avoid skewed density
+        valid_lines = [line for line in lines if line.strip()]
+        result["total_lines"] = len(valid_lines)
         if result["total_lines"] == 0: return result
 
         comment_lines = 0
-        for line in lines:
-            stripped = line.strip()
-            if stripped.startswith('#') or (stripped.startswith('"""') or stripped.startswith("'''")):
-                comment_lines += 1
+        in_multiline_string = False
+        multiline_char = ""
         
+        for line in valid_lines:
+            stripped = line.strip()
+            
+            # Fast track single line comments
+            if not in_multiline_string and stripped.startswith('#'):
+                comment_lines += 1
+                continue
+                
+            # Handle multiline strings (docstrings)
+            quotes_3_double = stripped.count('"""')
+            quotes_3_single = stripped.count("'''")
+            
+            if in_multiline_string:
+                comment_lines += 1
+                # Check if it ends on this line
+                if (multiline_char == '"""' and quotes_3_double > 0) or \
+                   (multiline_char == "'''" and quotes_3_single > 0):
+                    in_multiline_string = False
+            else:
+                if quotes_3_double > 0 and quotes_3_double % 2 != 0:
+                    in_multiline_string = True
+                    multiline_char = '"""'
+                    comment_lines += 1
+                elif quotes_3_single > 0 and quotes_3_single % 2 != 0:
+                    in_multiline_string = True
+                    multiline_char = "'''"
+                    comment_lines += 1
+                elif (quotes_3_double > 0 and quotes_3_double % 2 == 0) or \
+                     (quotes_3_single > 0 and quotes_3_single % 2 == 0):
+                    # Single-line docstring like """Hello"""
+                    comment_lines += 1
+
         result["comment_lines"] = comment_lines
         result["density"] = comment_lines / result["total_lines"]
         
@@ -499,9 +533,26 @@ class AdvancedCodeJudge:
             if result["total_lines"] == 0:
                 return result
             
-            unique = set(code_lines)
-            result["unique_lines"] = len(unique)
-            result["duplicate_lines"] = result["total_lines"] - result["unique_lines"]
+            BLOCK_SIZE = 3
+            duplicate_indices = set()
+            
+            if result["total_lines"] >= BLOCK_SIZE:
+                seen_blocks = set()
+                for i in range(len(code_lines) - BLOCK_SIZE + 1):
+                    block = tuple(code_lines[i:i+BLOCK_SIZE])
+                    
+                    # Filter out blocks that are just trivial combinations of brackets or generic statements
+                    is_trivial = all(len(line) < 5 or line in ('continue', 'break', 'pass', 'return', 'else:') for line in block)
+                    
+                    if not is_trivial:
+                        if block in seen_blocks:
+                            for j in range(i, i+BLOCK_SIZE):
+                                duplicate_indices.add(j)
+                        else:
+                            seen_blocks.add(block)
+                            
+            result["duplicate_lines"] = len(duplicate_indices)
+            result["unique_lines"] = result["total_lines"] - result["duplicate_lines"]
             result["duplication_ratio"] = result["duplicate_lines"] / result["total_lines"]
             
             if result["duplication_ratio"] == 0:
@@ -625,7 +676,7 @@ class AdvancedCodeJudge:
         # 2. Teknik Borç (20 pts)
         cat2 = (
             min(15, int(static_data["breakdown"]["pylint"]["raw_score"] * 1.5)) + 
-            min(5, static_data["breakdown"]["duplication"]["score"] / 2)
+            min(5, static_data["breakdown"]["duplication"]["score"])
         )
         
         # 3. Test & Build (15 pts)

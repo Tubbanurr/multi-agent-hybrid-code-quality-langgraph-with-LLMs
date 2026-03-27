@@ -363,11 +363,10 @@ Evaluate the code based on these specific semantic criteria (Max 30 points total
    - 4-6: Works for simple cases but crashes on empty input or invalid types.
    - 0-3: Broken logic, infinite loops, or major bugs.
 
-Deduct points for:
-- Lack of docstrings (-1 or -2)
+Deduct points from `test_reliability` for:
 - Hardcoded values that should be parameters (-1)
 - Redundant logic (-1)
-- Lack of type hints (-1)
+- Bad architectural choices (-1)
 
 Return ONLY a valid JSON object:
 {"identifier_clarity":<0-5>,"prompt_adherence":<0-10>,"naming_alignment":<0-5>,"test_reliability":<0-10>,"reasoning":"<detailed explanation of why points were deducted IN TURKISH LANGUAGE>"}"""

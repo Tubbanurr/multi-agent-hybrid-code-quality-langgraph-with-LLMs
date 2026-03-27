@@ -623,3 +623,71 @@ def square_of_even_numbers(numbers: list[int]) -> list[int]:
         print(f""Hata: {e}"")
         return []
 ```","Fonksiyon adı ve parametreleri PEP8 uyumludur. Belgenin metin açıklamaları da tematik olarak tutarlıdır. Core mantığı doğru implement edilmiş, hata yönetimi de iyi. Hiçbir eksiklik veya hata bulunmamıştır."
+REQ_20260327_233055_04bcabb9,Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir Python fonksiyonu yaz.,qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),85.0,25.0,11.5,15.0,12.0,15.0,7.0,qwen2.5-coder:7b,0,85.0,SUCCESS,2026-03-27 23:30,"```python
+def square_of_even_numbers(numbers):
+    return [x**2 for x in numbers if x % 2 == 0]
+
+# Örnek kullanım:
+numbers = [1, 2, 3, 4, 5, 6]
+result = square_of_even_numbers(numbers)
+print(result)  # [4, 16, 36]
+```",
+REQ_20260328_003207_e46788de,Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir Python fonksiyonu yaz.,qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),86.0,25.0,12.0,15.0,12.0,15.0,7.0,codellama:7b,0,86.0,SUCCESS,2026-03-28 00:32,"
+def get_squared_pairs(my_list):
+    return [x**2 for x in my_list if x % 2 == 0]",
+REQ_20260328_004725_b51d0d9f,Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir Python fonksiyonu yaz.,qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),86.0,25.0,12.0,15.0,12.0,15.0,7.0,qwen2.5-coder:7b,0,86.0,SUCCESS,2026-03-28 00:47,"```python
+def square_of_evens(numbers):
+    return [x**2 for x in numbers if x % 2 == 0]
+```",
+REQ_20260328_010439_0946372b,"Çok iş parçacıklı (multithreaded) çalışan bir veri işleme sisteminde, sisteme ait konfigürasyonları veya paylaşımlı kaynakları (örneğin bir veri tabanı bağlantı havuzu) yöneten bir yapı kurgula. Bu yapı hem Singleton tasarım kalıbını (her zaman tek bir örnek/instance olmalı) uygulamalı hem de Thread-Safe (iş parçacığı güvenli) olmalıdır. Ayrıca, kaynakların güvenli açılıp kapanmasını sağlamak için bir Context Manager (with bloğu desteği) protokolü ekle. Nesne oluşturulurken __new__ metodunu özel",qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),92.0,25.0,19.0,14.0,12.0,15.0,7.0,qwen2.5-coder:7b,0,92.0,SUCCESS,2026-03-28 01:04,"```python
+import threading
+
+class ResourcePool:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls, *args, **kwargs):
+        with cls._lock:
+            if not cls._instance:
+                cls._instance = super(ResourcePool, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
+    def __init__(self):
+        self.resources = []
+        self.lock = threading.Lock()
+
+    def acquire(self):
+        with self.lock:
+            if self.resources:
+                return self.resources.pop()
+            else:
+                return self.create_resource()
+
+    def release(self, resource):
+        with self.lock:
+            self.resources.append(resource)
+
+    def create_resource(self):
+        # Simulate resource creation
+        return f""Resource-{len(self.resources) + 1}""
+
+    def __enter__(self):
+        return self.acquire()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.release(exc_type)
+
+# Usage example
+if __name__ == ""__main__"":
+    pool = ResourcePool()
+
+    def worker():
+        with pool as resource:
+            print(f""Working with {resource}"")
+
+    threads = [threading.Thread(target=worker) for _ in range(5)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+```",
