@@ -584,3 +584,42 @@ def docstring():
 
 FileWriter.write_to_file(""example.txt"", ""Hello, World!"")
 ```","Kod, dosya yazma isteğini tam olarak yerine getirir. İsimler PEP8 uyumludur ve belirli işlevleri net bir şekilde ifade eder. Belgenin yazılmasına izin veren ve izin verilmeyen durumları kabul eden iyi bir hata yönetimi vardır. Herhangi bir eksiklik veya hata bulunmamaktadır."
+REQ_20260327_144211_15014d3f,Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir Python fonksiyonu yaz. ,qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),87.0,24.0,2.5,12.0,12.0,12.0,7.0,mistral:7b,3,87.0,SUCCESS,2026-03-27 14:42," ```python
+from typing import List, Union
+
+class SquareEvenFinder:
+    """"""
+    Class to find the squares of even numbers in a given list.
+    """"""
+
+    def __init__(self):
+        pass
+
+    def __call__(self, numbers_list: Union[List[int], None] = None) -> List[int]:
+        if numbers_list is None:
+            raise ValueError(""List of numbers is required."")
+
+        if not numbers_list:
+            raise ValueError(""List cannot be empty."")
+
+        squares_of_evens = []
+        for num in numbers_list:
+            if num % 2 == 0:
+                squares_of_evens.append(num ** 2)
+
+        return squares_of_evens
+```","Belirleyici clarity: 'SquareEvenFinder' ve 'squares_of_evens' gibi isimler net ve açıklamalı, ancak 'num' ismi bazı konularda hafifçe kabul edilebilir. Belirleme uyumu: Gereksinimleri tam olarak yerine getirir, özellikle None ve boş listeler gibi edge case'leri içerir. Adım uyumu: Domen özel terimleri kullanır. Dayanıklılık ve mantık: Hataları yönetir, dayanıklı ve verimli."
+REQ_20260327_171347_014faab6,Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir Python fonksiyonu yaz. ,qwen2.5-coder:7b,mistral:7b,codellama:7b,deepseek-r1:14b (Ollama),91.0,25.0,9.5,15.0,12.0,15.0,7.0,qwen2.5-coder:7b,2,91.0,SUCCESS,2026-03-27 17:13,"```python
+def square_of_even_numbers(numbers: list[int]) -> list[int]:
+    """"""
+    Verilen bir tam sayı listesindeki çift sayıların karelerini alan bir fonksiyon.
+
+    :param numbers: Tam sayı listesi
+    :return: Çift sayıların kareleri listesi
+    """"""
+    try:
+        return [x**2 for x in numbers if x % 2 == 0]
+    except TypeError as e:
+        print(f""Hata: {e}"")
+        return []
+```","Fonksiyon adı ve parametreleri PEP8 uyumludur. Belgenin metin açıklamaları da tematik olarak tutarlıdır. Core mantığı doğru implement edilmiş, hata yönetimi de iyi. Hiçbir eksiklik veya hata bulunmamıştır."

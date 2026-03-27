@@ -88,9 +88,14 @@ class LLMJudge:
                 "error": False
             }
         """
+        # Clean the input code to remove conversational text and markdown formatting
+        from module.advanced_judge import AdvancedCodeJudge
+        judge_instance = AdvancedCodeJudge()
+        clean = judge_instance.clean_code(code)
+
         # Pre-check: Detect garbage or non-code hallucinations
         from module.ollama_client import validate_code
-        if not validate_code(code):
+        if not validate_code(clean):
             return {
                 "semantic_score": 0,
                 "breakdown": {
@@ -106,10 +111,10 @@ class LLMJudge:
         
         # Use Ollama DeepSeek-R1 if available
         if self.use_ollama and self.ollama_available:
-            return self._evaluate_with_ollama(code, prompt)
+            return self._evaluate_with_ollama(clean, prompt)
         
         # Fallback to Groq
-        return self._evaluate_with_groq(code, prompt)
+        return self._evaluate_with_groq(clean, prompt)
     
     def _evaluate_with_ollama(self, code: str, prompt: str) -> Dict[str, Any]:
         """Evaluate code using DeepSeek-R1 via Ollama."""

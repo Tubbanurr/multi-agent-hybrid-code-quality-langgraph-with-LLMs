@@ -89,7 +89,7 @@ class AdvancedCodeJudge:
             
             # Run pylint - we need the text output to get the 'rated at' line easily
             proc = subprocess.run(
-                ['python3', '-m', 'pylint', temp_file, '--score=yes'],
+                ['python3', '-m', 'pylint', temp_file, '--score=yes', '--disable=missing-docstring,missing-module-docstring,missing-function-docstring,invalid-name'],
                 capture_output=True,
                 text=True,
                 timeout=15,
