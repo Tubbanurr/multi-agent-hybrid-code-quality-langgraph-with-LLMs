@@ -4,6 +4,7 @@ Provides unified interface for local LLM models via Ollama.
 """
 
 import os
+import re
 import requests
 import json
 from typing import Optional, Dict, Any
@@ -404,8 +405,7 @@ Evaluate this code and return JSON scores."""
         }
     
     chain_of_thought = ""
-    import re
-    
+
     # Extract JSON block more aggressively
     json_response = response
     if "<think>" in response and "</think>" in response:

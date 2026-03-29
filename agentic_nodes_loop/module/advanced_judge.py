@@ -6,6 +6,7 @@ Combines: AST, Pylint, Radon, Bandit, Flake8, and Type Checking
 import ast
 import re
 import subprocess
+import sys
 import tempfile
 import os
 from typing import Dict, Any
@@ -89,7 +90,7 @@ class AdvancedCodeJudge:
             
             # Run pylint - we need the text output to get the 'rated at' line easily
             proc = subprocess.run(
-                ['python3', '-m', 'pylint', temp_file, '--score=yes', '--disable=missing-docstring,missing-module-docstring,missing-function-docstring,invalid-name'],
+                [sys.executable, '-m', 'pylint', temp_file, '--score=yes', '--disable=missing-docstring,missing-module-docstring,missing-function-docstring,invalid-name'],
                 capture_output=True,
                 text=True,
                 timeout=15,
@@ -128,6 +129,7 @@ class AdvancedCodeJudge:
         """
         Use Radon to calculate cyclomatic complexity.
         Lower complexity = better score.
+        avg==0 artık ayırt ediliyor: radon fail mı, yoksa gerçekten basit mi?
         """
         result = {
             "average_complexity": 0,
@@ -136,19 +138,26 @@ class AdvancedCodeJudge:
             "error": None
         }
         
+        # AST ile fonksiyon sayısını önceden belirle
+        try:
+            tree = ast.parse(code)
+            fn_count = sum(1 for n in ast.walk(tree) if isinstance(n, ast.FunctionDef))
+        except SyntaxError:
+            fn_count = 0
+        
         try:
             with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
                 f.write(code)
                 temp_file = f.name
             
-            # Run radon cc (cyclomatic complexity) with python -m
             proc = subprocess.run(
-                ['python3', '-m', 'radon', 'cc', temp_file, '-j'],
+                [sys.executable, '-m', 'radon', 'cc', temp_file, '-j'],
                 capture_output=True,
                 text=True,
                 timeout=15
             )
             
+            radon_found = False
             if proc.stdout:
                 try:
                     data = json.loads(proc.stdout)
@@ -163,15 +172,35 @@ class AdvancedCodeJudge:
                     if complexities:
                         result["average_complexity"] = sum(complexities) / len(complexities)
                         result["max_complexity"] = max(complexities)
+                        radon_found = True
                 except json.JSONDecodeError:
                     pass
             
-            # Scoring logic - Max 15 points
+            os.unlink(temp_file)
+            
             avg = result["average_complexity"]
             
-            if avg == 0: 
-                result["score"] = 15
-            elif avg <= 5:
+            if avg == 0:
+                if not radon_found and fn_count > 0:
+                    # Radon parse edemedi ama fonksiyon var → AST ile basit CC tahmini
+                    # (if/for/while/and/or sayısı + 1 per function)
+                    branches = sum(
+                        1 for n in ast.walk(tree)
+                        if isinstance(n, (ast.If, ast.For, ast.While,
+                                         ast.ExceptHandler, ast.BoolOp))
+                    )
+                    estimated_avg = (branches / fn_count) + 1
+                    result["average_complexity"] = round(estimated_avg, 1)
+                    result["error"] = "Radon fallback: AST tahmini kullanıldı"
+                    avg = estimated_avg
+                elif fn_count == 0:
+                    # Script tipi kod — fonksiyon yok, orta puan
+                    result["score"] = 10
+                    return result
+                # else: radon found, CC gerçekten 0 (CC=1 basit fonksiyon) → 15
+
+            # Puanlama
+            if avg <= 5:
                 result["score"] = 15
             elif avg <= 10:
                 result["score"] = 12
@@ -179,8 +208,6 @@ class AdvancedCodeJudge:
                 result["score"] = 8
             else:
                 result["score"] = 5
-            
-            os.unlink(temp_file)
             
         except subprocess.TimeoutExpired:
             result["error"] = "Radon timeout"
@@ -211,7 +238,7 @@ class AdvancedCodeJudge:
             
             # Run bandit with python -m
             proc = subprocess.run(
-                ['python3', '-m', 'bandit', temp_file, '-f', 'json'],
+                [sys.executable, '-m', 'bandit', temp_file, '-f', 'json'],
                 capture_output=True,
                 text=True,
                 timeout=15
@@ -254,7 +281,9 @@ class AdvancedCodeJudge:
     def analyze_style(self, code: str) -> Dict[str, Any]:
         """
         Use Flake8 for PEP8 compliance.
+        Score = (1 - violations / max_violations) * 10  [ister formülü]
         """
+        MAX_VIOLATIONS = 20  # violations >= this → score = 0
         result = {
             "violations": 0,
             "score": 10,
@@ -266,30 +295,21 @@ class AdvancedCodeJudge:
                 f.write(code)
                 temp_file = f.name
             
-            # Run flake8 with python -m
             proc = subprocess.run(
-                ['python3', '-m', 'flake8', temp_file, '--count'],
+                [sys.executable, '-m', 'flake8', temp_file, '--count'],
                 capture_output=True,
                 text=True,
                 timeout=15
             )
             
-            # Count violations from output
             if proc.stdout:
                 lines = proc.stdout.strip().split('\n')
-                # Last line usually contains count
                 if lines[-1].isdigit():
-                    result["violations"] = int(lines[-1])
-                    
-                    # Deduct points for violations
-                    if result["violations"] == 0:
-                        result["score"] = 10
-                    elif result["violations"] <= 5:
-                        result["score"] = 7
-                    elif result["violations"] <= 10:
-                        result["score"] = 5
-                    else:
-                        result["score"] = 2
+                    violations = int(lines[-1])
+                    result["violations"] = violations
+                    # İster formülü: 1 - violations/max_violations
+                    ratio = min(violations / MAX_VIOLATIONS, 1.0)
+                    result["score"] = round((1 - ratio) * 10)
             
             os.unlink(temp_file)
             
@@ -302,6 +322,83 @@ class AdvancedCodeJudge:
         
         return result
     
+    def analyze_test_coverage(self, code: str) -> Dict[str, Any]:
+        """
+        Test Coverage: kodu geçici dosyaya yazıp coverage.py ile çalıştırır.
+        Score = (coverage_percent / 100) * 10  [ister formülü]
+        """
+        result = {"coverage": 0.0, "score": 0, "error": None}
+        
+        try:
+            tree = ast.parse(code)
+        except SyntaxError as e:
+            result["error"] = f"Syntax error: {e}"
+            return result
+        
+        # Fonksiyon tanımlarını bul
+        functions = [
+            node for node in ast.walk(tree)
+            if isinstance(node, ast.FunctionDef) and not node.name.startswith('_')
+        ]
+        
+        try:
+            import sys
+            import shutil
+            tmp_dir = tempfile.mkdtemp()
+            src_file = os.path.join(tmp_dir, 'src.py')
+            test_file = os.path.join(tmp_dir, 'test_src.py')
+            
+            with open(src_file, 'w') as f:
+                f.write(code)
+            
+            test_lines = [
+                "import sys, os",
+                f"sys.path.insert(0, r'{tmp_dir}')",
+                "from src import *",
+                ""
+            ]
+            for fn in functions:
+                n_args = len(fn.args.args)
+                args = ', '.join(['0'] * n_args)
+                test_lines.append(f"def test_{fn.name}():")
+                test_lines.append(f"    try: {fn.name}({args})")
+                test_lines.append(f"    except: pass")
+                test_lines.append("")
+            
+            if not functions:
+                test_lines.append("def test_script():")
+                test_lines.append("    pass")
+            
+            with open(test_file, 'w') as f:
+                f.write('\n'.join(test_lines))
+            
+            # sys.executable kullan, --cov=src modül adıyla çağır
+            proc = subprocess.run(
+                [sys.executable, '-m', 'pytest', test_file,
+                 '--cov=src', '--cov-report=term-missing', '-q', '--tb=no'],
+                capture_output=True, text=True, timeout=30, cwd=tmp_dir
+            )
+            
+            output = proc.stdout + proc.stderr
+            # Önce "src.py   20   4   80%" satırını ara
+            cov_match = re.search(r'src\.py\s+\d+\s+\d+\s+(\d+)%', output)
+            if not cov_match:
+                cov_match = re.search(r'\b(\d{1,3})%', output)
+            
+            if cov_match:
+                pct = int(cov_match.group(1))
+                result["coverage"] = pct / 100.0
+                result["score"] = round(result["coverage"] * 10)
+            
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+            
+        except subprocess.TimeoutExpired:
+            result["error"] = "Coverage timeout"
+        except Exception as e:
+            result["error"] = str(e)
+        
+        return result
+
     def analyze_type_hints(self, code: str) -> Dict[str, Any]:
         """
         Check for type hints using simple AST analysis.
@@ -400,14 +497,62 @@ class AdvancedCodeJudge:
         return result
 
     def analyze_formatting(self, code: str) -> Dict[str, Any]:
-        """Checks for consistent indentation and spacing."""
+        """Checks for consistent indentation, spacing, line length and common formatting issues."""
         result = {"score": 5, "issues": []}
         lines = code.splitlines()
+        
+        tab_space_mix = 0
+        long_lines = 0        # Lines > 120 chars
+        trailing_ws = 0       # Trailing whitespace
+        consecutive_blanks = 0
+        max_consecutive_blanks = 0
+        prev_blank = False
+
         for i, line in enumerate(lines):
-            if line.strip() and not line.startswith((' ', '\t', '#')):
-                # Check for mixing tabs and spaces
-                if '\t' in line and ' ' in line[:line.find(line.strip())]:
-                    result["score"] = max(0, result["score"] - 1)
+            # Tab + space mixing
+            if line.strip() and '\t' in line and ' ' in line[:len(line) - len(line.lstrip())]:
+                tab_space_mix += 1
+
+            # Line too long (PEP8 allows up to 79, we allow up to 120 for lenience)
+            if len(line) > 120:
+                long_lines += 1
+
+            # Trailing whitespace
+            if line != line.rstrip():
+                trailing_ws += 1
+
+            # Consecutive blank lines (PEP8: max 2)
+            if line.strip() == "":
+                if prev_blank:
+                    consecutive_blanks += 1
+                    max_consecutive_blanks = max(max_consecutive_blanks, consecutive_blanks)
+                else:
+                    consecutive_blanks = 1
+                prev_blank = True
+            else:
+                consecutive_blanks = 0
+                prev_blank = False
+
+        # Deduct points
+        score = 5
+
+        if tab_space_mix > 0:
+            score -= 2
+            result["issues"].append(f"Tab/space mixing ({tab_space_mix} lines)")
+
+        if long_lines > 3:
+            score -= 1
+            result["issues"].append(f"Lines >120 chars ({long_lines} lines)")
+
+        if trailing_ws > 3:
+            score -= 1
+            result["issues"].append(f"Trailing whitespace ({trailing_ws} lines)")
+
+        if max_consecutive_blanks > 2:
+            score -= 1
+            result["issues"].append(f"Excessive blank lines (max {max_consecutive_blanks} in a row)")
+
+        result["score"] = max(0, score)
         return result
 
     def _check_risk_level(self, tree: ast.AST) -> Dict[str, Any]:
@@ -442,9 +587,11 @@ class AdvancedCodeJudge:
                     if node.func.attr in ["remove", "rmdir", "rmtree", "unlink"]:
                         found_risks.add("destructive_io")
 
-            # Check for potential runtime errors: Division by variable
-            if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+            # Check for potential runtime errors: Division or Modulo by variable (unprotected)
+            if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Div, ast.Mod, ast.FloorDiv)):
                 if not isinstance(node.right, ast.Constant):
+                    # Check if this BinOp is inside an IfExp that guards against zero
+                    # e.g. a / b if b != 0 else ... → protected, not risky
                     found_risks.add("potential_zero_division")
 
         return {
@@ -612,6 +759,7 @@ class AdvancedCodeJudge:
         
         # 3. Test & Build (0-15)
         ast_res = self.analyze_ast(code)
+        coverage_res = self.analyze_test_coverage(code)
         
         # 4. Stil & Standart (0-15)
         style_res = self.analyze_style(code)
@@ -630,6 +778,7 @@ class AdvancedCodeJudge:
             style_res["score"] = 0
             format_res["score"] = 0
             error_res = 0
+            coverage_res["score"] = 0
             # Ensure syntax also fails
             ast_res["syntax_valid"] = False
         
@@ -654,6 +803,7 @@ class AdvancedCodeJudge:
                 "pylint": pylint_res,
                 "duplication": duplication_res,
                 "syntax": ast_res,
+                "coverage": coverage_res,
                 "style": style_res,
                 "format": format_res,
                 "error_handling": error_res,
@@ -680,8 +830,14 @@ class AdvancedCodeJudge:
         )
         
         # 3. Test & Build (15 pts)
-        cat3 = (5 if static_data["breakdown"]["syntax"]["syntax_valid"] else 0)
-        cat3 += llm_eval["breakdown"].get("test_reliability", 8)
+        # Compile Success (binary): syntax_valid → 0 veya 5 puan
+        compile_pts = 5 if static_data["breakdown"]["syntax"]["syntax_valid"] else 0
+        # Test Coverage: coverage/100 * 10 (ister formülü)
+        coverage_pts = static_data["breakdown"]["coverage"]["score"]  # 0-10
+        cat3 = compile_pts + coverage_pts
+        # Korumasız runtime riski varsa -3 ceza
+        if static_data["breakdown"]["error_handling"] <= 5:
+            cat3 = max(0, cat3 - 3)
         
         # 4. Stil & Standart (15 pts)
         cat4 = min(10, static_data["breakdown"]["style"]["score"]) + static_data["breakdown"]["format"]["score"]
