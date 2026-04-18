@@ -1,7 +1,7 @@
 import os
 import requests
 from groq import Groq
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import time
 
 load_dotenv()
@@ -175,9 +175,8 @@ def call_gemini(prompt: str) -> str:
 
 def get_model_names() -> dict:
     """Return display names for the current model configuration."""
-    from dotenv import load_dotenv, find_dotenv
+    # .env'yi yeniden yükle (sunucu yeniden başlatılmadan model değişimine izin verir)
     load_dotenv(find_dotenv(), override=True)
-    
     use_ollama_dynamic = os.getenv("USE_OLLAMA", "false").lower() == "true"
     
     if use_ollama_dynamic:

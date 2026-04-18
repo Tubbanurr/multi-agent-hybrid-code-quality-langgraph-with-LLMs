@@ -1161,3 +1161,58 @@ example_list = [1.5, ""2"", None, -3, ""abc""]
 positive_floats = filter_and_convert_to_float(example_list)
 print(positive_floats)  # Output should be [1.5, 2.0]
 ```",
+REQ_20260418_201042_59214c79,"Parametre olarak bir liste alan ve bu listedeki elemanları sayıya (float) dönüştürerek sadece pozitif olanları yeni bir liste olarak döndüren bir fonksiyon yaz. Liste içinde sayıya dönüşemeyecek veriler (string, None vb.) varsa bunları programı çökertmeden loglayıp atla. Tip ipuçlarını kullan ve isimlendirmeleri profesyonel standartlara (PEP8) uygun seç.",qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),95.0,20.0,17.0,15.0,14.0,15.0,14.0,qwen2.5-coder:7b,0,95.0,SUCCESS,2026-04-18 20:10,"```python
+import logging
+
+def filter_and_convert_to_float(input_list):
+    """"""
+    Takes a list as input, converts its elements to float if possible,
+    and returns a new list containing only the positive numbers.
+    Non-convertible elements are logged but not included in the output.
+
+    :param input_list: List of elements to be processed
+    :return: A new list with positive float numbers
+    """"""
+    logging.basicConfig(level=logging.WARNING)
+    result = []
+
+    for item in input_list:
+        try:
+            num = float(item)
+            if num > 0:
+                result.append(num)
+        except (ValueError, TypeError) as e:
+            logging.warning(f""Non-convertible element encountered: {item}, error: {e}"")
+
+    return result
+```",
+REQ_20260418_201439_3184b341,"Parametre olarak bir liste alan ve bu listedeki elemanları sayıya (float) dönüştürerek sadece pozitif olanları yeni bir liste olarak döndüren bir fonksiyon yaz. Liste içinde sayıya dönüşemeyecek veriler (string, None vb.) varsa bunları programı çökertmeden loglayıp atla. Tip ipuçlarını kullan ve isimlendirmeleri profesyonel standartlara (PEP8) uygun seç.",qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),92.0,20.0,18.0,15.0,11.0,15.0,13.0,qwen2.5-coder:7b,4,92.0,SUCCESS,2026-04-18 20:14,"```python
+import logging
+
+logging.basicConfig(level=logging.WARNING)
+
+def filter_and_convert_to_float(input_list):
+    """"""
+    Converts elements of the input list to float and filters out non-positive values.
+    
+    Args:
+        input_list (list): A list containing elements that can be converted to float.
+        
+    Returns:
+        list: A new list containing only positive float numbers.
+    """"""
+    result = []
+    for item in input_list:
+        try:
+            num = float(item)
+            if num > 0:
+                result.append(num)
+        except (ValueError, TypeError):
+            logging.warning(f""Skipping non-convertible value: {item}"")
+    return result
+
+# Example usage
+example_list = [1.5, ""2"", None, -3, ""abc""]
+filtered_list = filter_and_convert_to_float(example_list)
+print(filtered_list)  # Output: [1.5, 2.0]
+```","The code meets all the specified requirements. It has clear and descriptive variable names, follows PEP8 guidelines, and handles various edge cases such as non-convertible values and empty input gracefully. The logic is robust and efficient, with appropriate error handling and logging."
