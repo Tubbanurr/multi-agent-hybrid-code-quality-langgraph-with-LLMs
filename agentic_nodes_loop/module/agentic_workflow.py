@@ -193,6 +193,7 @@ class HybridState(TypedDict):
     previous_categories: Dict[str, float]  # Önceki 4_categories
     winner_model: str
     final_quality_score: float # Ajanlardan gelen skorların ağırlıklı ortalaması
+    consecutive_no_improvement: int # (NEW) Art arda iyileşme olmayan iterasyon sayısı
     
     # Separate Analysis Results (NEW)
     static_analysis_result: Dict[str, Any]  # Static analyzer çıktısı
@@ -507,7 +508,8 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
             "quality_profile": quality_profile,
             "previous_categories": winner_analysis.get("categories", {}),
             "previous_code_snapshot": state["round1_codes"][winner],
-            "iteration_count": iteration + 1
+            "iteration_count": iteration + 1,
+            "consecutive_no_improvement": 0
         }
     else:
         # FEEDBACK TURU: İyileştirilen kodun hybrid skorunu hesapla
@@ -593,6 +595,13 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
         final_score = new_score
         final_categories = new_categories
         
+        consecutive_no_improvement = state.get("consecutive_no_improvement", 0)
+        
+        if new_score <= previous_score:
+            consecutive_no_improvement += 1
+        else:
+            consecutive_no_improvement = 0
+            
         if new_score < previous_score:  # En ufak bir düşüş olsa bile kabul etmiyoruz
             print(f"⚠️  ROLLBACK: Skor {previous_score:.1f} → {new_score:.1f} düştü. Önceki daha iyi kod korunuyor.")
             rollback_applied = True
@@ -600,7 +609,10 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
             final_score = previous_score
             final_categories = previous_categories
         else:
-            print(f"✅ İyileştirme: {previous_score:.1f} → {new_score:.1f}")
+            if new_score == previous_score:
+                print(f"⚠️  DEĞİŞİKLİK YOK: Skor {previous_score:.1f} (sabit kaldı).")
+            else:
+                print(f"✅ İyileştirme: {previous_score:.1f} → {new_score:.1f}")
         
         new_quality_profile = f"""### İTERASYON {iteration} FEEDBACK (CoT)
 
@@ -629,7 +641,8 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
             "feedback_iterations": feedback_iter,
             "quality_profile": new_quality_profile,
             "previous_categories": final_categories,
-            "iteration_count": iteration + 1
+            "iteration_count": iteration + 1,
+            "consecutive_no_improvement": consecutive_no_improvement
         }
 
 
@@ -668,14 +681,18 @@ def should_continue(state: HybridState) -> str:
     score = state["final_quality_score"]
     threshold = state.get("quality_threshold", 70.0)
     iteration = state.get("iteration_count", 0)
+    consecutive = state.get("consecutive_no_improvement", 0)
     
     print(f"\n⚖️  DÖNGÜ KONTROLÜ:")
-    print(f"   Mevcut Kalite Puanı: {score:.2f}, Eşik: {threshold}, İterasyon: {iteration}")
+    print(f"   Mevcut Kalite Puanı: {score:.2f}, Eşik: {threshold}, İterasyon: {iteration}, İyileşmeme: {consecutive}/4")
     
     max_iters = state.get("max_iterations", 3)
     
     if score >= threshold:
         print(f"   ✅ Hedef sağlandı ({threshold}). Sonlandırılıyor...\n")
+        return "finalize"
+    elif consecutive >= 4:
+        print(f"   🛑 Art arda 4 iterasyon iyileşme sağlanamadı ({consecutive}/4). Erken sonlandırılıyor...\n")
         return "finalize"
     elif iteration >= max_iters:
         print(f"   ⚠️  Maksimum iterasyon sayısına ({max_iters}) ulaşıldı. Sonlandırılıyor...\n")
@@ -773,7 +790,8 @@ def run_hybrid_workflow(prompt: str,
         "final_code": "",
         "final_score": 0.0,
         "status": "",
-        "judge_reasoning": ""
+        "judge_reasoning": "",
+        "consecutive_no_improvement": 0
     }
     
     result = hybrid_graph.invoke(
