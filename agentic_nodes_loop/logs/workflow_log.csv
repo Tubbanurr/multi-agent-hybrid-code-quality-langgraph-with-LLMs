@@ -1073,3 +1073,36 @@ example_list = [1.5, ""2"", None, -3, ""abc""]
 positive_floats = filter_and_convert_to_float(example_list)
 print(positive_floats)  # Output should be [1.5, 2.0]
 ```","The code meets all the specified requirements. It has clear and descriptive variable names, follows PEP8 guidelines, and handles various edge cases such as non-convertible values and empty input gracefully. The logic is robust and efficient, with appropriate error handling using try-except blocks. However, there are a few minor improvements that could be made for better readability and maintainability:"
+REQ_20260418_193341_c52598ad,"Parametre olarak bir liste alan ve bu listedeki elemanları sayıya (float) dönüştürerek sadece pozitif olanları yeni bir liste olarak döndüren bir fonksiyon yaz. Liste içinde sayıya dönüşemeyecek veriler (string, None vb.) varsa bunları programı çökertmeden loglayıp atla. Tip ipuçlarını kullan ve isimlendirmeleri profesyonel standartlara (PEP8) uygun seç.",qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),90.0,20.0,16.0,15.0,11.0,13.0,13.0,qwen2.5-coder:7b,2,90.0,SUCCESS,2026-04-18 19:33,"```python
+import logging
+from typing import List, Union
+
+logging.basicConfig(level=logging.WARNING)
+
+def filter_and_convert_to_float(input_list: List[Union[int, float, str, None]]) -> List[float]:
+    """"""
+    Takes a list as input, converts its elements to float if possible,
+    and returns a new list containing only the positive numbers.
+    Non-convertible elements are logged but not included in the output.
+
+    :param input_list: List of elements to be processed
+    :return: A list of positive floats
+    """"""
+    result = []
+    
+    for item in input_list:
+        try:
+            num = float(item)
+            if num > 0:
+                result.append(num)
+        except (ValueError, TypeError) as e:
+            logging.warning(f""Non-convertible element encountered: {item}. Error: {e}"")
+    
+    return result
+
+# Example usage
+if __name__ == ""__main__"":
+    test_list = [1.5, ""2"", None, -3, ""abc""]
+    positive_floats = filter_and_convert_to_float(test_list)
+    print(positive_floats)  # Output should be: [1.5, 2.0]
+```","The code meets all the specified criteria. It has clear and descriptive variable names, follows PEP8 guidelines, and handles errors gracefully by logging non-convertible elements. The logic is robust and efficient, with no redundant or hard-coded values. The test reliability score of 9 indicates that the function works correctly for various inputs, including edge cases like empty lists and invalid types."
