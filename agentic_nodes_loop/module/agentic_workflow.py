@@ -468,7 +468,7 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
             reasoning = analysis.get("reasoning", "")
             
             quality_parts.append(f"### {model}")
-            quality_parts.append(f"- Hybrid Skor: {total}/100 (Statik: {static:.1f}/70, LLM: {llm}/30)")
+            quality_parts.append(f"- Hybrid Skor: {total}/100 (Statik: {static:.1f}/70 (%{(static/70*100):.1f} Başarı) | LLM: {llm}/30 (%{(llm/30*100):.1f} Başarı))")
             quality_parts.append(f"- Değerlendirme: {reasoning}")
         
         quality_profile = "\n".join(quality_parts)

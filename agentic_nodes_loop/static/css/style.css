@@ -246,7 +246,8 @@ textarea::placeholder {
     height: 420px;
     overflow: auto;
     background: #1a1b26;
-    position: relative; /* For Copy Button positioning */
+    position: relative;
+    /* For Copy Button positioning */
 }
 
 .copy-btn {
@@ -263,7 +264,8 @@ textarea::placeholder {
     cursor: pointer;
     backdrop-filter: blur(8px);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 999; /* Extremely high to stay on top */
+    z-index: 999;
+    /* Extremely high to stay on top */
 }
 
 .copy-btn:hover {
@@ -575,6 +577,7 @@ details[open] summary::after {
         height: 300px;
     }
 }
+
 /* Detailed Feedback Iteration Styles */
 .feedback-iteration-detailed {
     background: white;
@@ -840,7 +843,7 @@ details[open] summary::after {
     line-height: 1.8;
 }
 
-.llm-breakdown > div {
+.llm-breakdown>div {
     padding: 0.25rem 0;
     color: var(--gray-700);
     display: flex;

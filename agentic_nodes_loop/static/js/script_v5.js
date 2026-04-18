@@ -161,7 +161,7 @@ function showRound1(codes, scoresData) {
                     <div class="score-total-value">Hybrid: ${hybridScore}/100</div>
                 </div>
                 <div class="score-breakdown">
-                    Statik: ${(staticScore / 70 * 100).toFixed(1)}/100 (70%) | LLM: ${(llmScore / 30 * 100).toFixed(1)}/100 (30%)
+                    Statik: ${staticScore}/70 (%${(staticScore / 70 * 100).toFixed(1)} Başarı) | LLM: ${llmScore}/30 (%${(llmScore / 30 * 100).toFixed(1)} Başarı)
                 </div>
             </div>
             

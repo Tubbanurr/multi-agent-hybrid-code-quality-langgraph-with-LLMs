@@ -901,3 +901,114 @@ def filter_and_convert_to_float(input_list):
             print(f""Warning: '{item}' cannot be converted to a float and will be skipped."")
     return positive_floats
 ```",
+REQ_20260418_162017_9edffb8b,"Parametre olarak bir liste alan ve bu listedeki elemanları sayıya (float) dönüştürerek sadece pozitif olanları yeni bir liste olarak döndüren bir fonksiyon yaz. Liste içinde sayıya dönüşemeyecek veriler (string, None vb.) varsa bunları programı çökertmeden loglayıp atla. Tip ipuçlarını kullan ve isimlendirmeleri profesyonel standartlara (PEP8) uygun seç.",qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),82.0,25.0,17.0,5.0,10.0,15.0,10.0,qwen2.5-coder:7b,0,82.0,SUCCESS,2026-04-18 16:20,"```python
+import logging
+
+logging.basicConfig(level=logging.WARNING)
+
+def filter_and_convert_to_float(input_list):
+    """"""
+    Converts elements in the input list to float and filters out only positive numbers.
+    
+    Args:
+    input_list (list): A list containing elements that can be converted to float.
+    
+    Returns:
+    list: A new list containing only the positive float values from the input list.
+    """"""
+    result = []
+    for item in input_list:
+        try:
+            num = float(item)
+            if num > 0:
+                result.append(num)
+        except (ValueError, TypeError) as e:
+            logging.warning(f""Skipping non-convertible or negative value: {item}"")
+    return result
+
+# Example usage
+if __name__ == ""__main__"":
+    sample_list = [1.5, ""2"", None, -3, ""abc"", 4]
+    positive_floats = filter_and_convert_to_float(sample_list)
+    print(positive_floats)  # Output: [1.5, 2.0, 4.0]
+```",
+REQ_20260418_162211_8cc97fc7,"Parametre olarak bir liste alan ve bu listedeki elemanları sayıya (float) dönüştürerek sadece pozitif olanları yeni bir liste olarak döndüren bir fonksiyon yaz. Liste içinde sayıya dönüşemeyecek veriler (string, None vb.) varsa bunları programı çökertmeden loglayıp atla. Tip ipuçlarını kullan ve isimlendirmeleri profesyonel standartlara (PEP8) uygun seç.",qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),85.0,24.0,18.0,5.0,13.0,15.0,10.0,qwen2.5-coder:7b,0,85.0,SUCCESS,2026-04-18 16:22,"```python
+import logging
+
+logging.basicConfig(level=logging.WARNING)
+
+def filter_and_convert_to_float(input_list):
+    """"""
+    Takes a list as input, converts its elements to float if possible,
+    and returns a new list containing only the positive floats.
+    Non-convertible elements are logged as warnings and ignored.
+
+    :param input_list: List of elements to be processed
+    :return: A new list with positive float numbers
+    """"""
+    result = []
+    for item in input_list:
+        try:
+            num = float(item)
+            if num > 0:
+                result.append(num)
+        except (ValueError, TypeError) as e:
+            logging.warning(f""Non-convertible element encountered: {item}, error: {e}"")
+    return result
+
+# Example usage
+example_list = [1.5, ""2"", None, -3, ""abc""]
+positive_floats = filter_and_convert_to_float(example_list)
+print(positive_floats)  # Output should be [1.5, 2.0]
+```",
+REQ_20260418_162715_04cc5743,"Parametre olarak bir liste alan ve bu listedeki elemanları sayıya (float) dönüştürerek sadece pozitif olanları yeni bir liste olarak döndüren bir fonksiyon yaz. Liste içinde sayıya dönüşemeyecek veriler (string, None vb.) varsa bunları programı çökertmeden loglayıp atla. Tip ipuçlarını kullan ve isimlendirmeleri profesyonel standartlara (PEP8) uygun seç.",qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),80.0,20.0,18.0,5.0,14.0,13.0,10.0,qwen2.5-coder:7b,0,80.0,SUCCESS,2026-04-18 16:27,"```python
+def filter_and_convert_to_float(input_list):
+    positive_floats = []
+    for item in input_list:
+        try:
+            number = float(item)
+            if number > 0:
+                positive_floats.append(number)
+        except ValueError:
+            print(f""Warning: '{item}' cannot be converted to a float and will be skipped."")
+    return positive_floats
+```",
+REQ_20260418_163247_f604809d,"Parametre olarak bir liste alan ve bu listedeki elemanları sayıya (float) dönüştürerek sadece pozitif olanları yeni bir liste olarak döndüren bir fonksiyon yaz. Liste içinde sayıya dönüşemeyecek veriler (string, None vb.) varsa bunları programı çökertmeden loglayıp atla. Tip ipuçlarını kullan ve isimlendirmeleri profesyonel standartlara (PEP8) uygun seç.",qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),85.0,25.0,17.0,5.0,13.0,15.0,10.0,qwen2.5-coder:7b,0,85.0,SUCCESS,2026-04-18 16:32,"```python
+import logging
+
+def filter_and_convert_to_float(input_list):
+    """"""
+    Converts elements of the input list to float and filters out only positive numbers.
+    Non-convertible elements are logged and ignored.
+
+    Args:
+        input_list (list): The list containing elements to be converted and filtered.
+
+    Returns:
+        list: A new list containing only positive float numbers.
+    """"""
+    logging.basicConfig(level=logging.WARNING)
+    result = []
+
+    for item in input_list:
+        try:
+            num = float(item)
+            if num > 0:
+                result.append(num)
+        except (ValueError, TypeError) as e:
+            logging.warning(f""Non-convertible element encountered: {item}, error: {e}"")
+
+    return result
+```",
+REQ_20260418_163402_bb78a9c9,"Parametre olarak bir liste alan ve bu listedeki elemanları sayıya (float) dönüştürerek sadece pozitif olanları yeni bir liste olarak döndüren bir fonksiyon yaz. Liste içinde sayıya dönüşemeyecek veriler (string, None vb.) varsa bunları programı çökertmeden loglayıp atla. Tip ipuçlarını kullan ve isimlendirmeleri profesyonel standartlara (PEP8) uygun seç.",qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),82.0,20.0,18.0,5.0,14.0,15.0,10.0,qwen2.5-coder:7b,0,82.0,SUCCESS,2026-04-18 16:34,"```python
+def filter_and_convert_to_float(input_list):
+    result = []
+    for item in input_list:
+        try:
+            number = float(item)
+            if number > 0:
+                result.append(number)
+        except ValueError:
+            print(f""Warning: '{item}' cannot be converted to a float and will be skipped."")
+    return result
+```",
