@@ -309,7 +309,7 @@ class AdvancedCodeJudge:
                     result["violations"] = violations
                     # İster formülü: 1 - violations/max_violations
                     ratio = min(violations / MAX_VIOLATIONS, 1.0)
-                    result["score"] = round((1 - ratio) * 10)
+                    result["score"] = round((1 - ratio) * 15)
             
             os.unlink(temp_file)
             
@@ -836,15 +836,14 @@ class AdvancedCodeJudge:
             ast_res["syntax_valid"] = False
         
         # Static Total - Precise sum based on weights:
-        # 15(Complexity)+5(Comments)+15(Pylint)+5(Duplication)+5(Syntax)+10(Style)+5(Format)+10(Error) = 70 total
+        # 15(Complexity)+5(Comments)+15(Pylint)+5(Duplication)+5(Syntax)+15(Style)+10(Error) = 70 total
         static_raw = (
             complexity_res["score"] +    # 15
             comment_res["score"] +       # 5
             pylint_res["scaled_score"] + # 15
             duplication_res["score"] +    # 5
             ast_res["score"] +            # 5
-            style_res["score"] +         # 10
-            format_res["score"] +        # 5
+            style_res["score"] +         # 15
             error_res                    # 10
         )
         
@@ -868,38 +867,33 @@ class AdvancedCodeJudge:
     def get_hybrid_score(self, static_data: Dict[str, Any], llm_eval: Dict[str, Any]) -> Dict[str, Any]:
         """
         Combines static and LLM results into the exact 6-category 100-point scale.
+        Exactly honors 70% Static and 30% LLM distribution.
         """
-        # 1. Kod Kalitesi (25 pts)
+        # 1. Kod Kalitesi (20 pts - Statik)
         cat1 = (
             min(15, static_data["breakdown"]["complexity"]["score"]) + 
-            static_data["breakdown"]["comments"]["score"] + 
-            llm_eval["breakdown"].get("identifier_clarity", 0)
+            static_data["breakdown"]["comments"]["score"]
         )
         
-        # 2. Teknik Borç (20 pts)
+        # 2. Teknik Borç (20 pts - Statik)
         cat2 = (
             min(15, int(static_data["breakdown"]["pylint"]["raw_score"] * 1.5)) + 
             min(5, static_data["breakdown"]["duplication"]["score"])
         )
         
-        # 3. Test & Build (15 pts)
-        # Compile Success (binary): syntax_valid → 0 veya 5 puan
+        # 3. Test & Build (15 pts - Statik)
         compile_pts = 5 if static_data["breakdown"]["syntax"]["syntax_valid"] else 0
-        # Test Coverage: coverage/100 * 10 (ister formülü)
-        coverage_pts = static_data["breakdown"]["coverage"]["score"]  # 0-10
-        cat3 = compile_pts + coverage_pts
-        # Korumasız runtime riski varsa -3 ceza
-        if static_data["breakdown"]["error_handling"] <= 5:
-            cat3 = max(0, cat3 - 3)
+        error_pts = static_data["breakdown"]["error_handling"]
+        cat3 = compile_pts + error_pts
         
-        # 4. Stil & Standart (15 pts)
-        cat4 = min(10, static_data["breakdown"]["style"]["score"]) + static_data["breakdown"]["format"]["score"]
+        # 4. Stil & Standart (15 pts - Statik)
+        cat4 = min(15, static_data["breakdown"]["style"]["score"])
         
-        # 5. Semantic Alignment (15 pts)
+        # 5. Semantic Alignment (15 pts - LLM)
         cat5 = llm_eval["breakdown"].get("prompt_adherence", 0) + llm_eval["breakdown"].get("naming_alignment", 0)
         
-        # 6. Robustness & Safety (10 pts)
-        cat6 = static_data["breakdown"]["error_handling"]
+        # 6. Robustness & Safety (15 pts - LLM)
+        cat6 = llm_eval["breakdown"].get("test_reliability", 0) + llm_eval["breakdown"].get("identifier_clarity", 0)
         
         total_score = cat1 + cat2 + cat3 + cat4 + cat5 + cat6
         

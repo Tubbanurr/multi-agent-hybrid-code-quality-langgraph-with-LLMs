@@ -172,10 +172,10 @@ function showRound1(codes, scoresData) {
                 <div class="category-item">
                     <div class="category-header">
                         <span class="category-label">1. Kod Kalitesi</span>
-                        <span class="category-value">${categories["1_Kod_Kalitesi"] || 0}/25</span>
+                        <span class="category-value">${categories["1_Kod_Kalitesi"] || 0}/20</span>
                     </div>
                     <div class="progress-bars-container" style="display: flex; gap: 2px;">
-                        <div class="progress-bar" style="flex: 1;"><div class="progress-fill" style="width: ${(categories["1_Kod_Kalitesi"] || 0) / 25 * 100}%; background: #3b82f6;"></div></div>
+                        <div class="progress-bar" style="flex: 1;"><div class="progress-fill" style="width: ${(categories["1_Kod_Kalitesi"] || 0) / 20 * 100}%; background: #3b82f6;"></div></div>
                     </div>
                 </div>
                 
@@ -222,10 +222,10 @@ function showRound1(codes, scoresData) {
                 <div class="category-item">
                     <div class="category-header">
                         <span class="category-label">6. Robustness & Safety</span>
-                        <span class="category-value">${categories["6_Robustness_Safety"] || 0}/10</span>
+                        <span class="category-value">${categories["6_Robustness_Safety"] || 0}/15</span>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${(categories["6_Robustness_Safety"] || 0) / 10 * 100}%; background: #ef4444;"></div>
+                        <div class="progress-fill" style="width: ${(categories["6_Robustness_Safety"] || 0) / 15 * 100}%; background: #ef4444;"></div>
                     </div>
                 </div>
             </div>
@@ -278,7 +278,7 @@ function showRound1(codes, scoresData) {
                     <div><strong>Syntax/AST:</strong> ${staticBreakdown.syntax?.score || 0}/5</div>
                     <div><strong>Pylint:</strong> ${staticBreakdown.pylint?.scaled_score || 0}/15 (Raw: ${staticBreakdown.pylint?.raw_score?.toFixed(2) || 0}/10)</div>
                     <div><strong>Karmaşıklık:</strong> ${staticBreakdown.complexity?.score || 0}/15 (Max: ${staticBreakdown.complexity?.max_complexity || 0})</div>
-                    <div><strong>Stil (PEP8):</strong> ${staticBreakdown.style?.score || 0}/10 (İhlal: ${staticBreakdown.style?.violations || 0})</div>
+                    <div><strong>Stil (PEP8):</strong> ${staticBreakdown.style?.score || 0}/15 (İhlal: ${staticBreakdown.style?.violations || 0})</div>
                     <div><strong>Yorum Yoğunluğu:</strong> ${staticBreakdown.comments?.score || 0}/5 (%${((staticBreakdown.comments?.density || 0) * 100).toFixed(1)})</div>
                     <div><strong>Kod Tekrarı:</strong> ${staticBreakdown.duplication?.score || 0}/5 (%${((staticBreakdown.duplication?.duplication_ratio || 0) * 100).toFixed(1)})</div>
                     <div><strong>Hata Yönetimi:</strong> ${staticBreakdown.error_handling || 0}/10</div>
