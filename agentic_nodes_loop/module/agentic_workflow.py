@@ -826,10 +826,31 @@ def _log_workflow_result(
         )
         print(f"📝 Kapsamlı log kaydedildi: {request_id}")
 
+        # Excel raporu oluştur (ayrı modül gerektirmez)
         try:
-            from module.excel_exporter import export_to_excel
-            export_to_excel()
-            print(f"  ✅ Excel raporu başarıyla güncellendi: logs/workflow_report.xlsx")
+            import pandas as pd
+            from openpyxl.styles import Font, PatternFill, Alignment
+
+            csv_path   = "logs/workflow_log.csv"
+            excel_path = "logs/workflow_report.xlsx"
+
+            df = pd.read_csv(csv_path)
+            with pd.ExcelWriter(excel_path, engine="openpyxl") as writer:
+                df.to_excel(writer, index=False, sheet_name="Workflow_Report")
+                ws = writer.sheets["Workflow_Report"]
+
+                header_fill = PatternFill(start_color="D7E4BC", end_color="D7E4BC", fill_type="solid")
+                header_font = Font(bold=True)
+                for cell in ws[1]:
+                    cell.fill      = header_fill
+                    cell.font      = header_font
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
+
+                for col_cells in ws.columns:
+                    width = max(len(str(c.value or "")) for c in col_cells)
+                    ws.column_dimensions[col_cells[0].column_letter].width = min(width + 2, 50)
+
+            print(f"  ✅ Excel raporu başarıyla güncellendi: {excel_path}")
         except Exception as excel_err:
             print(f"⚠️  Excel güncelleme hatası: {excel_err}")
 
