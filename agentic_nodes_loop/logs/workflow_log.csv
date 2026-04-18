@@ -1131,3 +1131,33 @@ def filter_and_convert_to_float(input_list):
 
     return result
 ```",
+REQ_20260418_200624_b7e4d517,"Parametre olarak bir liste alan ve bu listedeki elemanları sayıya (float) dönüştürerek sadece pozitif olanları yeni bir liste olarak döndüren bir fonksiyon yaz. Liste içinde sayıya dönüşemeyecek veriler (string, None vb.) varsa bunları programı çökertmeden loglayıp atla. Tip ipuçlarını kullan ve isimlendirmeleri profesyonel standartlara (PEP8) uygun seç.",qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),90.0,20.0,18.0,15.0,11.0,13.0,13.0,qwen2.5-coder:7b,0,90.0,SUCCESS,2026-04-18 20:06,"```python
+import logging
+
+logging.basicConfig(level=logging.WARNING)
+
+def filter_and_convert_to_float(input_list):
+    """"""
+    Takes a list as input, converts its elements to float if possible,
+    and returns a new list containing only the positive numbers.
+    
+    Non-convertible elements are logged as warnings and ignored.
+    
+    :param input_list: List of elements to be processed
+    :return: A new list with positive float numbers
+    """"""
+    result = []
+    for item in input_list:
+        try:
+            num = float(item)
+            if num > 0:
+                result.append(num)
+        except (ValueError, TypeError) as e:
+            logging.warning(f""Non-convertible element encountered: {item}, error: {e}"")
+    return result
+
+# Example usage
+example_list = [1.5, ""2"", None, -3, ""abc""]
+positive_floats = filter_and_convert_to_float(example_list)
+print(positive_floats)  # Output should be [1.5, 2.0]
+```",
