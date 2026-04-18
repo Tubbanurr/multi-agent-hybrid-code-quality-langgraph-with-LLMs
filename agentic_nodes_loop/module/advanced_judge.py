@@ -557,54 +557,94 @@ class AdvancedCodeJudge:
 
     def _check_risk_level(self, tree: ast.AST) -> Dict[str, Any]:
         """Detect risky operations (I/O, Network, Parsing, Volatile) using AST."""
-        risky_modules = {
+        high_risk_modules = {
             "requests": "network", "urllib": "network", "http": "network", "socket": "network",
+            "sqlite3": "database", "sqlalchemy": "database"
+        }
+        low_risk_modules = {
             "json": "parsing", "pickle": "parsing", "yaml": "parsing", "xml": "parsing",
             "os": "system", "subprocess": "system", "shutil": "system", "glob": "system",
-            "pathlib": "system", "sqlite3": "database", "sqlalchemy": "database",
-            "pandas": "data_parsing", "csv": "data_parsing"
+            "pathlib": "system", "pandas": "data_parsing", "csv": "data_parsing"
         }
         
-        found_risks = set()
+        found_high_risks = set()
+        found_low_risks = set()
+        
+        # Helper to recursively check if a node is inside a Try block or With block
+        def is_protected(target_node, protection_type=ast.Try):
+            for node in ast.walk(tree):
+                if isinstance(node, protection_type):
+                    for child in ast.walk(node):
+                        if child is target_node:
+                            return True
+            return False
+
         for node in ast.walk(tree):
+            found_risk_type = None
+            risk_level = None
+            
             # Check imports
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     base_module = alias.name.split('.')[0]
-                    if base_module in risky_modules:
-                        found_risks.add(risky_modules[base_module])
+                    if base_module in high_risk_modules:
+                        found_risk_type = high_risk_modules[base_module]
+                        risk_level = 'high'
+                    elif base_module in low_risk_modules:
+                        found_risk_type = low_risk_modules[base_module]
+                        risk_level = 'low'
             elif isinstance(node, ast.ImportFrom) and node.module:
                 base_module = node.module.split('.')[0]
-                if base_module in risky_modules:
-                    found_risks.add(risky_modules[base_module])
+                if base_module in high_risk_modules:
+                    found_risk_type = high_risk_modules[base_module]
+                    risk_level = 'high'
+                elif base_module in low_risk_modules:
+                    found_risk_type = low_risk_modules[base_module]
+                    risk_level = 'low'
             
             # Check built-in risky functions/calls
             if isinstance(node, ast.Call):
                 if isinstance(node.func, ast.Name):
-                    if node.func.id in ["open", "eval", "exec", "input"]:
-                        found_risks.add("io_or_volatile")
+                    if node.func.id in ["eval", "exec"]:
+                        found_risk_type = "volatile"
+                        risk_level = 'high'
+                    elif node.func.id in ["open", "input"]:
+                        found_risk_type = "io"
+                        risk_level = 'low'
                 elif isinstance(node.func, ast.Attribute):
                     if node.func.attr in ["remove", "rmdir", "rmtree", "unlink"]:
-                        found_risks.add("destructive_io")
+                        found_risk_type = "destructive_io"
+                        risk_level = 'high'
 
-            # Check for potential runtime errors: Division or Modulo by variable (unprotected)
+            # Potential zero division
             if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Div, ast.Mod, ast.FloorDiv)):
                 if not isinstance(node.right, ast.Constant):
-                    # Check if this BinOp is inside an IfExp that guards against zero
-                    # e.g. a / b if b != 0 else ... → protected, not risky
-                    found_risks.add("potential_zero_division")
+                    found_risk_type = "potential_zero_division"
+                    risk_level = 'low'
+            
+            if found_risk_type:
+                # Check if the risk itself is protected
+                protected_by_try = is_protected(node, ast.Try)
+                protected_by_with = is_protected(node, ast.With)
+                
+                risk_data = (found_risk_type, protected_by_try, protected_by_with)
+                if risk_level == 'high':
+                    found_high_risks.add(risk_data)
+                elif risk_level == 'low':
+                    found_low_risks.add(risk_data)
 
         return {
-            "is_risky": len(found_risks) > 0,
-            "categories": list(found_risks)
+            "has_high_risk": len(found_high_risks) > 0,
+            "has_low_risk": len(found_low_risks) > 0,
+            "high_risks": list(found_high_risks),
+            "low_risks": list(found_low_risks)
         }
 
     def analyze_error_handling(self, code: str) -> int:
         """
         Check for error handling patterns with risk awareness.
-        Simple, safe code gets a high baseline (7/10).
-        Risky code without try-except is penalized.
-        Bare 'except:' handlers are penalized as bad practice.
+        Simple, safe code gets a high baseline (10/10).
+        Risky code without try-except is penalized based on severity.
         """
         try:
             tree = ast.parse(code)
@@ -614,6 +654,8 @@ class AdvancedCodeJudge:
             has_raise = False
             has_assert = False
             has_bare_except = False
+            has_broad_exception = False
+            has_specific_exception = False
             
             for node in ast.walk(tree):
                 if isinstance(node, ast.Try):
@@ -621,39 +663,50 @@ class AdvancedCodeJudge:
                     for handler in node.handlers:
                         if handler.type is None: # Bare except:
                             has_bare_except = True
+                        elif isinstance(handler.type, ast.Name) and handler.type.id == "Exception":
+                            has_broad_exception = True
+                        else:
+                            has_specific_exception = True
                 if isinstance(node, ast.Raise):
                     has_raise = True
                 if isinstance(node, ast.Assert):
                     has_assert = True
             
-            # Logic for score (Max 10)
-            if risk_info["is_risky"]:
-                if has_try:
-                    score = 10
-                else:
-                    # Penalize risky code missing error handling
-                    score = 4 + (2 if has_raise or has_assert else 0)
-            else:
-                # Low risk code: baseline 7
-                score = 7
-                if has_try:
-                    score = 10
-                elif has_raise or has_assert:
-                    score = 9
-
+            # Start with a perfect score 
+            score = 10
+            
+            # Penalize unprotected risks
+            unprotected_high = sum(1 for r, p_try, p_with in risk_info["high_risks"] if not p_try)
+            unprotected_low = sum(1 for r, p_try, p_with in risk_info["low_risks"] if not p_try and r != "io")
+            unprotected_io = sum(1 for r, p_try, p_with in risk_info["low_risks"] if r == "io" and not p_try and not p_with)
+            
+            if unprotected_high > 0:
+                score -= 4  # High risk without try/except loses 4 points
+            elif unprotected_low > 0 or unprotected_io > 0:
+                score -= 2  # Low risk or IO without try/with loses 2 points
+                
+            # If the code lacks try but has some manual checks (raise/assert), give back 1 point buffer
+            if (unprotected_high > 0 or unprotected_low > 0) and not has_try and (has_raise or has_assert):
+                score = min(10, score + 1)
+                
             # Apply penalty for bad practices
             if has_bare_except:
-                score = max(2, score - 3) # Heavy penalty for bare except
-            
-            return min(score, 10)
+                score -= 3 # Heavy penalty for bare except
+            elif has_broad_exception and not has_specific_exception:
+                score -= 1 # Minor penalty for catching Exception broadly without specific catches
+
+            return max(0, min(score, 10))
             
         except Exception:
-            # Fallback for syntax errors (can't analyze risk accurately)
-            score = 3
+            # Fallback for syntax errors 
+            score = 5
             if "try:" in code: score += 2
-            if "except " in code: score += 1
-            if "except:" in code: score -= 1 # Bare except penalty even in text search
-            if "raise " in code or "assert " in code: score += 2
+            if "except " in code: 
+                score += 2
+                if "Exception" in code: score -= 1
+            if "except:" in code: score -= 3 # Bare except penalty 
+            if "with open" in code: score += 2
+            if "raise " in code or "assert " in code: score += 1
             return max(0, min(score, 10))
     
     def analyze_duplications(self, code: str) -> Dict[str, Any]:

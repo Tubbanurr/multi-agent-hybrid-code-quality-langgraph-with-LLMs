@@ -691,3 +691,213 @@ if __name__ == ""__main__"":
     for thread in threads:
         thread.join()
 ```",
+REQ_20260328_170842_27fe2520,fibonacci kodu ver,qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,deepseek-r1:1.5b (Ollama),86.0,25.0,13.0,14.0,12.0,15.0,7.0,qwen2.5-coder:7b,0,86.0,SUCCESS,2026-03-28 17:08,"```python
+def fibonacci(n):
+    if n <= 0:
+        return []
+    elif n == 1:
+        return [0]
+    elif n == 2:
+        return [0, 1]
+    
+    fib_sequence = [0, 1]
+    for i in range(2, n):
+        next_value = fib_sequence[-1] + fib_sequence[-2]
+        fib_sequence.append(next_value)
+    
+    return fib_sequence
+
+# Example usage
+n = 10
+print(fibonacci(n))
+```",
+REQ_20260329_112938_bd4a6480,python dosya işlemleri kod ver,qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,deepseek-r1:1.5b (Ollama),92.0,25.0,14.0,13.0,12.0,12.0,4.0,qwen2.5-coder:3b,1,92.0,SUCCESS,2026-03-29 11:29,"```python
+import os
+
+class FileOperations:
+    """"""
+    A class to handle file operations such as creating, appending, reading, and deleting files.
+    """"""
+
+    def __init__(self, file_path: str):
+        self.file_path = file_path
+
+    def create_file(self) -> None:
+        """"""
+        Creates a new file with the specified path.
+        """"""
+        try:
+            with open(self.file_path, 'w') as file:
+                file.write(""Bu bir örnek metin."")
+        except Exception as e:
+            print(f""Error creating file: {e}"")
+
+    def append_content(self) -> None:
+        """"""
+        Appends content to an existing file.
+        """"""
+        try:
+            with open(self.file_path, 'a') as file:
+                file.write(""\nEklenen satır."")
+        except Exception as e:
+            print(f""Error appending content: {e}"")
+
+    def read_file(self) -> str:
+        """"""
+        Reads the content of a file.
+        :return: The content of the file as a string.
+        """"""
+        try:
+            with open(self.file_path, 'r') as file:
+                return file.read()
+        except Exception as e:
+            print(f""Error reading file: {e}"")
+            return """"
+
+    def delete_file(self) -> None:
+        """"""
+        Deletes an existing file.
+        """"""
+        try:
+            os.remove(self.file_path)
+        except Exception as e:
+            print(f""Error deleting file: {e}"")
+
+# Example usage
+file_operations = FileOperations(""example.txt"")
+file_operations.create_file()
+file_operations.append_content()
+content = file_operations.read_file()
+print(content)
+file_operations.delete_file()
+```","The code is well-structured, uses clear method names, and follows PEP8 guidelines for class naming. It handles exceptions properly and deletes files without issues. However, the delete_file method could be improved to ensure it returns a value on failure and handle exceptions more gracefully. The variable names are consistent and descriptive, making the code easy to understand."
+REQ_20260402_021552_07f25ac0,fibonacci kodu ver,qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),81.0,25.0,13.0,5.0,13.0,15.0,7.0,qwen2.5-coder:7b,10,81.0,SUCCESS,2026-04-02 02:15,"```python
+def fibonacci(n: int) -> list:
+    """"""
+    Calculate the Fibonacci sequence up to the nth element.
+
+    Parameters:
+    n (int): The number of elements in the Fibonacci sequence to generate.
+
+    Returns:
+    list: A list containing the first n elements of the Fibonacci sequence.
+    """"""
+    if n <= 0:
+        return []
+    elif n == 1:
+        return [0]
+    elif n == 2:
+        return [0, 1]
+
+    fib_sequence = [0, 1]
+    for i in range(2, n):
+        next_value = fib_sequence[-1] + fib_sequence[-2]
+        fib_sequence.append(next_value)
+
+    return fib_sequence
+
+# Example usage
+n = 10
+print(fibonacci(n))
+```","Bu kod, Fibonacci serisini hesaplamak için doğru bir şekilde tasarlanmıştır. Herhangi bir hata veya eksiklik yoktur. Ancak test_reliability puanı 9 olarak verildi çünkü test fonksiyonu içinde bazı hardcoded değerler ve redundant logic bulunuyor."
+REQ_20260402_023337_15dcf865,fibonacci python kodu ver,qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),85.0,25.0,15.0,5.0,13.0,15.0,10.0,qwen2.5-coder:3b,4,85.0,SUCCESS,2026-04-02 02:33,"```python
+import typing
+
+def fibonacci(n: int) -> typing.List[int]:
+    """"""
+    Fibonacci serisini hesaplar.
+
+    Args:
+        n (int): Seri uzunluğu. n >= 0.
+
+    Returns:
+        List[int]: Fibonacci serisi.
+    """"""
+    if n < 0:
+        raise ValueError(""n must be a non-negative integer."")
+    
+    fib_sequence: typing.List[int] = []
+    for i in range(n + 1):
+        if i == 0:
+            fib_sequence.append(0)
+        elif i == 1:
+            fib_sequence.append(1)
+        else:
+            next_value: int = fib_sequence[-1] + fib_sequence[-2]
+            fib_sequence.append(next_value)
+    
+    return fib_sequence
+
+# Örnek kullanım
+try:
+    print(fibonacci(10))  # Output: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+except ValueError as e:
+    print(e)
+```","Bu kod, Fibonacci serisini hesaplamak için doğru bir şekilde tasarlanmıştır. Identifier Clarity ve Naming Alignment iyi olduğu için 5 puan alındı. Prompt Adherence da 10 puan alındı çünkü kod, verilen istekleri tamamen karşıladı. Test Reliability de 9 puan alındı çünkü kodun hata yönetimi ve güvenilirliği oldukça iyi. Ancak, test_reliability için biraz daha fazla değerlendirme yapmak gerekebilir. Örneğin, n = -1 gibi negatif bir değer için hata mesajını doğrudan döndürmek yerine ValueError raise etmek daha doğru olabilir. Ayrıca, fib_sequence.append(next_value) ifadesi iki kez çalıştırılıyor ve buunun yerine fib_sequence.extend([next_value]) kullanmak daha iyi olacaktır."
+REQ_20260402_124509_6c21db1d,fibonacci python kodu ver,qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),84.0,25.0,15.0,5.0,14.0,15.0,10.0,qwen2.5-coder:3b,10,84.0,SUCCESS,2026-04-02 12:45,"```python
+def fibonacci(n):
+    if n <= 0:
+        return []
+    elif n == 1:
+        return [0]
+    elif n == 2:
+        return [0, 1]
+
+    fib_sequence = [0, 1]
+    for i in range(2, n):
+        next_value = fib_sequence[-1] + fib_sequence[-2]
+        fib_sequence.append(next_value)
+
+    return fib_sequence
+
+# Örnek kullanım
+n = 10
+print(fibonacci(n))
+```","Bu kod, Fibonacci serisini hesaplamak için doğru bir şekilde tasarlanmıştır. Identifier Clarity ve Naming Alignment iyi olduğu için 5 puan alındı. Prompt Adherence da 10 puan alındı çünkü kod, verilen isteklere tam olarak uygulandı. Test Reliability de 9 puan alındı çünkü kod, hataları yönetebilir ve doğru sonuçları döndürür. Ancak, test_reliability için biraz daha fazla değerlendirme yapmak gerekebilir. Örneğin, n = 0 durumunda boş bir liste döndürüldüğünü göz önünde bulundurun. Bu bu, bu kodun genel olarak doğru çalıştığına dair güvenilirlik puanı verildi."
+REQ_20260418_140714_fb72ae94,pthon fibonacci kodu ver,qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),84.0,25.0,13.0,5.0,13.0,15.0,10.0,qwen2.5-coder:7b,10,84.0,SUCCESS,2026-04-18 14:07,"```python
+def fibonacci(n: int) -> list:
+    """"""
+    Calculate the Fibonacci sequence up to n elements.
+
+    Parameters:
+    n (int): The number of elements in the Fibonacci sequence to generate.
+
+    Returns:
+    list: A list containing the first n elements of the Fibonacci sequence.
+    """"""
+    if n <= 0:
+        return []
+    elif n == 1:
+        return [0]
+    elif n == 2:
+        return [0, 1]
+
+    fib_sequence = [0, 1]
+    for i in range(2, n):
+        next_value = fib_sequence[-1] + fib_sequence[-2]
+        fib_sequence.append(next_value)
+
+    return fib_sequence
+
+# Example usage
+n = 10
+print(fibonacci(n))
+```","Bu kod, Fibonacci serisini n elemanlı olarak hesaplamak için doğru bir şekilde yazılmıştır. Ancak test_reliability puanı 9 olarak verildi çünkü test fonksiyonu içinde bazı hatalar var. Bu hatalar şunlardır:
+
+1. Test fonksiyonunda n değeri hardcoded olarak belirlenmiştir (n = 10). Bu, test fonksiyonun genel bir şekilde çalışması için gereken bir parametre olmalıdır.
+
+2. Test fonksiyonunda redundant (yinelemeli) kod var. Bu, test fonksiyonun performansını azaltabilir ve daha doğru sonuçları vermez.
+
+3. Test fonksiyonunda bazı hatalar var. Bu, test fonksiyonun doğru çalışması için gereken bir yapı olmalıdır."
+REQ_20260418_141148_cbc4bc03,"Parametre olarak bir liste alan ve bu listedeki elemanları sayıya (float) dönüştürerek sadece pozitif olanları yeni bir liste olarak döndüren bir fonksiyon yaz. Liste içinde sayıya dönüşemeyecek veriler (string, None vb.) varsa bunları programı çökertmeden loglayıp atla. Tip ipuçlarını kullan ve isimlendirmeleri profesyonel standartlara (PEP8) uygun seç.",qwen2.5-coder:7b,qwen2.5-coder:3b,gemma2:2b,qwen2.5-coder:3b (Ollama),82.0,20.0,18.0,5.0,14.0,15.0,10.0,qwen2.5-coder:7b,0,82.0,SUCCESS,2026-04-18 14:11,"```python
+def filter_and_convert_to_float(input_list):
+    positive_floats = []
+    for item in input_list:
+        try:
+            number = float(item)
+            if number > 0:
+                positive_floats.append(number)
+        except ValueError:
+            print(f""Warning: '{item}' cannot be converted to a float and will be skipped."")
+    return positive_floats
+```",
