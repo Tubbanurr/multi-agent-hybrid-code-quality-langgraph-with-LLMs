@@ -4,21 +4,24 @@ Hybrid Agentic Workflow
 İkinci tur: Kazanan < eşik ise feedback döngüsü
 """
 
-from typing import TypedDict, Dict, Any, List, Optional
-from langgraph.graph import StateGraph, END
-from langchain_groq import ChatGroq
 import os
 import csv
-import json # Added json import
-from datetime import datetime
+import json
+import time
+import traceback
 import uuid
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from typing import TypedDict, Dict, Any, List, Optional
+
 from dotenv import load_dotenv
+from langgraph.graph import StateGraph, END
 
-# Mevcut modüllerden import
-from module.llm_clients import call_codellama, call_deepseek, call_gemini, get_model_names
 from module.advanced_judge import AdvancedCodeJudge
+from module.llm_clients import call_codellama, call_deepseek, call_gemini, get_model_names
+from module.llm_judge import LLMJudge
+from module.feedback_agent import generate_cot_feedback, format_suggestions_for_prompt
 
-# Env variables
 load_dotenv()
 
 # --- CSV Logging Utility ---
@@ -47,9 +50,6 @@ def log_request_to_csv(
     # Check if file exists to determine if we need to write headers
     file_exists = os.path.isfile(log_file)
     
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    
-    # Format weights as display string
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     
     # Prepare row data
@@ -176,62 +176,42 @@ class HybridState(TypedDict):
     iteration_count: int
     max_iterations: int
     quality_threshold: float
-    
-    # Configuration (NEW)
+
+    # Configuration
     static_weight: float
     llm_weight: float
     metric_weights: Optional[Dict[str, int]]
-    
+
     # Round 1 Data
     round1_codes: Dict[str, str]
     round1_scores: Dict[str, Any]
-    
+
     # Recursive Loop State
     current_code: str
     current_score: float
-    previous_code_snapshot: str  # Önceki iterasyonun kodu (generator çalışmadan önce)
-    previous_categories: Dict[str, float]  # Önceki 4_categories
+    previous_code_snapshot: str
+    previous_categories: Dict[str, float]
     winner_model: str
-    final_quality_score: float # Ajanlardan gelen skorların ağırlıklı ortalaması
-    consecutive_no_improvement: int # (NEW) Art arda iyileşme olmayan iterasyon sayısı
-    
-    # Separate Analysis Results (NEW)
-    static_analysis_result: Dict[str, Any]  # Static analyzer çıktısı
-    llm_evaluation_result: Dict[str, Any]   # LLM judge çıktısı
-    hybrid_score: float                      # Birleştirilmiş skor
-    
+    winner_code: str         # İlk turda seçilen kazanan kodu
+    winner_score: float      # İlk turda kazananın skoru
+    final_quality_score: float
+    consecutive_no_improvement: int
+
+    # Separate Analysis Results
+    static_analysis_result: Dict[str, Any]
+    llm_evaluation_result: Dict[str, Any]
+    hybrid_score: float
+
     # Feedback
     quality_profile: str
     feedback_iterations: List[Dict[str, Any]]
-    
+
     # Results
     final_code: str
     final_score: float
-    status: str  # "direct_output" | "improved_via_feedback"
-    judge_reasoning: str # Final reasoning for logs
+    status: str              # "direct_output" | "improved_via_feedback"
+    judge_reasoning: str
 
-
-# --- Helper: HYBRID Analysis (Static + LLM) ---
-def analyze_with_4_metrics(code: str, prompt: str = "") -> Dict[str, Any]:
-    """
-    HYBRID ANALYSIS: 100-Point 6-Category scale.
-    """
-    from module.advanced_judge import AdvancedCodeJudge
-    from module.llm_judge import LLMJudge
-    
-    if "API Error" in code or len(code.strip()) < 20:
-        return {"total_score": 0, "is_error": True}
-    
-    judge = AdvancedCodeJudge()
-    llm_judge = LLMJudge()
-    
-    static_analysis = judge.score_code(code)
-    llm_evaluation = llm_judge.evaluate_code(code, prompt)
-    
-    hybrid_result = judge.get_hybrid_score(static_analysis, llm_evaluation)
-    hybrid_result["is_error"] = False
-    
-    return hybrid_result
 
 
 # --- Node 1: Generator Node (Kod Oluşturma) ---
@@ -251,8 +231,6 @@ def generator_node(state: HybridState) -> HybridState:
         # Model isimlerini dinamik al (Ollama veya Cloud)
         model_names = get_model_names()
         
-        from concurrent.futures import ThreadPoolExecutor
-        
         def safe_call(name, func, p):
             try:
                 print(f"  🚀 {name} başlatıldı...")
@@ -269,7 +247,6 @@ def generator_node(state: HybridState) -> HybridState:
                 executor.submit(safe_call, model_names["model_2"], call_deepseek, prompt),
                 executor.submit(safe_call, model_names["model_3"], call_gemini, prompt)
             ]
-            
             results = [f.result() for f in futures]
             codes = dict(results)
 
@@ -311,8 +288,6 @@ def generator_node(state: HybridState) -> HybridState:
 ⚠️ Mevcut işlevselliği KORU, sadece kaliteyi artır!"""
         
         winner_model = state["winner_model"]
-        
-        winner_model = state["winner_model"]
         model_names = get_model_names()
         
         # Determine which function to call based on which model won
@@ -346,25 +321,19 @@ def static_analyzer_node(state: HybridState) -> HybridState:
     judge = AdvancedCodeJudge(metric_weights=metric_weights)
     
     if iteration == 0:
-        # İLK TUR: 3 modeli analiz et
         round1_codes = state["round1_codes"]
         static_results = {}
-        
         for model, code in round1_codes.items():
             result = judge.score_code(code)
             static_results[model] = result
-            # Normalize to 100 for display (Static raw max is 70)
-            display_score = (result['static_total'] / 70) * 100
+            display_score = (result["static_total"] / 70) * 100
             print(f"📊 {model} Statik Skor: {display_score:.1f}/100")
-        
         return {"static_analysis_result": static_results}
     else:
-        # FEEDBACK TURU: İyileştirilen kodu analiz et
         new_code = state["current_code"]
         result = judge.score_code(new_code)
-        display_score = (result['static_total'] / 70) * 100
+        display_score = (result["static_total"] / 70) * 100
         print(f"📊 Statik Analiz Skoru: {display_score:.1f}/100")
-        
         return {"static_analysis_result": result}
 
 
@@ -375,42 +344,34 @@ def llm_judge_node(state: HybridState) -> HybridState:
     """
     prompt = state["prompt"]
     iteration = state.get("iteration_count", 0)
-    
+
     print(f"\n{'='*60}")
     print(f"🤖 DÜĞÜM 3: LLM SEMANTIC DEĞERLENDİRME")
     print(f"{'='*60}\n")
-    
-    from module.llm_judge import LLMJudge
+
     llm_judge = LLMJudge()
-    
+
     if iteration == 0:
-        # İLK TUR: 3 modeli değerlendir
         round1_codes = state["round1_codes"]
         llm_results = {}
-        
         for model, code in round1_codes.items():
-            import time
-            time.sleep(2)  # Give Ollama/RAM a break between models
+            time.sleep(2)  # Ollama/RAM için nefes molası
             result = llm_judge.evaluate_code(code, prompt)
             llm_results[model] = result
-            # Normalize LLM score to 100 for display (LLM raw max is 30)
-            display_score = (result['semantic_score'] / 30) * 100
+            display_score = (result["semantic_score"] / 30) * 100
             print(f"📊 {model} LLM Skor: {display_score:.1f}/100")
             if result.get("error"):
                 print(f"   ⚠️ Hata: {result.get('reasoning', 'Unknown error')}")
             else:
                 print(f"   💬 Reasoning: {result.get('reasoning', '')[:100]}...")
-        
         return {"llm_evaluation_result": llm_results}
     else:
-        # FEEDBACK TURU: İyileştirilen kodu değerlendir
         new_code = state["current_code"]
         result = llm_judge.evaluate_code(new_code, prompt)
-        display_score = (result['semantic_score'] / 30) * 100
+        display_score = (result["semantic_score"] / 30) * 100
         print(f"📊 LLM Semantic Skor: {display_score:.1f}/100")
         if result.get("error"):
             print(f"   ⚠️ Hata: {result.get('reasoning', 'Unknown error')}")
-        
         return {"llm_evaluation_result": result}
 
 
@@ -530,8 +491,6 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
         
         # Chain-of-Thought Feedback Agent ile dinamik öneriler üret
         print(f"\n🧠 CoT Feedback Agent çalışıyor...")
-        from module.feedback_agent import generate_cot_feedback, format_suggestions_for_prompt
-        
         cot_feedback = generate_cot_feedback(
             code=new_code,
             original_prompt=state["prompt"],
@@ -540,19 +499,19 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
             previous_score=previous_score,
             current_score=new_score
         )
-        
-        suggestions = cot_feedback.get("suggestions", [])
-        cot_summary = cot_feedback.get("summary", "")
+
+        suggestions      = cot_feedback.get("suggestions", [])
+        cot_summary      = cot_feedback.get("summary", "")
         chain_of_thought = cot_feedback.get("chain_of_thought", "")
-        
-        # Debug output
+
         if suggestions:
             print(f"✅ {len(suggestions)} dinamik öneri üretildi")
-            for s in suggestions[:3]:  # İlk 3'ü göster
+            for s in suggestions[:3]:
                 print(f"   [{s.get('priority', '?')}] {s.get('area', 'Genel')}: {s.get('action', '')[:50]}...")
         else:
             print("⚠️  Öneri üretilemedi, fallback kullanılıyor")
-            suggestions = [{"priority": 2, "area": "Genel", "issue": "Kod kalitesi düşük", "action": "Docstring, type hints ve error handling ekle"}]
+            suggestions = [{"priority": 2, "area": "Genel", "issue": "Kod kalitesi düşük",
+                            "action": "Docstring, type hints ve error handling ekle"}]
         
         # Metrik değişimlerini hesapla (6 yeni kategori)
         metric_changes = {}
@@ -646,11 +605,6 @@ def hybrid_scorer_node(state: HybridState) -> HybridState:
         }
 
 
-# --- Decision: Feedback gerekli mi? ---
-def should_do_feedback(state: HybridState) -> str:
-    """
-    Kazananın skoru eşiğin altındaysa feedback'e git
-    """
 # --- Finalize Node ---
 def finalize_node(state: HybridState) -> HybridState:
     """Süreci sonlandırır."""
@@ -767,31 +721,33 @@ def run_hybrid_workflow(prompt: str,
     print(f"{'='*60}\n")
     
     initial_state = {
-        "prompt": prompt,
-        "iteration_count": 0,
-        "max_iterations": max_iterations,
-        "quality_threshold": quality_threshold,
-        "static_weight": static_weight,
-        "llm_weight": llm_weight,
-        "metric_weights": metric_weights,
-        "round1_codes": {},
-        "round1_scores": {},
-        "current_code": "",
-        "current_score": 0.0,
-        "previous_code_snapshot": "",
-        "previous_categories": {},
-        "winner_model": "",
-        "final_quality_score": 0.0,
-        "static_analysis_result": {},   
-        "llm_evaluation_result": {},    
-        "hybrid_score": 0.0,             
-        "quality_profile": "",
-        "feedback_iterations": [],
-        "final_code": "",
-        "final_score": 0.0,
-        "status": "",
-        "judge_reasoning": "",
-        "consecutive_no_improvement": 0
+        "prompt":                    prompt,
+        "iteration_count":           0,
+        "max_iterations":            max_iterations,
+        "quality_threshold":         quality_threshold,
+        "static_weight":             static_weight,
+        "llm_weight":                llm_weight,
+        "metric_weights":            metric_weights,
+        "round1_codes":              {},
+        "round1_scores":             {},
+        "current_code":              "",
+        "current_score":             0.0,
+        "previous_code_snapshot":    "",
+        "previous_categories":       {},
+        "winner_model":              "",
+        "winner_code":               "",
+        "winner_score":              0.0,
+        "final_quality_score":       0.0,
+        "consecutive_no_improvement": 0,
+        "static_analysis_result":    {},
+        "llm_evaluation_result":     {},
+        "hybrid_score":              0.0,
+        "quality_profile":           "",
+        "feedback_iterations":       [],
+        "final_code":                "",
+        "final_score":               0.0,
+        "status":                    "",
+        "judge_reasoning":           "",
     }
     
     result = hybrid_graph.invoke(
@@ -806,21 +762,34 @@ def run_hybrid_workflow(prompt: str,
     print(f"Son Skor: {result['final_score']}/100")
     print(f"{'='*60}\n")
     
-    # --- CSV Logging ---
+    _log_workflow_result(
+        result=result,
+        prompt=prompt,
+        quality_threshold=quality_threshold,
+        max_iterations=max_iterations,
+        static_weight=static_weight,
+        llm_weight=llm_weight,
+    )
+    return result
+
+
+# --- Private: Loglama Yardımcısı ---
+def _log_workflow_result(
+    result: Dict[str, Any],
+    prompt: str,
+    quality_threshold: float,
+    max_iterations: int,
+    static_weight: float,
+    llm_weight: float,
+) -> None:
+    """Workflow sonucunu CSV ve Excel'e yazar."""
     try:
-        # Generate unique request ID
-        request_id = f"REQ_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
-        
-        # Extract model scores from round1_scores
+        request_id   = f"REQ_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{str(uuid.uuid4())[:8]}"
+        model_names  = get_model_names()
         round1_scores = result.get("round1_scores", {})
-        
-        # Dinamik model isimlerini al
-        model_names = get_model_names()
-        
-        # Extract categories for the winner for the CSV log
-        winner_data = round1_scores.get(result.get("winner_model"), {})
-        cats = winner_data.get("categories", {})
-        
+
+        winner_data  = round1_scores.get(result.get("winner_model"), {})
+        cats         = winner_data.get("categories", {})
         model_scores = {
             "cat1": cats.get("1_Kod_Kalitesi", 0),
             "cat2": cats.get("2_Teknik_Borc", 0),
@@ -829,23 +798,17 @@ def run_hybrid_workflow(prompt: str,
             "cat5": cats.get("5_Semantic_Alignment", 0),
             "cat6": cats.get("6_Robustness_Safety", 0),
         }
-        
-        # Determine status
-        iteration_count = result.get("iteration_count", 0) - 1  # Subtract 1 because it's incremented at start
-        if iteration_count < 0:
-            iteration_count = 0
-            
-        status = "SUCCESS" if result.get("status") == "improved_via_feedback" or result.get("status") == "direct_output" else "MAX_ITER_REACHED"
-        
-        # If max iterations reached without success, update status
-        if iteration_count >= max_iterations and result.get("final_score", 0) < quality_threshold:
-            status = "MAX_ITER_REACHED"
-            
-        # Get Judge Model Name
-        from module.llm_judge import LLMJudge
+
+        iteration_count = max(0, result.get("iteration_count", 0) - 1)
+        final_score     = result.get("final_score", 0.0)
+        status = (
+            "MAX_ITER_REACHED"
+            if iteration_count >= max_iterations and final_score < quality_threshold
+            else "SUCCESS"
+        )
+
         judge_model = LLMJudge().get_model_name()
-        
-        # Log to CSV
+
         log_request_to_csv(
             request_id=request_id,
             user_prompt=prompt,
@@ -856,25 +819,21 @@ def run_hybrid_workflow(prompt: str,
             model_scores=model_scores,
             initial_winner=result.get("winner_model", "Unknown"),
             iteration_count=iteration_count,
-            final_score=result.get("final_score", 0.0),
+            final_score=final_score,
             status=status,
             generated_code=result.get("final_code", ""),
-            judge_reasoning=result.get("judge_reasoning", "")
+            judge_reasoning=result.get("judge_reasoning", ""),
         )
         print(f"📝 Kapsamlı log kaydedildi: {request_id}")
-        
-        # Excel raporunu otomatik güncelle
+
         try:
             from module.excel_exporter import export_to_excel
             export_to_excel()
-            print(f"📊 Excel raporu güncellendi: logs/workflow_report.xlsx")
+            print(f"  ✅ Excel raporu başarıyla güncellendi: logs/workflow_report.xlsx")
         except Exception as excel_err:
             print(f"⚠️  Excel güncelleme hatası: {excel_err}")
-            
-    except Exception as e:
-        print(f"❌ Loglama hatası: {e}")
-        import traceback
+
+    except Exception as exc:
+        print(f"❌ Loglama hatası: {exc}")
         traceback.print_exc()
-    
-    return result
 
