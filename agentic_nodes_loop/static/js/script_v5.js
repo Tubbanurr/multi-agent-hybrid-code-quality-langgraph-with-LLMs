@@ -115,8 +115,8 @@ async function generate() {
     const ctx = canvas.getContext('2d');
     let particles = [];
     let mouse = { x: -999, y: -999 };
-    const PARTICLE_COUNT = 60;
-    const CONNECT_DIST = 120;
+    const PARTICLE_COUNT = 120;
+    const CONNECT_DIST = 150;
 
     function resize() {
         canvas.width = window.innerWidth;
@@ -136,8 +136,8 @@ async function generate() {
             this.y = Math.random() * canvas.height;
             this.vx = (Math.random() - 0.5) * 0.4;
             this.vy = (Math.random() - 0.5) * 0.4;
-            this.r = Math.random() * 1.5 + 0.5;
-            this.alpha = Math.random() * 0.3 + 0.1;
+            this.r = Math.random() * 2.2 + 0.8;
+            this.alpha = Math.random() * 0.5 + 0.2;
         }
         update() {
             // Mouse repel
@@ -183,7 +183,7 @@ async function generate() {
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(100, 130, 255, ${0.06 * (1 - dist / CONNECT_DIST)})`;
+                    ctx.strokeStyle = `rgba(120, 180, 255, ${0.18 * (1 - dist / CONNECT_DIST)})`;
                     ctx.lineWidth = 0.5;
                     ctx.stroke();
                 }
@@ -223,21 +223,21 @@ function createScoreRing(score, size = 95) {
                 </filter>
             </defs>
             <!-- Background ring -->
-            <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none"
+            <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none"
                     stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
             <!-- Score ring with glow -->
-            <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none"
+            <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none"
                     stroke="${color}" stroke-width="6"
                     stroke-dasharray="${circ}" stroke-dashoffset="${offset}"
-                    transform="rotate(-90 ${size/2} ${size/2})" stroke-linecap="round"
+                    transform="rotate(-90 ${size / 2} ${size / 2})" stroke-linecap="round"
                     filter="url(#${glowId})"
                     style="transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);"/>
             <!-- Score number -->
-            <text x="${size/2}" y="${size/2 - 3}" text-anchor="middle" dominant-baseline="central"
+            <text x="${size / 2}" y="${size / 2 - 3}" text-anchor="middle" dominant-baseline="central"
                   fill="white" font-size="${size * 0.3}" font-weight="800"
                   font-family="Inter, sans-serif">${score}</text>
             <!-- HYBRID label -->
-            <text x="${size/2}" y="${size/2 + 15}" text-anchor="middle"
+            <text x="${size / 2}" y="${size / 2 + 15}" text-anchor="middle"
                   fill="${color}" font-size="${size * 0.09}" font-weight="700"
                   letter-spacing="0.15em" font-family="Inter, sans-serif">HYBRID</text>
         </svg>
