@@ -836,9 +836,13 @@ def _log_workflow_result(
                     cell.font      = header_font
                     cell.alignment = Alignment(horizontal="center", vertical="center")
 
+                wrap_alignment = Alignment(wrap_text=True, vertical="top")
                 for col_cells in ws.columns:
-                    width = max(len(str(c.value or "")) for c in col_cells)
-                    ws.column_dimensions[col_cells[0].column_letter].width = min(width + 2, 50)
+                    # Sabit bir maksimum genişlik vererek yazının alta sarılmasını (wrap_text) sağlıyoruz
+                    ws.column_dimensions[col_cells[0].column_letter].width = 60
+                    for cell in col_cells:
+                        if cell.row > 1: # Başlık hücresi hariç
+                            cell.alignment = wrap_alignment
 
             print(f"  ✅ Excel raporu başarıyla güncellendi: {excel_path}")
         except Exception as excel_err:
