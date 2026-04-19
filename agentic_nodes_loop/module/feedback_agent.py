@@ -168,8 +168,7 @@ def _call_ollama_cot(system_prompt: str, user_prompt: str) -> Dict[str, Any]:
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user",   "content": user_prompt},
-            ],
-            format_json=True,
+            ]
         )
         return _parse_cot_response(response)
     except Exception as exc:

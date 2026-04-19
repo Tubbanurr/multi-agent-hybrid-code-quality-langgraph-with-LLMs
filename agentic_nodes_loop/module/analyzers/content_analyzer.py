@@ -82,10 +82,14 @@ class ContentAnalyzer(BaseAnalyzer):
 
         if result["total_lines"] < 10 and result["comment_lines"] == 0:
             result["score"] = 5
-        elif 0.05 <= result["density"] <= 0.4:
+        elif 0.05 <= result["density"] <= 0.65:
+            # Toleransı %65'e kadar çıkardık, Pydoc/Docstring eklendiğinde ceza yemez
             result["score"] = 5
-        elif result["density"] > 0:
+        elif result["density"] > 0.65:
+            # Sadece koddan 2/3 oranında fazla yorum (aşırı şişirme) varsa puan kırılır
             result["score"] = 3
+        elif result["density"] > 0:
+            result["score"] = 4
         else:
             result["score"] = 0
 

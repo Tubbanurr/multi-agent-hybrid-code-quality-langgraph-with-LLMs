@@ -248,18 +248,19 @@ def generator_node(state: HybridState) -> HybridState:
 {current_code}
 ```
 
-## ZORUNLU İYİLEŞTİRMELER
+## [KRİTİK] YARGICI GERİ BİLDİRİMİ (ÖNCELİK 1)
+Aşağıdaki sorunlar tespit edilmiştir ve kodun kabul edilmesi için BUNLARI ÇÖZMEN ZORUNLUDUR:
 {quality_profile}
 
-## TALİMATLAR
-1. Yukarıdaki ÖNCELİKLİ önerileri MUTLAKA uygula
-2. Docstring ekle (fonksiyon/class varsa)
-3. Type hints ekle (parametreler ve dönüş değeri)
-4. Error handling ekle (try-except)
-5. Değişken isimlerini anlamlı yap
+## YAZILIM MÜHENDİSLİĞİ STANDARTLARI (ÖNCELİK 2)
+Yukarıdaki Kritik Geri Bildirimleri KESİNLİKLE uyguladıktan sonra, kodun genel kalitesini korumak için şu standartları da sağla:
+- Bütün sınıf ve fonksiyonlara detaylı Docstring ekle.
+- Tüm parametrelere ve dönüş değerlerine Type Hints ekle.
+- Beklenmedik hatalara karşı Error handling (try-except) ekle.
+- Değişken isimlerini daha anlamlı yap.
 
-⚠️ ÖNEMLİ: SADECE Python kodu üret, açıklama yazma!
-⚠️ Mevcut işlevselliği KORU, sadece kaliteyi artır!"""
+⚠️ ÖNEMLİ: En büyük önceliğin [KRİTİK] YARGICI GERİ BİLDİRİMİ kısmındaki spesifik eksikleri gidermektir! ASLA halüsinasyon yapma, istenmeyen modül ekleme.
+⚠️ SADECE saf Python kodu üret, açıklama yazma!"""
         
         winner_model = state["winner_model"]
         model_names = get_model_names()

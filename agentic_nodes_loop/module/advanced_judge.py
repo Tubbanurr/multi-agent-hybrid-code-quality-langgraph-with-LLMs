@@ -167,10 +167,12 @@ class AdvancedCodeJudge:
         )
 
         # 2. Teknik Borç (20 pts — Statik)
-        cat2 = (
+        # Type Hints ZORUNLULUK DEĞILDIR: Sadece kullanıldığında Teknik borcu azaltan "Bonus" etkisindedir.
+        cat2_base = (
             min(15, int(bd["pylint"]["raw_score"] * 1.5))
             + min(5, bd["duplication"]["score"])
         )
+        cat2 = min(20, cat2_base + bd["type_hints"]["score"])
 
         # 3. Test & Build (15 pts — Statik)
         compile_pts = 5 if bd["syntax"]["syntax_valid"] else 0
