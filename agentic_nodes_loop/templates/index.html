@@ -19,9 +19,111 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/css/style.css?v=7.0.0">
+
+    <style>
+        /* ---- İkili Sistem (Matrix) Arka Plan Animasyonları — Çok Yönlü ---- */
+        .bg-plane {
+            position: fixed;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0;
+            white-space: nowrap;
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--neon-cyan);
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        /* ✈️ 1 — Sol → Sağ, orta bant, yavaş dalga */
+        .bg-plane-1 { font-size: 28px; animation: planeFly1 22s ease-in-out infinite 0s; }
+        @keyframes planeFly1 {
+            0%   { left:-80px; top:55%; opacity:0;    transform:rotate(-3deg); }
+            6%   { left:4%;    top:52%; opacity:0.5;  transform:rotate(-5deg); }
+            22%  { left:23%;   top:44%; transform:rotate(-2deg); }
+            38%  { left:40%;   top:52%; transform:rotate(-5deg); }
+            54%  { left:57%;   top:43%; transform:rotate(-2deg); }
+            70%  { left:73%;   top:51%; transform:rotate(-5deg); }
+            85%  { left:87%;   top:43%; transform:rotate(-2deg); }
+            94%  { left:97%;   top:50%; opacity:0.5;  transform:rotate(-4deg); }
+            100% { left:112%;  top:48%; opacity:0;    transform:rotate(-3deg); }
+        }
+
+        /* ✈️ 2 — Sağ → Sol (ters), üst bant, orta hız */
+        .bg-plane-2 { font-size: 22px; animation: planeFly2 19s ease-in-out infinite 5s; }
+        @keyframes planeFly2 {
+            0%   { left:110%;  top:18%; opacity:0;    transform:scaleX(-1) rotate(-3deg); }
+            6%   { left:95%;   top:22%; opacity:0.45; transform:scaleX(-1) rotate(-5deg); }
+            22%  { left:76%;   top:13%; transform:scaleX(-1) rotate(-2deg); }
+            38%  { left:60%;   top:22%; transform:scaleX(-1) rotate(-5deg); }
+            54%  { left:44%;   top:12%; transform:scaleX(-1) rotate(-2deg); }
+            70%  { left:28%;   top:21%; transform:scaleX(-1) rotate(-5deg); }
+            85%  { left:13%;   top:12%; transform:scaleX(-1) rotate(-2deg); }
+            94%  { left:3%;    top:19%; opacity:0.45; transform:scaleX(-1) rotate(-4deg); }
+            100% { left:-60px; top:17%; opacity:0;    transform:scaleX(-1) rotate(-3deg); }
+        }
+
+        /* ✈️ 3 — Affağı → Yukarı, sol taraf, yavaş */
+        .bg-plane-3 { font-size: 20px; animation: planeFly3 21s ease-in-out infinite 9s; }
+        @keyframes planeFly3 {
+            0%   { left:18%;  top:112%; opacity:0;    transform:rotate(-90deg); }
+            6%   { left:20%;  top:95%;  opacity:0.45; transform:rotate(-88deg); }
+            22%  { left:15%;  top:74%;  transform:rotate(-92deg); }
+            40%  { left:21%;  top:53%;  transform:rotate(-87deg); }
+            58%  { left:14%;  top:33%;  transform:rotate(-93deg); }
+            76%  { left:20%;  top:14%;  transform:rotate(-88deg); }
+            90%  { left:17%;  top:3%;   opacity:0.45; transform:rotate(-91deg); }
+            100% { left:19%;  top:-12%; opacity:0;    transform:rotate(-90deg); }
+        }
+
+        /* ✈️ 4 — Yukarı → Affağı, sağ taraf */
+        .bg-plane-4 { font-size: 19px; animation: planeFly4 26s ease-in-out infinite 15s; }
+        @keyframes planeFly4 {
+            0%   { left:74%;  top:-12%; opacity:0;    transform:rotate(90deg); }
+            6%   { left:72%;  top:4%;   opacity:0.42; transform:rotate(88deg); }
+            22%  { left:77%;  top:25%;  transform:rotate(92deg); }
+            40%  { left:71%;  top:45%;  transform:rotate(87deg); }
+            58%  { left:76%;  top:63%;  transform:rotate(93deg); }
+            76%  { left:72%;  top:80%;  transform:rotate(88deg); }
+            90%  { left:75%;  top:95%;  opacity:0.42; transform:rotate(91deg); }
+            100% { left:74%;  top:112%; opacity:0;    transform:rotate(90deg); }
+        }
+
+        /* ✈️ 5 — Sağ → Sol (ters), alt bant, hızlı */
+        .bg-plane-5 { font-size: 18px; animation: planeFly5 14s ease-in-out infinite 12s; }
+        @keyframes planeFly5 {
+            0%   { left:110%;  top:72%; opacity:0;    transform:scaleX(-1) rotate(-4deg); }
+            7%   { left:93%;   top:68%; opacity:0.4;  transform:scaleX(-1) rotate(-6deg); }
+            26%  { left:71%;   top:76%; transform:scaleX(-1) rotate(-2deg); }
+            46%  { left:50%;   top:67%; transform:scaleX(-1) rotate(-6deg); }
+            66%  { left:28%;   top:76%; transform:scaleX(-1) rotate(-2deg); }
+            86%  { left:8%;    top:67%; opacity:0.4;  transform:scaleX(-1) rotate(-5deg); }
+            100% { left:-60px; top:72%; opacity:0;    transform:scaleX(-1) rotate(-4deg); }
+        }
+
+        /* ✈️ 6 — Sol → Sağ, çok hızlı, orta-alt */
+        .bg-plane-6 { font-size: 16px; animation: planeFly6 10s ease-in-out infinite 2s; }
+        @keyframes planeFly6 {
+            0%   { left:-40px; top:80%; opacity:0;    transform:rotate(-4deg); }
+            8%   { left:4%;    top:76%; opacity:0.38; transform:rotate(-6deg); }
+            27%  { left:26%;   top:83%; transform:rotate(-1deg); }
+            47%  { left:48%;   top:75%; transform:rotate(-6deg); }
+            67%  { left:68%;   top:83%; transform:rotate(-1deg); }
+            87%  { left:88%;   top:75%; opacity:0.38; transform:rotate(-5deg); }
+            100% { left:112%;  top:80%; opacity:0;    transform:rotate(-4deg); }
+        }
+    </style>
+
 </head>
 
 <body>
+
+    <!-- Arka plan Matrix animasyonları: 4 farklı yön (position:fixed, layout'a etkisi yok) -->
+    <div class="bg-plane bg-plane-1" aria-hidden="true">010110</div>  <!-- sol → sağ -->
+    <div class="bg-plane bg-plane-2" aria-hidden="true">100101</div>  <!-- sağ → sol -->
+    <div class="bg-plane bg-plane-3" aria-hidden="true">110010</div>  <!-- affağı → yukarı -->
+    <div class="bg-plane bg-plane-4" aria-hidden="true">101010</div>  <!-- yukarı → affağı -->
+    <div class="bg-plane bg-plane-5" aria-hidden="true">001101</div>  <!-- sağ → sol, alt -->
+    <div class="bg-plane bg-plane-6" aria-hidden="true">111000</div>  <!-- sol → sağ, hızlı -->
 
     <header class="app-header">
         <div class="container">
