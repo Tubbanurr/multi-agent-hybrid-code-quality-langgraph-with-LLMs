@@ -26,19 +26,15 @@ load_dotenv()
 
 # --- CSV Logging Utility ---
 def log_request_to_csv(
-    request_id: str,
     user_prompt: str,
-    model_names: Dict[str, str],
-    judge_model: str,
-    static_weight: float,
-    llm_weight: float,
-    model_scores: Dict[str, float],
-    initial_winner: str,
+    winner_model: str,
+    initial_code: str,
+    llm_deficiencies: str,
+    final_code: str,
+    improvements_made: str,
+    score_change_text: str,
     iteration_count: int,
-    final_score: float,
-    status: str,
-    generated_code: str,
-    judge_reasoning: str,
+    judge_model: str,
     log_file: str = "logs/workflow_log.csv"
 ):
     """
@@ -54,26 +50,15 @@ def log_request_to_csv(
     
     # Prepare row data
     row_data = [
-        request_id,
-        user_prompt[:500].replace("\n", " "),
-        model_names.get("model_1", "Model 1"),
-        model_names.get("model_2", "Model 2"),
-        model_names.get("model_3", "Model 3"),
-        judge_model,
-        f"{final_score:.1f}",
-        f"{model_scores.get('cat1', 0):.1f}",
-        f"{model_scores.get('cat2', 0):.1f}",
-        f"{model_scores.get('cat3', 0):.1f}",
-        f"{model_scores.get('cat4', 0):.1f}",
-        f"{model_scores.get('cat5', 0):.1f}",
-        f"{model_scores.get('cat6', 0):.1f}",
-        initial_winner,
+        user_prompt[:1000].replace("\n", " "),
+        winner_model,
+        initial_code,
+        llm_deficiencies,
+        final_code,
+        improvements_made,
+        score_change_text,
         iteration_count,
-        f"{final_score:.1f}",
-        status,
-        timestamp,
-        generated_code,
-        judge_reasoning
+        judge_model
     ]
     
     with open(log_file, mode='a', newline='', encoding='utf-8') as f:
@@ -82,26 +67,15 @@ def log_request_to_csv(
         # Write header if file is new
         if not file_exists:
             writer.writerow([
-                "Request_ID",
-                "User_Prompt",
-                "Model_1_Name",
-                "Model_2_Name",
-                "Model_3_Name",
-                "Judge_Model",
-                "Total_Score",
-                "Cat1_Kod_Kalitesi",
-                "Cat2_Teknik_Borc",
-                "Cat3_Test_Build",
-                "Cat4_Stil_Standart",
-                "Cat5_Semantic_Alignment",
-                "Cat6_Robustness_Safety",
-                "Initial_Winner",
+                "Prompt",
+                "Winner_Model",
+                "Initial_Code",
+                "LLM_Deficiencies",
+                "Final_Code",
+                "Improvements_Made",
+                "Score_Change",
                 "Iteration_Count",
-                "Final_Score",
-                "Status",
-                "Timestamp",
-                "Generated_Code",
-                "Judge_Reasoning"
+                "Judge_Model"
             ])
         
         # Write data row
@@ -801,6 +775,11 @@ def _log_workflow_result(
 
         iteration_count = max(0, result.get("iteration_count", 0) - 1)
         final_score     = result.get("final_score", 0.0)
+        winner_score    = result.get("winner_score", 0.0)
+        score_diff      = final_score - winner_score
+        
+        score_change_text = f"{winner_score:.1f} -> {final_score:.1f} ({score_diff:+.1f})"
+        
         status = (
             "MAX_ITER_REACHED"
             if iteration_count >= max_iterations and final_score < quality_threshold
@@ -808,21 +787,31 @@ def _log_workflow_result(
         )
 
         judge_model = LLMJudge().get_model_name()
+        
+        # Yapılan iyileştirmeleri feedback_iterations'tan topla
+        feedback_iterations = result.get("feedback_iterations", [])
+        improvements_list = []
+        for i, iter_data in enumerate(feedback_iterations, 1):
+            iter_improvements = []
+            for suggestion in iter_data.get("suggestions", []):
+                action = suggestion.get("action", "")
+                if action:
+                    iter_improvements.append(f"- {action}")
+            if iter_improvements:
+                improvements_list.append(f"İterasyon {i}:\n" + "\n".join(iter_improvements))
+        
+        improvements_made = "\n\n".join(improvements_list) if improvements_list else "İyileştirme gerekmedi."
 
         log_request_to_csv(
-            request_id=request_id,
             user_prompt=prompt,
-            model_names=model_names,
-            judge_model=judge_model,
-            static_weight=static_weight,
-            llm_weight=llm_weight,
-            model_scores=model_scores,
-            initial_winner=result.get("winner_model", "Unknown"),
+            winner_model=result.get("winner_model", "Unknown"),
+            initial_code=result.get("winner_code", ""),
+            llm_deficiencies=winner_data.get("reasoning", ""),
+            final_code=result.get("final_code", ""),
+            improvements_made=improvements_made,
+            score_change_text=score_change_text,
             iteration_count=iteration_count,
-            final_score=final_score,
-            status=status,
-            generated_code=result.get("final_code", ""),
-            judge_reasoning=result.get("judge_reasoning", ""),
+            judge_model=judge_model,
         )
         print(f"📝 Kapsamlı log kaydedildi: {request_id}")
 
