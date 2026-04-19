@@ -53,7 +53,7 @@ def generate_endpoint(req: PromptRequest) -> Dict:
     """
     result = run_hybrid_workflow(
         prompt=req.prompt,
-        quality_threshold=99.0,
+        quality_threshold=80.0,
         max_iterations=11,
         static_weight=req.static_weight,
         llm_weight=req.llm_weight,

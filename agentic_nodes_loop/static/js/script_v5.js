@@ -1,5 +1,5 @@
 // Global Functions (attached to window for direct HTML access)
-window.copyCode = function(elementId) {
+window.copyCode = function (elementId) {
     const codeElement = document.getElementById(elementId);
     if (!codeElement) {
         console.error("Copy failed: Element not found", elementId);
@@ -35,7 +35,7 @@ window.copyCode = function(elementId) {
     }
 };
 
-window.fallbackCopyTextToClipboard = function(text) {
+window.fallbackCopyTextToClipboard = function (text) {
     const textArea = document.createElement("textarea");
     textArea.value = text;
     textArea.style.position = "fixed";
@@ -59,7 +59,7 @@ window.fallbackCopyTextToClipboard = function(text) {
 };
 
 // Error Handler
-window.onerror = function(message, source, lineno, colno, error) {
+window.onerror = function (message, source, lineno, colno, error) {
     console.error(`JS HATA: ${message} @ ${source}:${lineno}:${colno}`);
     return false;
 };
@@ -105,27 +105,197 @@ async function generate() {
     }
 }
 
+// ═══════════════════════════════════════════
+// 2. PARTICLE FIELD - Mouse-interactive
+// ═══════════════════════════════════════════
+(function initParticles() {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'particle-canvas';
+    document.body.prepend(canvas);
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let mouse = { x: -999, y: -999 };
+    const PARTICLE_COUNT = 60;
+    const CONNECT_DIST = 120;
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    document.addEventListener('mousemove', e => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.vx = (Math.random() - 0.5) * 0.4;
+            this.vy = (Math.random() - 0.5) * 0.4;
+            this.r = Math.random() * 1.5 + 0.5;
+            this.alpha = Math.random() * 0.3 + 0.1;
+        }
+        update() {
+            // Mouse repel
+            const dx = this.x - mouse.x;
+            const dy = this.y - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 150) {
+                const force = (150 - dist) / 150 * 0.02;
+                this.vx += dx / dist * force;
+                this.vy += dy / dist * force;
+            }
+            this.x += this.vx;
+            this.y += this.vy;
+            // Wrap around
+            if (this.x < 0) this.x = canvas.width;
+            if (this.x > canvas.width) this.x = 0;
+            if (this.y < 0) this.y = canvas.height;
+            if (this.y > canvas.height) this.y = 0;
+            // Damping
+            this.vx *= 0.999;
+            this.vy *= 0.999;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(140, 160, 255, ${this.alpha})`;
+            ctx.fill();
+        }
+    }
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        // Connection lines
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < CONNECT_DIST) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.strokeStyle = `rgba(100, 130, 255, ${0.06 * (1 - dist / CONNECT_DIST)})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(animate);
+    }
+    animate();
+})();
+
+// ═══════════════════════════════════════════
+// 7. SCORE RING - SVG animated circle
+// ═══════════════════════════════════════════
+function getScoreColor(score) {
+    if (score >= 85) return '#f97316';   // Orange/Gold
+    if (score >= 65) return '#3b82f6';   // Blue
+    if (score >= 45) return '#f59e0b';   // Amber
+    return '#64748b';                    // Gray
+}
+
+function createScoreRing(score, size = 95) {
+    const r = (size / 2) - 7;
+    const circ = 2 * Math.PI * r;
+    const offset = circ * (1 - score / 100);
+    const color = getScoreColor(score);
+    const glowId = `glow-${Math.random().toString(36).slice(2, 8)}`;
+
+    return `
+        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="--ring-color: ${color};">
+            <defs>
+                <filter id="${glowId}">
+                    <feGaussianBlur stdDeviation="3" result="blur"/>
+                    <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+            </defs>
+            <!-- Background ring -->
+            <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none"
+                    stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
+            <!-- Score ring with glow -->
+            <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none"
+                    stroke="${color}" stroke-width="6"
+                    stroke-dasharray="${circ}" stroke-dashoffset="${offset}"
+                    transform="rotate(-90 ${size/2} ${size/2})" stroke-linecap="round"
+                    filter="url(#${glowId})"
+                    style="transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);"/>
+            <!-- Score number -->
+            <text x="${size/2}" y="${size/2 - 3}" text-anchor="middle" dominant-baseline="central"
+                  fill="white" font-size="${size * 0.3}" font-weight="800"
+                  font-family="Inter, sans-serif">${score}</text>
+            <!-- HYBRID label -->
+            <text x="${size/2}" y="${size/2 + 15}" text-anchor="middle"
+                  fill="${color}" font-size="${size * 0.09}" font-weight="700"
+                  letter-spacing="0.15em" font-family="Inter, sans-serif">HYBRID</text>
+        </svg>
+    `;
+}
+
+// ═══════════════════════════════════════════
+// SHOW ROUND 1 - Enhanced with all effects
+// ═══════════════════════════════════════════
 function showRound1(codes, scoresData) {
     document.getElementById("round1-section").style.display = "block";
 
-    // Dinamik model isimleri - backend'den gelen isimleri kullan
     const modelKeys = Object.keys(codes);
     const modelSlots = ["model-1", "model-2", "model-3"];
+
+    // Find winner model
+    let maxScore = -1;
+    let winnerModel = '';
+    modelKeys.forEach(name => {
+        const s = scoresData[name]?.total_score || 0;
+        if (s > maxScore) { maxScore = s; winnerModel = name; }
+    });
 
     modelKeys.forEach((modelName, index) => {
         const slotId = modelSlots[index] || `model-${index}`;
         const code = codes[modelName] || "Kod üretilemedi";
         const scoreData = scoresData[modelName];
+        const isWinner = modelName === winnerModel;
 
-        // Update model header with dynamic name
+        // 10. Winner card glow
+        const card = document.getElementById(`score-${slotId}`)?.closest('.model-card');
+        if (card) {
+            if (isWinner) card.classList.add('winner-card');
+            else card.classList.remove('winner-card');
+        }
+
+        // Model header with number + winner badge
         const headerElement = document.getElementById(`header-${slotId}`);
-        if (headerElement) headerElement.textContent = modelName;
+        if (headerElement) {
+            const nameParts = modelName.split(':');
+            const mainName = nameParts[0] || modelName;
+            const subName = nameParts.slice(1).join(':') || '';
+
+            headerElement.innerHTML = `
+                <span class="model-number">${index + 1}</span>
+                <span class="model-name-text">
+                    ${mainName}
+                    ${subName ? `<span class="model-name-sub">${subName}</span>` : ''}
+                </span>
+                ${isWinner ? '<span class="winner-badge">👑 KAZANAN</span>' : ''}
+            `;
+        }
 
         // Display code
         const codeElement = document.getElementById(`code-${slotId}`);
         if (codeElement) codeElement.textContent = code;
 
-        // Display HYBRID score with breakdown
+        // Score panel
         const scorePanel = document.getElementById(`score-${slotId}`);
         if (!scorePanel) {
             console.error(`Missing element: score-${slotId}`);
@@ -133,12 +303,10 @@ function showRound1(codes, scoresData) {
         }
 
         if (!scoreData || scoreData.is_error) {
-            // API HATASI - ÖZEL GÖSTER
             scorePanel.innerHTML = `
-                <div style="background: #fee; padding: 1rem; border-radius: 8px; border: 2px solid #f00; text-align: center;">
-                    <div style="font-weight: bold; color: #d00; font-size: 1.2rem;">API HATASI</div>
-                    <div style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">Model kod üretemedi</div>
-                    <div style="margin-top: 0.5rem; font-weight: bold;">Skor: 0/100</div>
+                <div style="padding: 1.5rem; text-align: center; background: rgba(239, 68, 68, 0.05); border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                    <div style="font-weight: 700; color: #ef4444; font-size: 1.1rem;">API HATASI</div>
+                    <div style="margin-top: 0.5rem; color: #94a3b8; font-size: 0.85rem;">Model kod üretemedi</div>
                 </div>
             `;
             return;
@@ -155,78 +323,70 @@ function showRound1(codes, scoresData) {
         const llmBreakdown = llmEvaluation.breakdown || {};
 
         scorePanel.innerHTML = `
-            <!-- Hybrid Score Badge -->
-            <div class="score-total">
-                <div class="hybrid-badge">
-                    <div class="score-total-value">Hybrid: ${hybridScore}/100</div>
+            <!-- 7. Score Ring + Details -->
+            <div class="score-display">
+                <div class="score-circle-container">
+                    ${createScoreRing(hybridScore)}
                 </div>
-                <div class="score-breakdown">
-                    Statik: ${staticScore}/70 (%${(staticScore / 70 * 100).toFixed(1)} Başarı) | LLM: ${llmScore}/30 (%${(llmScore / 30 * 100).toFixed(1)} Başarı)
+                <div class="score-details">
+                    <div class="score-detail-row">
+                        <span class="detail-icon" style="background: #3b82f6; color: #3b82f6;"></span>
+                        <span class="detail-label">Statik Analiz</span>
+                        <span class="detail-value">${staticScore.toFixed(0)}/70</span>
+                    </div>
+                    <div class="score-detail-row">
+                        <span class="detail-icon" style="background: #8b5cf6; color: #8b5cf6;"></span>
+                        <span class="detail-label">LLM Değerlendirme</span>
+                        <span class="detail-value">${llmScore}/30</span>
+                    </div>
                 </div>
             </div>
             
             <!-- 6 Hybrid Categories -->
             <div class="categories-container">
-                <div class="categories-title">Kod Kalite Metrikleri (6 Kategori)</div>
+                <div class="categories-title">Kalite Metrikleri (6 Kategori)</div>
                 
                 <div class="category-item">
                     <div class="category-header">
                         <span class="category-label">1. Kod Kalitesi</span>
                         <span class="category-value">${categories["1_Kod_Kalitesi"] || 0}/20</span>
                     </div>
-                    <div class="progress-bars-container" style="display: flex; gap: 2px;">
-                        <div class="progress-bar" style="flex: 1;"><div class="progress-fill" style="width: ${(categories["1_Kod_Kalitesi"] || 0) / 20 * 100}%; background: #3b82f6;"></div></div>
-                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: ${(categories["1_Kod_Kalitesi"] || 0) / 20 * 100}%; background: #3b82f6; color: #3b82f6;"></div></div>
                 </div>
-                
                 <div class="category-item">
                     <div class="category-header">
                         <span class="category-label">2. Teknik Borç</span>
                         <span class="category-value">${categories["2_Teknik_Borc"] || 0}/20</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${(categories["2_Teknik_Borc"] || 0) / 20 * 100}%; background: #f59e0b;"></div>
-                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: ${(categories["2_Teknik_Borc"] || 0) / 20 * 100}%; background: #f59e0b; color: #f59e0b;"></div></div>
                 </div>
-                
                 <div class="category-item">
                     <div class="category-header">
                         <span class="category-label">3. Test & Build</span>
                         <span class="category-value">${categories["3_Test_Build"] || 0}/15</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${(categories["3_Test_Build"] || 0) / 15 * 100}%; background: #10b981;"></div>
-                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: ${(categories["3_Test_Build"] || 0) / 15 * 100}%; background: #10b981; color: #10b981;"></div></div>
                 </div>
-                
                 <div class="category-item">
                     <div class="category-header">
                         <span class="category-label">4. Stil & Standart</span>
                         <span class="category-value">${categories["4_Stil_Standart"] || 0}/15</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${(categories["4_Stil_Standart"] || 0) / 15 * 100}%; background: #6366f1;"></div>
-                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: ${(categories["4_Stil_Standart"] || 0) / 15 * 100}%; background: #6366f1; color: #6366f1;"></div></div>
                 </div>
-
                 <div class="category-item">
                     <div class="category-header">
                         <span class="category-label">5. Semantic Alignment</span>
                         <span class="category-value">${categories["5_Semantic_Alignment"] || 0}/15</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${(categories["5_Semantic_Alignment"] || 0) / 15 * 100}%; background: #ec4899;"></div>
-                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: ${(categories["5_Semantic_Alignment"] || 0) / 15 * 100}%; background: #ec4899; color: #ec4899;"></div></div>
                 </div>
-
                 <div class="category-item">
                     <div class="category-header">
                         <span class="category-label">6. Robustness & Safety</span>
                         <span class="category-value">${categories["6_Robustness_Safety"] || 0}/15</span>
                     </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${(categories["6_Robustness_Safety"] || 0) / 15 * 100}%; background: #ef4444;"></div>
-                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: ${(categories["6_Robustness_Safety"] || 0) / 15 * 100}%; background: #ef4444; color: #ef4444;"></div></div>
                 </div>
             </div>
             
@@ -234,22 +394,10 @@ function showRound1(codes, scoresData) {
             <div class="llm-evaluation">
                 <div class="llm-title">LLM Semantic Değerlendirme</div>
                 <div class="llm-breakdown">
-                    <div class="llm-metric-row">
-                        <span>Identifier Clarity:</span>
-                        <span class="llm-score-value">${llmBreakdown.identifier_clarity || 0}/5</span>
-                    </div>
-                    <div class="llm-metric-row">
-                        <span>Prompt Adherence:</span>
-                        <span class="llm-score-value">${llmBreakdown.prompt_adherence || 0}/10</span>
-                    </div>
-                    <div class="llm-metric-row">
-                        <span>Naming Alignment:</span>
-                        <span class="llm-score-value">${llmBreakdown.naming_alignment || 0}/5</span>
-                    </div>
-                    <div class="llm-metric-row">
-                        <span>Logic & Reliability:</span>
-                        <span class="llm-score-value">${llmBreakdown.test_reliability || 0}/10</span>
-                    </div>
+                    <div><span>Identifier Clarity:</span><span class="llm-score-value">${llmBreakdown.identifier_clarity || 0}/5</span></div>
+                    <div><span>Prompt Adherence:</span><span class="llm-score-value">${llmBreakdown.prompt_adherence || 0}/10</span></div>
+                    <div><span>Naming Alignment:</span><span class="llm-score-value">${llmBreakdown.naming_alignment || 0}/5</span></div>
+                    <div><span>Logic & Reliability:</span><span class="llm-score-value">${llmBreakdown.test_reliability || 0}/10</span></div>
                 </div>
                 ${llmEvaluation.chain_of_thought ? `
                     <details class="cot-thinking" style="margin-top: 0.75rem; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 8px; padding: 0.5rem;">
@@ -263,8 +411,8 @@ function showRound1(codes, scoresData) {
                 ` : ''}
                 ${llmEvaluation.reasoning ? `
                     <details style="margin-top: 0.75rem;">
-                        <summary style="cursor: pointer; font-weight: 600; color: var(--gray-700);">💬 LLM Reasoning</summary>
-                        <p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--gray-600); line-height: 1.6;">
+                        <summary style="cursor: pointer; font-weight: 600; color: #94a3b8;">💬 LLM Reasoning</summary>
+                        <p style="margin-top: 0.5rem; font-size: 0.82rem; color: #94a3b8; line-height: 1.6;">
                             ${llmEvaluation.reasoning}
                         </p>
                     </details>
