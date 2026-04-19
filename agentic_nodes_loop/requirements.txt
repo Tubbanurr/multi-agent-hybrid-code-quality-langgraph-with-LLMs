@@ -8,6 +8,8 @@ langgraph
 langchain-groq
 langchain-google-genai
 langchain-core
+openai
+google-generativeai
 
 # Advanced Code Analysis Tools (for /analyze-advanced endpoint)
 pylint>=3.0.0          # Comprehensive code quality checker
