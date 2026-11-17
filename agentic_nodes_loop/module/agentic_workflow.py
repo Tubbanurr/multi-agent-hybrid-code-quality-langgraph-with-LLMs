@@ -86,162 +86,61 @@ def log_request_to_csv(
 def calculate_dynamic_threshold(prompt: str) -> float:
     """
     Prompt karmaşıklığına göre dinamik kalite eşiği hesapla.
-    Türkçe ve İngilizce keyword desteği ile.
-
-    Basit işlemler için düşük eşik (60),
-    karmaşık algoritmalar/mimari için yüksek eşik (88).
-
+    
+    Basit işlemler (aritmetik, tek satırlık) için düşük eşik,
+    karmaşık algoritmalar için yüksek eşik.
+    
     Returns:
-        float: 60.0 - 88.0 arası threshold değeri
+        float: 55.0 - 75.0 arası threshold değeri
     """
     prompt_lower = prompt.lower()
-
-    # Token sayısı
+    
+    # Token sayısı (basit yaklaşım)
     word_count = len(prompt.split())
-
-    # --- KARMAŞIKLIK GÖSTERGELERİ (Türkçe + İngilizce) ---
+    
+    # Karmaşıklık göstergeleri
     complexity_keywords = [
-        # Algoritmalar / Algorithms
-        'algorithm', 'algoritma',
-        'sort', 'sıralama', 'sorting',
-        'search', 'arama', 'searching',
-        'binary search', 'ikili arama',
-        'recursive', 'özyinelemeli', 'özyineleme', 'recursion',
-        'dynamic programming', 'dinamik programlama',
-        'fibonacci', 'factorial', 'faktöriyel',
-        'backtracking',
-
-        # Veri Yapıları / Data Structures
-        'linked list', 'bağlı liste',
-        'tree', 'ağaç', 'binary tree', 'ikili ağaç', 'bst',
-        'graph', 'graf', 'network',
-        'queue', 'kuyruk',
-        'stack', 'yığın',
-        'heap', 'min heap', 'max heap',
-        'hash', 'hash table', 'hash map', 'karma tablo',
-        'trie', 'prefix tree',
-
-        # Eşzamanlılık / Concurrency
-        'thread', 'threading', 'iş parçacığı',
-        'multiprocessing', 'çok işlemcili', 'çok işlemci',
-        'concurrent', 'concurrency', 'eşzamanlı', 'eş zamanlı',
-        'parallel', 'paralel',
-        'async', 'asyncio', 'asenkron',
-        'await', 'coroutine',
-        'lock', 'kilit', 'mutex',
-        'semaphore', 'semafor',
-        'race condition', 'yarış durumu',
-        'deadlock', 'çıkmaz',
-        'rate limit', 'rate limiting', 'hız sınırlama',
-
-        # OOP & Tasarım Desenleri / OOP & Design Patterns
-        'class', 'sınıf',
-        'oop', 'nesne yönelimli',
-        'design pattern', 'tasarım deseni',
-        'singleton',
-        'factory', 'fabrika',
-        'observer', 'gözlemci',
-        'decorator', 'dekoratör',
-        'strategy', 'strateji',
-        'abstract', 'soyut', 'soyut sınıf',
-        'abstract base class', 'abc',
-        'inheritance', 'miras', 'kalıtım',
-        'polymorphism', 'çok biçimlilik',
-        'encapsulation', 'kapsülleme',
-        'interface', 'arayüz',
-        'metaclass', 'meta sınıf',
-        'descriptor',
-        'immutable', 'değiştirilemez',
-        'mixin',
-
-        # İleri Python / Advanced Python
-        'generator', 'üreteç',
-        'iterator', 'yineleyici',
-        'context manager', 'bağlam yöneticisi',
-        'lazy loading', 'tembel yükleme',
-        'memory', 'bellek', 'memory management',
-        'pickle', 'serializ', 'serileştir',
-        'binary', 'ikili',
-        'buffer', 'tampon',
-        'stream', 'akış',
-        'mmap', 'memory map',
-
-        # Mimari & Sistem / Architecture & System
-        'api', 'rest', 'graphql',
-        'database', 'veritabanı', 'sql', 'nosql',
-        'microservice', 'mikroservis',
-        'cache', 'önbellek', 'caching',
-        'retry', 'yeniden deneme',
-        'pipeline', 'boru hattı',
-        'middleware',
-        'event', 'event loop', 'olay döngüsü',
-        'queue system', 'mesaj kuyruğu',
-        'distributed', 'dağıtık',
-        'load balancer', 'yük dengeleyici',
-
-        # Güvenlik / Security
-        'encrypt', 'şifrele', 'şifreleme', 'encryption',
-        'decrypt', 'şifre çöz',
-        'hash password', 'parola hash',
-        'salt', 'token', 'jwt',
-        'authentication', 'kimlik doğrulama', 'yetkilendirme',
-        'authorization', 'yetki',
-        'sql injection', 'güvenlik açığı',
-        'vulnerability', 'xss', 'csrf',
-
-        # Matematik & Bilimsel / Math & Scientific
-        'matrix', 'matris',
-        'optimization', 'optimizasyon', 'optimize',
-        'neural', 'sinir ağı',
-        'machine learning', 'makine öğrenmesi',
-        'deep learning', 'derin öğrenme',
-        'complexity', 'karmaşıklık', 'o(n)',
+        'algorithm', 'algoritma', 'sort', 'search', 'binary', 'tree',
+        'graph', 'recursive', 'dynamic', 'fibonacci', 'linked list',
+        'hash', 'queue', 'stack', 'class', 'oop', 'design pattern',
+        'api', 'database', 'async', 'thread', 'parallel'
     ]
-
-    # --- BASİTLİK GÖSTERGELERİ (Türkçe + İngilizce) ---
+    
+    # Basitlik göstergeleri
     simple_keywords = [
-        'hello world', 'merhaba dünya',
-        'merhaba', 'hello',
-        'basit', 'simple', 'basic', 'temel',
-        'topla', 'add two', 'iki sayı',
-        'çıkar', 'subtract',
-        'çarp', 'multiply',
-        'böl', 'divide',
-        'kare al', 'kare', 'square',
-        'küp', 'cube',
-        'katları', 'multiples',
-        'tek satır', 'one line', 'one-liner',
-        'print et', 'ekrana yaz',
+        'topla', 'çıkar', 'çarp', 'böl', 'hesapla', 'yaz', 'print',
+        '+', '-', '*', '/', 'kare', 'küp', 'katları', 'hello',
+        'merhaba', 'basit', 'simple', 'basic'
     ]
-
+    
     # Skor hesapla
     complexity_score = 0
-
+    
+    # Karmaşıklık keyword kontrolü
     for keyword in complexity_keywords:
         if keyword in prompt_lower:
             complexity_score += 10
-
+    
+    # Basitlik keyword kontrolü
     for keyword in simple_keywords:
         if keyword in prompt_lower:
             complexity_score -= 8
-
+    
     # Word count bazlı ayarlama
     if word_count <= 5:
         complexity_score -= 10
-    elif word_count >= 20:
-        complexity_score += 8
     elif word_count >= 15:
         complexity_score += 5
-
-    # Threshold hesapla (60-88 arası)
-    base_threshold = 68.0
+    
+    # Threshold hesapla (55-75 arası)
+    base_threshold = 65.0
     threshold = base_threshold + (complexity_score / 5)
-
+    
     # Sınırla
-    threshold = max(60.0, min(88.0, threshold))
-
-    print(f"📊 Dinamik Threshold: {threshold:.1f} (karmaşıklık skoru: {complexity_score}, kelime: {word_count})")
-
+    threshold = max(55.0, min(75.0, threshold))
+    
+    print(f"📊 Dinamik Threshold: {threshold:.1f} (prompt karmaşıklık skoru: {complexity_score})")
+    
     return threshold
 
 # --- State Definition ---
